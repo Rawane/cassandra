@@ -3,19 +3,26 @@ import {HttpClient,HttpHeaders} from '@angular/common/http';
 import {Subject} from 'rxjs'
 import {environment} from '../../environments/environment';
 import {ConnectionDTO} from '../model/connection-dto';
+import {KeyspaceDTO} from '../model/keyspace-dto';
 @Injectable()
 export class GaindeService {
   connectionsSubject=new Subject<any>();  
   metaConnectionSubject=new Subject<any>(); 
   saveConnectSubject=new Subject<boolean>();
+  keyspaceMetaSubject=new Subject<any>(); 
+  keyspaceMetaDeletedSubject=new Subject<any>();   
   deleteConnectSubject=new Subject<boolean>();
   errorMsgConnectionsSubject=new Subject<string>(); 
   errorConnectionCloseSubject=new Subject<string>(); 
   connectionClosedSubject=new Subject<boolean>();
   tableInfoSubject=new Subject<JSON>();
+  keyspaceInfoSubject=new Subject<JSON>();
   tableRowsSubject=new Subject<JSON>();
   tableColumnsSubject=new Subject<JSON[]>();
   errorTableSubject=new Subject<string>(); 
+  errorKeyspaceSubject=new Subject<string>(); 
+  removeKeyspaceSubject=new Subject<string>();
+  removeTableSubject=new Subject<string>();
   currentMetaConnection:any;
   currentConnection:ConnectionDTO;
   httpOptions = {
@@ -30,6 +37,13 @@ export class GaindeService {
   emitSaveConnectSubject(saveConnect:boolean) {
     this.saveConnectSubject.next(saveConnect);
   }
+  emitKeyspaceMetaSubject(keyspaceMetaSubject:boolean) {
+    this.keyspaceMetaSubject.next(keyspaceMetaSubject);
+  }
+  emitKeyspaceDeletedMetaSubject(keyspaceMetaDeletedSubject:boolean) {
+    this.keyspaceMetaDeletedSubject.next(keyspaceMetaDeletedSubject);
+  }
+  
   emitDeleteConnectSubject(deleteed:boolean) {
     this.deleteConnectSubject.next(deleteed);
   }
@@ -58,6 +72,19 @@ export class GaindeService {
   emitErrorTableSubject(error:string) {
     this.errorTableSubject.next(error);
   }
+  emitErrorKeyspaceSubject(error:string) {
+    this.errorKeyspaceSubject.next(error);
+  }
+  emitKeyspaceInfoSubject(keyspaceInfo:JSON) {
+    this.keyspaceInfoSubject.next(keyspaceInfo);
+  }
+  emitRemoveKeyspaceSubject(result:string) {
+    this.removeKeyspaceSubject.next(result);
+  }
+  emitRemoveTableSubject(result:string) {
+    this.removeTableSubject.next(result);
+  }
+  
   getAllConnections() {   
     this.httpClient
       .get<any>(environment['basePathGainde']+'/connection/all',this.httpOptions)
@@ -218,7 +245,85 @@ export class GaindeService {
         }
       );      
   }  
-  saveKeyspace(keyspaceDTO){
-
-  }   
+  saveKeyspace(connectionName:string,keyspaceDTO:KeyspaceDTO){
+    this.httpClient
+    .post<JSON>(environment['basePathGainde']+'/keyspace/'+connectionName,keyspaceDTO,this.httpOptions)
+    .subscribe(
+      (response) => {            
+       console.log('response  : ' + JSON.stringify(response));       
+       this.refreshAllMeta(connectionName,'add');
+      },
+      (error) => {
+        console.log('Erreur ! : ' + JSON.stringify(error));       
+        this.emitErrorKeyspaceSubject(error['error']['error']) ;
+      }
+    );    
+  }  
+  private refreshAllMeta(name:string,method:string) {   
+    this.httpClient
+      .get<any>(environment['basePathGainde']+'/connection/metadata/all/'+name,this.httpOptions)
+      .subscribe(
+        (response) => {               
+        // console.log('response  : ' + JSON.stringify(response)); 
+        if(method=='add') { 
+            this.emitKeyspaceMetaSubject(response);  
+        } 
+        if(method=='delete') { 
+          this.emitKeyspaceMetaSubject(response);  
+      }   
+        },
+        (error) => {
+          console.log('Erreur ! : ' + error);
+          this.emitErrorKeyspaceSubject(error['error']['error']) ;
+        }
+      );      
+  } 
+  getKeyspaceInfo(connectionName:string,keyspace) {   
+    this.httpClient
+      .get<JSON>(environment['basePathGainde']+'/keyspace/'+connectionName+'/'+keyspace,this.httpOptions)
+      .subscribe(
+        (response) => {               
+        // console.log('response  : ' + JSON.stringify(response));   
+         this.emitKeyspaceInfoSubject(response);
+        },
+        (error) => {
+          console.log('Erreur ! : ' + error);        
+          //this.emitErrorTableSubject(error['error']['error']) ;
+        }
+      );      
+  }  
+  removeKeySpace(connectionName:string,keyspcaeName:string){
+    this.httpClient
+    .delete<JSON>(environment['basePathGainde']+'/keyspace/'+connectionName+'/'+keyspcaeName,this.httpOptions)
+    .subscribe(
+      (response) => {            
+       console.log('response  : ' + JSON.stringify(response));
+      
+       this.emitRemoveKeyspaceSubject(keyspcaeName);
+       this.refreshAllMeta(connectionName,'delete');
+       
+      },
+      (error) => {
+        console.log('Erreur ! : ' + JSON.stringify(error));      
+        this.emitDeleteConnectSubject(false);
+      }
+    );    
+  }
+  removeTable(connectionName:string,keyspcaeName:string,tableName:string){
+    this.httpClient
+    .delete<JSON>(environment['basePathGainde']+'/table/'+connectionName+'/'+keyspcaeName+'/'+tableName,this.httpOptions)
+    .subscribe(
+      (response) => {            
+       console.log('response  : ' + JSON.stringify(response));
+      
+       this.emitRemoveTableSubject(tableName);
+       
+      },
+      (error) => {
+        console.log('Erreur ! : ' + JSON.stringify(error));      
+        this.emitDeleteConnectSubject(false);
+      }
+    );    
+  }
+  
 }

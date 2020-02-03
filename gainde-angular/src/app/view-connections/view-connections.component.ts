@@ -70,7 +70,7 @@ export class ViewConnectionsComponent implements OnInit {
   }
 
   onClickShowInfoConnection(conn:JSON){
-    console.log('onShowInfoConnection  : ' + JSON.stringify(conn));
+    //console.log('onShowInfoConnection  : ' + JSON.stringify(conn));
     this.connectionForm.get('name').setValue(conn['name']);
     this.connectionForm.get('ip').setValue(conn['ip']);
     this.connectionForm.get('port').setValue(conn['port']);
@@ -87,7 +87,7 @@ export class ViewConnectionsComponent implements OnInit {
     this.saveOrUpdate=true;
   }
   onClickConnectToCassandra(conn:JSON){
-    console.log('onConnectToCassandra  : ' + JSON.stringify(conn));   
+    //console.log('onConnectToCassandra  : ' + JSON.stringify(conn));   
     this.connectionForm.get('name').setValue(conn['name']);
     this.connectionForm.get('ip').setValue(conn['ip']);
     this.connectionForm.get('port').setValue(conn['port']);
@@ -97,7 +97,7 @@ export class ViewConnectionsComponent implements OnInit {
 
   }
   onDblClickConnectToCassandra(conn:JSON){
-    console.log('onConnectToCassandra  : ' + JSON.stringify(conn));
+    //console.log('onConnectToCassandra  : ' + JSON.stringify(conn));
     let  connectDTO=new ConnectionDTO(conn['name'],conn['ip'],
     conn['port'], conn['username'],conn['password']); 
     this.gaindeService.currentConnection=connectDTO;
@@ -105,7 +105,7 @@ export class ViewConnectionsComponent implements OnInit {
 
   }
   onSubmitFormConnection(actionButton){   
-    console.log('onConnectToCassandra  : ' + this.connectionForm.value['name']+'   actionButton '+actionButton);  
+    //console.log('onConnectToCassandra  : ' + this.connectionForm.value['name']+'   actionButton '+actionButton);  
     let  connectDTO=new ConnectionDTO(this.connectionForm.value['name'],this.connectionForm.value['ip'],
     this.connectionForm.value['port'], this.connectionForm.value['username'],this.connectionForm.value['password']);  
     if('save'===actionButton){       

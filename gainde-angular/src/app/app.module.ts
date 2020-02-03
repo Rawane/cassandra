@@ -6,13 +6,13 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatInputModule, MatPaginatorModule,MatSortModule, MatTableModule} from "@angular/material";
-import { MatTooltipModule,MatIconModule,MatExpansionModule} from "@angular/material";
+import { MatTooltipModule,MatIconModule,MatExpansionModule,MatSnackBarModule} from "@angular/material";
 import {MatProgressSpinnerModule,MatCardModule,MatTreeModule,MatDialogModule } from "@angular/material";
 import { MatAutocompleteModule,MatListModule,MatTabsModule,MatBadgeModule} from "@angular/material";
 import { MenuComponent } from './menu/menu.component';
 import { ViewConnectionsComponent,DialogInfoConnectionComponent } from './view-connections/view-connections.component';
 import{GaindeService} from './services/gainde.service';
-import { ViewKeyspaceComponent } from './view-keyspace/view-keyspace.component';
+import { ViewKeyspaceComponent,DialogInfoKeyspaceComponent } from './view-keyspace/view-keyspace.component';
 
 
 
@@ -22,7 +22,8 @@ import { ViewKeyspaceComponent } from './view-keyspace/view-keyspace.component';
     MenuComponent,
     ViewConnectionsComponent,
     DialogInfoConnectionComponent,
-    ViewKeyspaceComponent
+    ViewKeyspaceComponent,
+    DialogInfoKeyspaceComponent
     
   ],
   imports: [
@@ -47,9 +48,10 @@ import { ViewKeyspaceComponent } from './view-keyspace/view-keyspace.component';
     MatListModule,
     MatDialogModule,
     MatTabsModule,
-    MatBadgeModule
+    MatBadgeModule,
+    MatSnackBarModule
   ],
-  entryComponents:[DialogInfoConnectionComponent],
+  entryComponents:[DialogInfoConnectionComponent,DialogInfoKeyspaceComponent],
   providers: [GaindeService],
   bootstrap: [AppComponent]
 })

@@ -55,4 +55,15 @@
 .spanBadge .mat-badge-content{
   background : green;
 }
- 
+ .actionDeleteKeyspace{  
+  height: 8px;
+  width: 6px;
+  cursor: pointer;
+ }
+ ::ng-deep .green-snackbar{
+  background-color:green;
+  color:white;
+ }
+ .actionClick{   
+  cursor: pointer;
+ }
