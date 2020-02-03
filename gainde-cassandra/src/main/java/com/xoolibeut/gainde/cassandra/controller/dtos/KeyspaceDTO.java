@@ -1,10 +1,17 @@
 package com.xoolibeut.gainde.cassandra.controller.dtos;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+@JsonInclude(Include.NON_NULL)
 public class KeyspaceDTO {
 	private String name;
 	private String strategy;
 	private String replication;
 	private boolean durableWrite = true;
+	private List<String> tables=new ArrayList<String>();
 
 	public String getName() {
 		return name;
@@ -36,5 +43,13 @@ public class KeyspaceDTO {
 
 	public void setDurableWrite(boolean durableWrite) {
 		this.durableWrite = durableWrite;
+	}
+
+	public List<String> getTables() {
+		return tables;
+	}
+
+	public void setTables(List<String> tables) {
+		this.tables = tables;
 	}
 }

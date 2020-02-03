@@ -76,6 +76,12 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 				Map<String, String> map = keyspaceMetadata.getReplication();
 				LOGGER.info(map.toString());
 				keyspaceDTO.setName(keyspaceName);
+				keyspaceDTO.setReplication(map.get("replication_factor"));
+				keyspaceDTO.setStrategy(map.get("class"));
+				keyspaceDTO.setDurableWrite(keyspaceMetadata.isDurableWrites());
+				keyspaceMetadata.getTables().forEach(table->{
+					keyspaceDTO.getTables().add(table.getName());
+				});
 			}
 		}
 		return keyspaceDTO;
