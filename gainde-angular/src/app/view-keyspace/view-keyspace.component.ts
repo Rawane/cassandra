@@ -30,6 +30,7 @@ export class ViewKeyspaceComponent implements OnInit {
   connectionClosedSubscription:Subscription;
   tableInfoSubscription:Subscription;
   metaKeyspaceSubscription:Subscription;
+  metaKeyspaceDeletedSubscription:Subscription;
   errorClosedSubscription:Subscription;
   tableColumnsSubscription:Subscription;
   tableInfo:JSON;
@@ -112,6 +113,14 @@ export class ViewKeyspaceComponent implements OnInit {
         this.openSnackBar('Le keyspace '+this.currentKeyspaceName+' a été ajouté avec succès','');
         this.addKeyspaceVisible=false;
       }
+      
+    });
+    this.metaKeyspaceDeletedSubscription=this.gaindeService.keyspaceMetaSubject.subscribe((keyspaceMeta: any) => {
+      this.dataSource.data=keyspaceMeta;   
+      this.gaindeService.currentMetaConnection= keyspaceMeta;      
+       // this.openSnackBar('Le keyspace '+this.currentKeyspaceName+' a été ajouté avec succès','');
+        //this.addKeyspaceVisible=false;
+      
       
     });
     this.keyspaceInfoSubscription=this.gaindeService.keyspaceInfoSubject.subscribe((result: JSON) => {    
