@@ -1,0 +1,58 @@
+.truncate-header{   
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .content-header{
+    width:100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+.police-tree-invisible {
+  display: none;
+}
+
+.police-tree ul,
+.police-tree li {
+  margin-top: 0;
+  margin-bottom: 0;
+  list-style-type: none;
+}
+.iconSuccess{
+  color: green;
+}
+.iconWarning{
+  color:orange;
+}
+.buttonTree{
+  border: none;
+  background: transparent;
+}
+.divAction{
+    cursor:pointer;
+    border-radius: 30px;
+    border: 1px solid silver;
+    padding: 10px;
+}
+
+.divKeyspace{
+    cursor:pointer;    
+   /* border: 1px solid steelblue;*/
+    padding: 3px;
+   
+}
+.tabInfoConent{
+  overflow: hidden;
+}
+.iconKeyPrimary{
+  color:green;
+}
+.dividerTable{  
+  border:2px solid silver;
+}
+.spanBadge .mat-badge-content{
+  background : green;
+}
+ 

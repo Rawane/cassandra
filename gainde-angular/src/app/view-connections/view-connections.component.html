@@ -1,0 +1,66 @@
+<div class="row">
+    <div class="col-xs-3 col-md-2 col-lg-3">  
+        <mat-list>            
+            <mat-list-item *ngFor="let conn of connections">
+           
+             
+                      <mat-icon mat-list-icon class="iconConnection" (click)="onClickShowInfoConnection(conn)" >folder</mat-icon>
+                      <h4 mat-line (dblclick)="onDblClickConnectToCassandra(conn)" class="iconConnection">{{conn.name}}</h4>
+                    <p mat-line *ngIf="conn.ip" > {{conn.ip}}:{{conn.port}}</p>               
+                  
+                    <mat-icon class="iconConnection actionDelete" (click)="onClickRemoveConnection(conn.name)" >delete</mat-icon>                   
+                  
+            
+             
+            </mat-list-item>           
+          </mat-list>
+          <div>
+            <button type="button" class="btn btn-primary" (click)="onClickNewConnection()" >Nouveau Connection</button>
+          </div>
+    </div>
+    <div class="col-xs-9 col-md-10 col-lg-9"> 
+        <div>
+
+            <form [formGroup]="connectionForm" (ngSubmit)="onSubmitFormConnection(actionButton)">
+                <div class="form-group">
+                    <label for="name">Nom de la Connection</label>
+                    <input id="name" class="form-control" formControlName="name" >
+                </div>
+                <div class="form-group">
+                    <label for="ip">Hostname</label>
+                    <input id="ip" class="form-control" formControlName="ip" >
+                </div>
+                <div class="form-group">
+                    <label for="port">Port</label>
+                    <input id="port" class="form-control" formControlName="port" >
+                </div>
+                <div class="form-group">
+                    <label for="username">Useranme</label>
+                    <input id="username" class="form-control" formControlName="username" >
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input id="password" class="form-control" formControlName="password" type="password" >
+                </div>
+                <div class="row">
+                    <div class="col-xs-4 col-md-4 col-lg-4">
+                        <button type="submit" class="btn btn-primary" [disabled]="connectionForm.invalid" (click)="actionButton = 'connection'">
+                            Connection
+                        </button>
+                    </div>
+                    <div class="col-xs-4 col-md-4 col-lg-4">
+                       
+                        <!--<button type="button" class="btn btn-success"  (click)="openDialog()">
+                           Test Button
+                        </button>  -->
+                    </div>
+                    <div class="col-xs-4 col-md-4 col-lg-4">
+                        <button type="submit" class="btn btn-success boutonSave" [disabled]="connectionForm.invalid" (click)="actionButton = 'save'">
+                            Enregistrer Connection
+                        </button>  
+                    </div>
+                 </div>
+            </form>
+        </div>
+    </div>
+</div>
