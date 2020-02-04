@@ -42,6 +42,7 @@ export class ViewKeyspaceComponent implements OnInit {
   displayedColumnsTableData: string[];
   colonneDataSource=new MatTableDataSource<JSON>();
   tableDatasDataSource=new MatTableDataSource<JSON>();
+  bigTable:boolean=false;
   currentTableKeys:string[];
   selectedPageIndex=0;
   selectedKeysPageIndex=0;
@@ -170,9 +171,8 @@ export class ViewKeyspaceComponent implements OnInit {
   }
   applyFilter(filterValue: string) {
     this.tableDatasDataSource.filter = filterValue.trim().toLowerCase();
-
     if (this.tableDatasDataSource.paginator) {
-       this.tableDatasDataSource.paginator.firstPage();
+        this.tableDatasDataSource.paginator.firstPage();
     }
   }
   onClickCloseConnection(){
@@ -239,6 +239,12 @@ export class ViewKeyspaceComponent implements OnInit {
     {
       this.selectedPageIndex=0;
     }
+  }
+  onClickAddNewTable(connectionName:string,keyspaceName:string){
+    this.router.navigate(['/editTable']);
+  }
+  onClickEditTable(connectionName:string,keyspaceName:string,tableName:string){
+    this.router.navigate(['/editTable']);
   }
   onClickShowKeyspace(){
    
