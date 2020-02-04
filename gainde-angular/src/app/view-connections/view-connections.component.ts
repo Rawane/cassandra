@@ -26,16 +26,9 @@ export class ViewConnectionsComponent implements OnInit {
   connections:any;
   metaConnection:any;
   allNotificationSubscription:Subscription;
-  //connectionsSubscription:Subscription;
   saveOrUpdate:boolean=true;
   saveConnection:boolean;
   deleteConnection:boolean;
-  //saveConnectionSubscription:Subscription;
-  //deleteConnectionSubscription:Subscription;
-  //errorMSGConnectionSubscription:Subscription;
-  //metaConnectionSubscription:Subscription;
-
-
   constructor(private gaindeService:GaindeService,
     private formBuilder:FormBuilder,private dialog: MatDialog,private router:Router,private snackBar:MatSnackBar) { 
 
@@ -51,10 +44,7 @@ export class ViewConnectionsComponent implements OnInit {
            this.connections=mapTransfert.get("content");           
            break;
           case ActionHttp.SAVE_CONNECTION:
-            this.openSnackBar('La connection '+mapTransfert.get("content")['name']+' a été ajoutée avec succés','');
-            this.saveOrUpdate=true;
-            this.resetForm();
-            this.gaindeService.getAllConnections();           
+            this.doAfterSaveConnectionOk(mapTransfert);           
             break;
           case ActionHttp.SAVE_CONNECTION_ERROR:
             this.openDialog('Info connection',"Erreur de sauvegarde",false,'');
@@ -85,37 +75,18 @@ export class ViewConnectionsComponent implements OnInit {
            break;
        }
       
-    });
-    
-   /* this.connectionsSubscription=this.gaindeService.connectionsSubject.subscribe((conn: any[]) => {
-      this.connections=conn;
-    });
-    this.saveConnectionSubscription=this.gaindeService.saveConnectSubject.subscribe((result:boolean)=>{
-      if(result){
-        this.gaindeService.getAllConnections();
-        this.saveOrUpdate=false;
-      }else{
-        this.openDialog('Info connection',"Erreur de sauvegarde",false,'');
-      }
-    });
-    this.deleteConnectionSubscription=this.gaindeService.deleteConnectSubject.subscribe((result:boolean)=>{
-      if(result){
-        this.gaindeService.getAllConnections();       
-      }else{
-        this.openDialog('Info connection',"Erreur de suppression",false,'');
-      }
-    });
-    this.errorMSGConnectionSubscription=this.gaindeService.errorMsgConnectionsSubject.subscribe((msg: string) => {
-      this.openDialog('Erreur de Connection',msg,false,'');
-    });
-    this.metaConnectionSubscription=this.gaindeService.metaConnectionSubject.subscribe((metaConnection: any) => {
-      this.gaindeService.currentMetaConnection=metaConnection;
-      this.router.navigate(['/viewKeyspace']);
-
-    });*/
+    }); 
+   
     this.gaindeService.getAllConnections();
     this.initForm();
   }
+  private doAfterSaveConnectionOk(mapTransfert: Map<string, any>) {
+    this.openSnackBar('La connection ' + mapTransfert.get("content")['name'] + ' a été ajoutée avec succés', '');
+    this.saveOrUpdate = true;
+    this.resetForm();
+    this.gaindeService.getAllConnections();
+  }
+
   openSnackBar(message: string, action: string) {
     this.snackBar.open(message, action, {
       duration: 3000,
