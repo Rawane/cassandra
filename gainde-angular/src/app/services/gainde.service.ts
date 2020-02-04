@@ -136,17 +136,17 @@ export class GaindeService {
         }
       );      
   }
-  getAllDatatable(connectionName:string,keyspace:string,table:string) {   
+  getAllDataTable(connectionName:string,keyspace:string,table:string) {   
     this.httpClient
-      .get<JSON[]>(environment['basePathGainde']+'/connection/data/columns/'+connectionName+'/'+keyspace+'/'+table,this.httpOptions)
+      .get<JSON[]>(environment['basePathGainde']+'/table/all/'+connectionName+'/'+keyspace+'/'+table,this.httpOptions)
       .subscribe(
         (response) => {               
          console.log('response  : ' + JSON.stringify(response));   
-         //this.emitTableColumnsSubject(response);
+         this.emitMapTransfertSubject(ActionHttp.ALL_DATA_TABLE,response);   
         },
         (error) => {
           console.log('Erreur ! : ' + error);        
-        //this.emitErrorTableSubject(error['error']['error']) ;
+          this.emitMapTransfertSubject(ActionHttp.ALL_DATA_TABLE_ERROR,error['error']['error']); 
         }
       );      
   } 

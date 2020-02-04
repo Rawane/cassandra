@@ -5,12 +5,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
 import com.xoolibeut.gainde.cassandra.repository.TableRepository;
 
@@ -23,7 +26,7 @@ public class TableController {
 	private TableRepository tableRepository;
 
 	@PostMapping("/create/{connectionName}/{kespace}")
-	public ResponseEntity<String> createConnection(@PathVariable("connectionName") String connectionName,
+	public ResponseEntity<String> createTable(@PathVariable("connectionName") String connectionName,
 			@PathVariable("kespace") String keyspaceName, @RequestBody TableDTO tableDTO) {
 		try {
 			tableRepository.createTable(tableDTO, connectionName, keyspaceName);
@@ -33,4 +36,16 @@ public class TableController {
 			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
 		}
 	}
-}
+	@GetMapping("/all/{connectionName}/{kespace}/{tableName}")
+	public ResponseEntity<String> getAllDataByTableName(@PathVariable("connectionName") String connectionName,
+			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName) {
+		try {
+			JsonNode jsonNode = tableRepository.getAllDataByTableName(connectionName, keyspaceName, tableName);
+			ObjectMapper mapper=new ObjectMapper();
+			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+		}
+	}
+}		

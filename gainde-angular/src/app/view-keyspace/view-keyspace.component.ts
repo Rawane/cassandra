@@ -1,10 +1,12 @@
-import { Component, OnInit,Inject } from '@angular/core';
+import { Component, OnInit,Inject,ViewChild } from '@angular/core';
 import {FormGroup,FormBuilder,Validators} from '@angular/forms'; 
 import {Router} from '@angular/router';
 import {Subscription} from 'rxjs';
 import {NestedTreeControl} from '@angular/cdk/tree';
 import {MatTreeNestedDataSource} from '@angular/material/tree';
 import {MatTableDataSource} from '@angular/material/table';
+import {MatPaginator} from '@angular/material/paginator';
+import {MatSort} from '@angular/material/sort';
 import {MatDialog, MatDialogRef,MAT_DIALOG_DATA} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {GaindeService} from '../services/gainde.service';
@@ -29,13 +31,17 @@ export class ViewKeyspaceComponent implements OnInit {
   createKeyspaceVisible:boolean=false;
   addKeyspaceVisible:boolean=false;
   allNotificationSubscription:Subscription;
+  @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
+  @ViewChild(MatSort, {static: false}) sort: MatSort;
   tableInfo:JSON;
   keyspaceInfo:JSON;
   displayedColumns=['name','type','primaraKey','indexed'];
   displayedColumnsPrimary=['key'];
   displayedColumnsTableKeys=['tableName','tableAction'];
   displayedColumnsIndex=['name','indexName'];
+  displayedColumnsTableData;
   colonneDataSource=new MatTableDataSource<JSON>();
+  tableDataDataSource=new MatTableDataSource<JSON>();
   currentTableKeys:string[];
   selectedPageIndex=0;
   selectedKeysPageIndex=0;
@@ -129,6 +135,30 @@ export class ViewKeyspaceComponent implements OnInit {
                 this.openDialog('INFO Keyspace',mapTransfert.get("content"),false,'');
                 break;  
             }
+            case ActionHttp.ALL_DATA_TABLE:              
+            { 
+              this.displayedColumnsTableData=mapTransfert.get("content")['columns'];
+              console.log('displayedColumnsTableData '+JSON.stringify(this.displayedColumnsTableData));
+              this.tableDataDataSource.data=mapTransfert.get("content")['data'];
+             
+              //this.tableDataDataSource.paginator = this.paginator;
+             // this.tableDataDataSource.sort = this.sort;      
+            /*  this.tableDataDataSource.sortingDataAccessor = (item, property) => {
+                //console.log(item)
+                switch (property) {
+                  case 'fromDate': {
+                    return new Date(item['timestamp']*1000);
+                  }
+                  default: return item[property];
+                }
+              };*/
+              break;
+            }
+            case ActionHttp.ALL_DATA_TABLE_ERROR: 
+            {               
+                this.openDialog('Table ',mapTransfert.get("content"),false,'');
+                break;  
+            }
             default:
               break;
          }
@@ -186,7 +216,7 @@ export class ViewKeyspaceComponent implements OnInit {
       console.log('onClickShowTabColonne  : ' + JSON.stringify(this.currentTableKeys));  
       console.log('onClickShowTabColonne event : ' + this.selectedPageIndex);  
       if(this.currentTableKeys && this.selectedPageIndex==1){
-        this.gaindeService.getAllDatatable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
+        this.gaindeService.getAllDataTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
       }   
   }
   onClickRowTable(row){

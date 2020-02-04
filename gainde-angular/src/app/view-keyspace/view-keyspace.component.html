@@ -105,7 +105,7 @@
                                 <ng-template matTabLabel>
                                     <span [matBadge]="keyspaceInfo['tables'].length" matBadgeColor="warn">Tables</span>
                                 </ng-template>
-                                <mat-table  #table [dataSource]="keyspaceInfo.tables"   >
+                                <mat-table  #table [dataSource]="keyspaceInfo.tables" >
                                     <ng-container matColumnDef="tableName">
                                       <mat-header-cell *matHeaderCellDef >
                                           Nom de la Table 
@@ -207,9 +207,23 @@
                             </div>
                         </mat-tab>
                         <mat-tab label="Données">
-
+                            <div *ngIf="displayedColumnsTableData">
+                                <mat-table  #table [dataSource]="tableDataDataSource"  >
+                                    <ng-container  ngFor="let colName of displayedColumnsTableData | async" [matColumnDef]="colName">
+                                    <mat-header-cell *matHeaderCellDef >
+                                        {{colName}}
+                                    </mat-header-cell>
+                                    <mat-cell *matCellDef="let name" class="columTraffic"                                       
+                                    class="actionClick"  >
+                                        {{name}}
+                                    </mat-cell>
+                                    </ng-container>                                                        
+                                    <mat-header-row *matHeaderRowDef="displayedColumnsTableData"></mat-header-row>
+                                    <mat-row  *matRowDef="let row; columns: displayedColumnsTableData;"></mat-row>         
+                                </mat-table>                               
+                             </div>
                         </mat-tab>
-                        <mat-tab  >
+                        <mat-tab >
                             <ng-template matTabLabel>
                                 <span [matBadge]="columnsSize" class="spanBadge">Colonnes</span>
                             </ng-template>
