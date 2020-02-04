@@ -207,20 +207,25 @@
                             </div>
                         </mat-tab>
                         <mat-tab label="Données">
-                            <div *ngIf="displayedColumnsTableData">
-                                <mat-table  #table [dataSource]="tableDataDataSource"  >
-                                    <ng-container  ngFor="let colName of displayedColumnsTableData | async" [matColumnDef]="colName">
-                                    <mat-header-cell *matHeaderCellDef >
-                                        {{colName}}
-                                    </mat-header-cell>
-                                    <mat-cell *matCellDef="let name" class="columTraffic"                                       
-                                    class="actionClick"  >
-                                        {{name}}
-                                    </mat-cell>
+                            <div *ngIf="displayedColumnsTableData && tableDatasDataSource.data">
+                                <mat-form-field>
+                                    <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+                                  </mat-form-field>
+                                <mat-table  #table [dataSource]="tableDatasDataSource" matSort >
+                                    <ng-container  *ngFor="let colName of displayedColumnsTableData" [matColumnDef]="colName">
+                                        <mat-header-cell *matHeaderCellDef mat-sort-header>
+                                            {{colName}}
+                                        </mat-header-cell>
+                                        <mat-cell *matCellDef="let element" class="columTraffic"                                       
+                                                  class="actionClick"  >
+                                            {{element[colName]}}
+                                        </mat-cell>
                                     </ng-container>                                                        
-                                    <mat-header-row *matHeaderRowDef="displayedColumnsTableData"></mat-header-row>
+                                    <mat-header-row  *matHeaderRowDef="displayedColumnsTableData"></mat-header-row>
                                     <mat-row  *matRowDef="let row; columns: displayedColumnsTableData;"></mat-row>         
-                                </mat-table>                               
+                                </mat-table>  
+                                <mat-paginator    [length]="paginationTableDataSize"   [pageSize]="10"  [showFirstLastButtons]="true">
+                                </mat-paginator>                             
                              </div>
                         </mat-tab>
                         <mat-tab >

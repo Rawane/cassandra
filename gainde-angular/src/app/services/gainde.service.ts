@@ -131,7 +131,7 @@ export class GaindeService {
          this.emitMapTransfertSubject(ActionHttp.INFO_TABLE,response);   
         },
         (error) => {
-          console.log('Erreur ! : ' + error);
+          console.log('Erreur ! : ' + error['error']['error']);
           this.emitMapTransfertSubject(ActionHttp.INFO_TABLE_ERROR,error['error']['error']);   
         }
       );      

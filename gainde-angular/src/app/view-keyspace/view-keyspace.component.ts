@@ -39,9 +39,9 @@ export class ViewKeyspaceComponent implements OnInit {
   displayedColumnsPrimary=['key'];
   displayedColumnsTableKeys=['tableName','tableAction'];
   displayedColumnsIndex=['name','indexName'];
-  displayedColumnsTableData;
+  displayedColumnsTableData: string[];
   colonneDataSource=new MatTableDataSource<JSON>();
-  tableDataDataSource=new MatTableDataSource<JSON>();
+  tableDatasDataSource=new MatTableDataSource<JSON>();
   currentTableKeys:string[];
   selectedPageIndex=0;
   selectedKeysPageIndex=0;
@@ -50,6 +50,7 @@ export class ViewKeyspaceComponent implements OnInit {
   currentKeyspaceName:string;
   columnsSize:number;
   keyspaceForm:FormGroup; 
+  paginationTableDataSize;
   hasChild = (_: number, node: Meta) => !!node.metas && node.metas.length > 0;
   constructor(private gaindeService:GaindeService,private router:Router,private formBuilder:FormBuilder,
    private snackBar:MatSnackBar,private dialog: MatDialog) {
@@ -65,9 +66,11 @@ export class ViewKeyspaceComponent implements OnInit {
 
 
     this.allNotificationSubscription=this.gaindeService.mapTransfertSubject.subscribe((mapTransfert: Map<string,any>) => {
+      let mapToString='';
       mapTransfert.forEach((key,item)=>{
-        console.log('ViewKeyspaceComponent mapTransfert key='+item+'  value='+JSON.stringify(mapTransfert.get(item)));
-      });     
+        mapToString=mapToString+' '+item+'  value='+JSON.stringify(mapTransfert.get(item));        
+      });   
+      console.log('ViewKeyspaceComponent mapTransfert '+mapToString);  
       switch (mapTransfert.get("type") as ActionHttp)  {
             case ActionHttp.CLOSE_CONNECTION:
             {
@@ -139,11 +142,12 @@ export class ViewKeyspaceComponent implements OnInit {
             { 
               this.displayedColumnsTableData=mapTransfert.get("content")['columns'];
               console.log('displayedColumnsTableData '+JSON.stringify(this.displayedColumnsTableData));
-              this.tableDataDataSource.data=mapTransfert.get("content")['data'];
-             
-              //this.tableDataDataSource.paginator = this.paginator;
-             // this.tableDataDataSource.sort = this.sort;      
-            /*  this.tableDataDataSource.sortingDataAccessor = (item, property) => {
+              this.tableDatasDataSource.data=mapTransfert.get("content")['data'];
+              this.paginationTableDataSize=mapTransfert.get("content")['data'].length;
+              console.log('data '+ this.tableDatasDataSource.data[0]['keyspace_name']);
+              this.tableDatasDataSource.paginator = this.paginator;
+              this.tableDatasDataSource.sort = this.sort;      
+              this.tableDatasDataSource.sortingDataAccessor = (item, property) => {
                 //console.log(item)
                 switch (property) {
                   case 'fromDate': {
@@ -151,7 +155,7 @@ export class ViewKeyspaceComponent implements OnInit {
                   }
                   default: return item[property];
                 }
-              };*/
+              };
               break;
             }
             case ActionHttp.ALL_DATA_TABLE_ERROR: 
@@ -164,7 +168,13 @@ export class ViewKeyspaceComponent implements OnInit {
          }
       });     
   }
-  
+  applyFilter(filterValue: string) {
+    this.tableDatasDataSource.filter = filterValue.trim().toLowerCase();
+
+    if (this.tableDatasDataSource.paginator) {
+       this.tableDatasDataSource.paginator.firstPage();
+    }
+  }
   onClickCloseConnection(){
     if(this.currentConnection){
       let name:string=this.currentConnection['name'];

@@ -36,9 +36,11 @@ export class ViewConnectionsComponent implements OnInit {
   ngOnInit() {
     //init Obersver
     this.allNotificationSubscription=this.gaindeService.mapTransfertSubject.subscribe((mapTransfert: Map<string,any>) => {
+      let mapToString='';
       mapTransfert.forEach((key,item)=>{
-        console.log('ViewConnectionsComponent mapTransfert key='+item+'  value='+JSON.stringify(mapTransfert.get(item)));
-      });    
+        mapToString=mapToString+' '+item+'  value='+JSON.stringify(mapTransfert.get(item));        
+      });   
+      console.log('ViewConnectionsComponent mapTransfert '+mapToString);     
        switch (mapTransfert.get("type") as ActionHttp) {
          case ActionHttp.ALL_CONNECTION:
            this.connections=mapTransfert.get("content");           

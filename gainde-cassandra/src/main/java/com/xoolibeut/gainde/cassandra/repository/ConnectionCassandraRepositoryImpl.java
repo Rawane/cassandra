@@ -118,9 +118,9 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 		if (cluster != null) {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(keyspaceName);
 			if (keyspaceMetadata != null) {
-				TableMetadata tableMetadata = keyspaceMetadata.getTable(tableName);
-				tableInfoDTO.setName(tableMetadata.getName());
+				TableMetadata tableMetadata = keyspaceMetadata.getTable(tableName);				
 				if (tableMetadata != null) {
+					tableInfoDTO.setName(tableMetadata.getName());
 					Collection<IndexMetadata> indexMetadatas = tableMetadata.getIndexes();
 					List<IndexColumn> listIndexColumns = new ArrayList<>();
 					indexMetadatas.forEach(index -> {
