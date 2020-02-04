@@ -5,6 +5,8 @@ import {Subscription} from 'rxjs';
 import {GaindeService} from '../services/gainde.service';
 import {ConnectionDTO} from '../model/connection-dto';
 import {MatDialog, MatDialogRef,MAT_DIALOG_DATA} from '@angular/material/dialog';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {ActionHttp} from '../model/action-http';
 
 export interface DialogData {
   text: string;
@@ -23,23 +25,69 @@ export class ViewConnectionsComponent implements OnInit {
   connectionForm:FormGroup; 
   connections:any;
   metaConnection:any;
-  connectionsSubscription:Subscription;
+  allNotificationSubscription:Subscription;
+  //connectionsSubscription:Subscription;
   saveOrUpdate:boolean=true;
   saveConnection:boolean;
   deleteConnection:boolean;
-  saveConnectionSubscription:Subscription;
-  deleteConnectionSubscription:Subscription;
-  errorMSGConnectionSubscription:Subscription;
-  metaConnectionSubscription:Subscription;
+  //saveConnectionSubscription:Subscription;
+  //deleteConnectionSubscription:Subscription;
+  //errorMSGConnectionSubscription:Subscription;
+  //metaConnectionSubscription:Subscription;
 
 
   constructor(private gaindeService:GaindeService,
-    private formBuilder:FormBuilder,private dialog: MatDialog,private router:Router) { 
+    private formBuilder:FormBuilder,private dialog: MatDialog,private router:Router,private snackBar:MatSnackBar) { 
 
   }
   ngOnInit() {
     //init Obersver
-    this.connectionsSubscription=this.gaindeService.connectionsSubject.subscribe((conn: any[]) => {
+    this.allNotificationSubscription=this.gaindeService.mapTransfertSubject.subscribe((mapTransfert: Map<string,any>) => {
+      mapTransfert.forEach((key,item)=>{
+        console.log('ViewConnectionsComponent mapTransfert key='+item+'  value='+JSON.stringify(mapTransfert.get(item)));
+      });    
+       switch (mapTransfert.get("type") as ActionHttp) {
+         case ActionHttp.ALL_CONNECTION:
+           this.connections=mapTransfert.get("content");           
+           break;
+          case ActionHttp.SAVE_CONNECTION:
+            this.openSnackBar('La connection '+mapTransfert.get("content")['name']+' a été ajoutée avec succés','');
+            this.saveOrUpdate=true;
+            this.resetForm();
+            this.gaindeService.getAllConnections();           
+            break;
+          case ActionHttp.SAVE_CONNECTION_ERROR:
+            this.openDialog('Info connection',"Erreur de sauvegarde",false,'');
+            break;
+          case ActionHttp.UPDATE_CONNECTION:
+              this.openSnackBar('La connection '+mapTransfert.get("content")['name']+' a été mis à jour avec succés','');
+              this.gaindeService.getAllConnections();           
+              break;
+          case ActionHttp.UPDATE_CONNECTION_ERROR:
+              this.openDialog('Info connection',"Erreur de mis à jour",false,'');
+              break;
+          case ActionHttp.DELETE_CONNECTION:
+            this.openSnackBar('La connection '+mapTransfert.get("content")+' a été supprimée avec succés','');
+            this.gaindeService.getAllConnections();
+            break;
+          case ActionHttp.DELETE_CONNECTION_ERROR:
+            this.openDialog('Info connection',"Erreur de suppression",false,'');
+            break;
+          case ActionHttp.CONNECT_TO:
+            this.gaindeService.currentMetaConnection=mapTransfert.get("content");
+            this.router.navigate(['/viewKeyspace']);
+            break;
+          case ActionHttp.CONNECT_TO_ERROR:
+            let msg:string=mapTransfert.get("content");
+            this.openDialog('Erreur de Connection',msg,false,'');
+            break;    
+         default:          
+           break;
+       }
+      
+    });
+    
+   /* this.connectionsSubscription=this.gaindeService.connectionsSubject.subscribe((conn: any[]) => {
       this.connections=conn;
     });
     this.saveConnectionSubscription=this.gaindeService.saveConnectSubject.subscribe((result:boolean)=>{
@@ -64,11 +112,25 @@ export class ViewConnectionsComponent implements OnInit {
       this.gaindeService.currentMetaConnection=metaConnection;
       this.router.navigate(['/viewKeyspace']);
 
-    });
+    });*/
     this.gaindeService.getAllConnections();
     this.initForm();
   }
-
+  openSnackBar(message: string, action: string) {
+    this.snackBar.open(message, action, {
+      duration: 3000,
+      // here specify the position
+      verticalPosition: 'top',
+      panelClass: ['green-snackbar']
+    });
+}
+private resetForm(){
+    this.connectionForm.get('name').setValue('');
+    this.connectionForm.get('ip').setValue('');
+    this.connectionForm.get('port').setValue('');
+    this.connectionForm.get('username').setValue('');
+    this.connectionForm.get('password').setValue('');
+}
   onClickShowInfoConnection(conn:JSON){
     //console.log('onShowInfoConnection  : ' + JSON.stringify(conn));
     this.connectionForm.get('name').setValue(conn['name']);

@@ -10,7 +10,8 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {GaindeService} from '../services/gainde.service';
 import {ConnectionDTO} from '../model/connection-dto';
 import {KeyspaceDTO} from '../model/keyspace-dto';
-import{DialogData} from '../view-connections/view-connections.component'
+import{DialogData} from '../view-connections/view-connections.component';
+import {ActionHttp} from '../model/action-http';
 interface Meta {
   name:string; 
   metas:Meta[];
@@ -27,20 +28,21 @@ export class ViewKeyspaceComponent implements OnInit {
   tabsTableVisible:boolean=false;
   createKeyspaceVisible:boolean=false;
   addKeyspaceVisible:boolean=false;
-  connectionClosedSubscription:Subscription;
-  tableInfoSubscription:Subscription;
-  metaKeyspaceSubscription:Subscription;
-  metaKeyspaceDeletedSubscription:Subscription;
-  errorClosedSubscription:Subscription;
-  tableColumnsSubscription:Subscription;
+  allNotificationSubscription:Subscription;
+  //connectionClosedSubscription:Subscription;
+ // tableInfoSubscription:Subscription;
+ // metaKeyspaceSubscription:Subscription;
+  //metaKeyspaceDeletedSubscription:Subscription;
+ // errorClosedSubscription:Subscription;
+  //tableColumnsSubscription:Subscription;
   tableInfo:JSON;
-  keyspaceInfoSubscription:Subscription;
-  keyspaceRemovedSubscription:Subscription;
-  tableRemovedSubscription:Subscription;
+  //keyspaceInfoSubscription:Subscription;
+  //keyspaceRemovedSubscription:Subscription;
+  //tableRemovedSubscription:Subscription;
   keyspaceInfo:JSON;
   displayedColumns=['name','type','primaraKey','indexed'];
   displayedColumnsPrimary=['key'];
-  displayedColumnsTableKeys=['tableName'];
+  displayedColumnsTableKeys=['tableName','tableAction'];
   displayedColumnsIndex=['name','indexName'];
   colonneDataSource=new MatTableDataSource<JSON>();
   currentTableKeys:string[];
@@ -66,73 +68,89 @@ export class ViewKeyspaceComponent implements OnInit {
         this.treeControl.expand(this.gaindeService.currentMetaConnection[i])
       } */ 
     }
-    this.connectionClosedSubscription=this.gaindeService.connectionClosedSubject.subscribe((result: boolean) => {     
-      if(result){
-        this.router.navigate(['/viewConnections']);
-      }
-    });
-    this.errorClosedSubscription=this.gaindeService.errorConnectionCloseSubject.subscribe((result: string) => {    
-     
-    });
-    this.keyspaceRemovedSubscription=this.gaindeService.removeKeyspaceSubject.subscribe((result: string) => {    
-      this.openSnackBar('Le keyspace '+result+' a été ajouté supprimée','');
-    });
-    this.tableRemovedSubscription=this.gaindeService.removeTableSubject.subscribe((result: string) => {    
-      this.openSnackBar('La table '+result+' a été ajouté supprimée','');
-    });
-    this.tableInfoSubscription=this.gaindeService.tableInfoSubject.subscribe((result: JSON) => {    
-     this.tableInfo=result;
-     this.colonneDataSource.data=this.tableInfo['columns']; 
-     this.columnsSize=this.tableInfo['columns'].length;   
-     this.tabsTableVisible=true;
-     if(this.gaindeService.currentMetaConnection && this.currentKeyspaceName) {
-      for (let i = 0; i < this.gaindeService.currentMetaConnection.length; i++) {
-        if(this.gaindeService.currentMetaConnection[i]['name']===this.currentKeyspaceName)
-          {
-            this.treeControl.expand(this.gaindeService.currentMetaConnection[i]);           
-            
-          }
-      } 
-     
-    }
-     
 
-    });  
-    this.metaKeyspaceSubscription=this.gaindeService.keyspaceMetaSubject.subscribe((keyspaceMeta: any) => {
-      this.dataSource.data=keyspaceMeta;   
-      this.gaindeService.currentMetaConnection= keyspaceMeta;
-      if(this.gaindeService.currentMetaConnection && this.currentKeyspaceName) {
-        for (let i = 0; i < this.gaindeService.currentMetaConnection.length; i++) {
-          if(this.gaindeService.currentMetaConnection[i]['name']===this.currentKeyspaceName)
-            {
-              this.treeControl.expand(this.gaindeService.currentMetaConnection[i]);
-              this.currentNodeId=this.gaindeService.currentMetaConnection[i]['id'];
-              
-            }
-        }  
-        this.openSnackBar('Le keyspace '+this.currentKeyspaceName+' a été ajouté avec succès','');
-        this.addKeyspaceVisible=false;
-      }
-      
-    });
-    this.metaKeyspaceDeletedSubscription=this.gaindeService.keyspaceMetaSubject.subscribe((keyspaceMeta: any) => {
-      this.dataSource.data=keyspaceMeta;   
-      this.gaindeService.currentMetaConnection= keyspaceMeta;      
-       // this.openSnackBar('Le keyspace '+this.currentKeyspaceName+' a été ajouté avec succès','');
-        //this.addKeyspaceVisible=false;
-      
-      
-    });
-    this.keyspaceInfoSubscription=this.gaindeService.keyspaceInfoSubject.subscribe((result: JSON) => {    
-     this.keyspaceInfo=result;
-     console.log('keyspaceInfoSubscription  : ' + JSON.stringify(this.keyspaceInfo));
-     this.createKeyspaceVisible=true;
-    });
-     
+
+    this.allNotificationSubscription=this.gaindeService.mapTransfertSubject.subscribe((mapTransfert: Map<string,any>) => {
+      mapTransfert.forEach((key,item)=>{
+        console.log('ViewKeyspaceComponent mapTransfert key='+item+'  value='+JSON.stringify(mapTransfert.get(item)));
+      });     
+      switch (mapTransfert.get("type") as ActionHttp)  {
+            case ActionHttp.CLOSE_CONNECTION:
+              this.router.navigate(['/viewConnections']);
+              break;
+              case ActionHttp.CLOSE_CONNECTION_ERROR:
+                this.openDialog('Connection',"Erreur lors de la fermiture de la connection",false,'');
+                break;
+              case ActionHttp.REMOVE_KEYSPACE:
+                this.gaindeService.currentMetaConnection=mapTransfert.get('content');
+                this.dataSource.data=this.gaindeService.currentMetaConnection;
+                this.openSnackBar('Le keyspace  a été  supprimée','');
+                break;
+              case ActionHttp.REMOVE_KEYSPACE_ERROR:                
+                this.openDialog('Suppression Keyspace',mapTransfert.get("content"),false,'');
+                break;
+              case ActionHttp.REMOVE_TABLE:
+                this.gaindeService.currentMetaConnection=mapTransfert.get('content');
+                this.dataSource.data=this.gaindeService.currentMetaConnection;
+                this.openSnackBar('La table a été supprimée','');
+                break;
+              case ActionHttp.REMOVE_TABLE_ERROR:
+                this.openDialog('Suppression Table',mapTransfert.get("content"),false,'');
+                break;
+              case ActionHttp.INFO_TABLE:
+                this.tableInfo=mapTransfert.get('content');
+                this.colonneDataSource.data=this.tableInfo['columns']; 
+                this.columnsSize=this.tableInfo['columns'].length;   
+                this.tabsTableVisible=true;
+                if(this.gaindeService.currentMetaConnection && this.currentKeyspaceName) {
+                 for (let i = 0; i < this.gaindeService.currentMetaConnection.length; i++) {
+                   if(this.gaindeService.currentMetaConnection[i]['name']===this.currentKeyspaceName)
+                     {
+                       this.treeControl.expand(this.gaindeService.currentMetaConnection[i]);     
+                       
+                     }
+                 } 
+                
+               }
+                break;
+                case ActionHttp.INFO_TABLE_ERROR:
+                  this.openDialog('Erreur de Connection',mapTransfert.get("content"),false,'');
+                  break;
+              case ActionHttp.SAVE_KEYSPACE:
+                this.dataSource.data=mapTransfert.get('content');   
+                this.gaindeService.currentMetaConnection= mapTransfert.get('content');
+                  if(this.gaindeService.currentMetaConnection && this.currentKeyspaceName) {
+                    for (let i = 0; i < this.gaindeService.currentMetaConnection.length; i++) {
+                      if(this.gaindeService.currentMetaConnection[i]['name']===this.currentKeyspaceName)
+                        {
+                          this.treeControl.expand(this.gaindeService.currentMetaConnection[i]);
+                          this.currentNodeId=this.gaindeService.currentMetaConnection[i]['id'];
+                          
+                        }
+                    }  
+                    this.openSnackBar('Le keyspace '+this.currentKeyspaceName+' a été ajouté avec succès','');
+                    this.addKeyspaceVisible=false;
+                  }
+                break;          
+              case ActionHttp.SAVE_KEYSPACE_ERROR:                
+                this.openDialog('Keyspace',mapTransfert.get("content"),false,'');
+                break;   
+              case ActionHttp.INFO_KEYSPACE:                
+                this.keyspaceInfo=mapTransfert.get('content');
+                this.createKeyspaceVisible=true;
+                console.log('INFO_KEYSPACE  : ' + JSON.stringify(this.keyspaceInfo));
+                break;   
+              case ActionHttp.INFO_KEYSPACE_ERROR:                
+                this.openDialog('INFO Keyspace',mapTransfert.get("content"),false,'');
+                break;  
+            default:
+              break;
+         }
+      });     
   }
   openSnackBar(message: string, action: string) {
     this.snackBar.open(message, action, {
-      duration: 100000,
+      duration: 3000,
       // here specify the position
       verticalPosition: 'top',
       panelClass: ['green-snackbar']
@@ -198,7 +216,7 @@ export class ViewKeyspaceComponent implements OnInit {
       console.log('onClickShowTabColonne  : ' + JSON.stringify(this.currentTableKeys));  
       console.log('onClickShowTabColonne event : ' + this.selectedPageIndex);  
       if(this.currentTableKeys && this.selectedPageIndex==1){
-        this.gaindeService.getAllDatas(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
+        this.gaindeService.getAllDatatable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
       }   
   }
   onClickRowTable(row){
