@@ -12,31 +12,55 @@
   </mat-horizontal-stepper>
   <div>
 
-    <!--<form [formGroup]="createTableForm" (ngSubmit)="onClickSaveKeyspace()">
-      <div class="form-group">
-          <label for="name">Nom de la colonne</label>
-          <input id="name" class="form-control" formControlName="name" >
-      </div>
-      <div class="form-group">
-          <label for="strategy">Type de la colonne</label>
-          <select id="strategy" class="form-control" formControlName="strategy" >
-          <option value="Text">Text</option>                            
-          </select>
-      </div>
-                                              
+    <form [formGroup]="formTable" (ngSubmit)="onSubmitTable()">
+      <div class="row form-group">
+           <div class="col-4">
+
+           </div>
+          <label class="col-3" for="name">Nom de la Table</label>
+          <div class="col-5">
+            <input id="name" class="form-control" formControlName="name" >
+        </div>
+      </div>   
       <div class="row">
-          <div class="col-xs-4 col-md-4 col-lg-4">
-              
+        <div class="col-4">
+
+        </div>
+        <label class="col-3" >Nom de la colonne</label>
+        <label class="col-5" >type de la colonne</label>
+      </div>   
+      <div formArrayName="ligneColumns"
+            *ngFor="let item of formTable.get('ligneColumns').controls; let i = index;">
+            <div class="row" [formGroupName]="i">  
+              <div class="col-4">
+
+              </div>           
+              <div class="col-3">
+                 <input class="form-control" formControlName="name" placeholder="">  
+              </div> 
+              <div class="col-5">          
+                  <select id="type" class="form-control" formControlName="type" placeholder="type de colonne">
+                      <option value="Text">Text</option>                            
+                  </select>   
+              </div>                          
+            </div>
+        </div>
+      
+      <div class="row" style="margin-top: 30px;">
+          <div class="col-xs-4 col-md-4 col-lg-4">              
           </div>
           <div class="col-xs-4 col-md-4 col-lg-4">
-              <button type="submit" class="btn btn-success boutonSave" [disabled]="keyspaceForm.invalid" >
-                  Enregistrer 
+              <button type="button" class="btn btn-primary"  matTooltip="Ajouter une Ligne" (click)="onClickAddLigneColumn()">
+                <mat-icon >add</mat-icon> 
+                   
               </button> 
           </div>
           <div class="col-xs-4 col-md-4 col-lg-4">
-              
+            <button type="submit" class="btn btn-success boutonSave" [disabled]="formTable.invalid" >
+              Enregistrer 
+          </button> 
           </div>
       </div>
   </form>
--->
+
   </div>

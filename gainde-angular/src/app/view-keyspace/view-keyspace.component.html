@@ -103,76 +103,80 @@
                         </div>
                         <mat-tab-group class="tabTableGainde" (click)="onClickShowKeyspace()" [(selectedIndex)]="selectedKeysPageIndex">
                             <mat-tab label="Infos" > 
-                                <div *ngIf="keyspaceInfo">
-                                    <div class="row keyspaceRow">                                   
-                                        <label  class="col col-form-label">Nom</label>                                 
-                                        <div class="col">
-                                        <span>{{keyspaceInfo['name']}}</span>
+                                <div>
+                                    <div *ngIf="keyspaceInfo">
+                                        <div class="row keyspaceRow">                                   
+                                            <label  class="col col-form-label">Nom</label>                                 
+                                            <div class="col">
+                                            <span>{{keyspaceInfo['name']}}</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="row keyspaceRow">     
-                                        <label  class="col col-form-label">Réplication Stratégy</label>                               
-                                        <div class="col">
-                                        <span>{{keyspaceInfo['strategy']}}</span>
+                                        <div class="row keyspaceRow">     
+                                            <label  class="col col-form-label">Réplication Stratégy</label>                               
+                                            <div class="col">
+                                            <span>{{keyspaceInfo['strategy']}}</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="row keyspaceRow">
-                                        <label  class="col col-form-label">Réplication Factor</label>
-                                        <div class="col">
-                                        <span>{{keyspaceInfo['replication']}}</span>
+                                        <div class="row keyspaceRow">
+                                            <label  class="col col-form-label">Réplication Factor</label>
+                                            <div class="col">
+                                            <span>{{keyspaceInfo['replication']}}</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="row keyspaceRow">
-                                        <label  class="col col-form-label">DURABLE_WRITES</label>
-                                        <div class="col">
-                                        <span >{{keyspaceInfo['durableWrite']}}</span>
+                                        <div class="row keyspaceRow">
+                                            <label  class="col col-form-label">DURABLE_WRITES</label>
+                                            <div class="col">
+                                            <span >{{keyspaceInfo['durableWrite']}}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </mat-tab>
                             <mat-tab  > 
                                 <ng-template matTabLabel>
-                                    <span [matBadge]="keyspaceInfo['tables'].length" matBadgeColor="warn">Tables</span>
+                                    <span [matBadge]="keyspaceInfo['tables']?keyspaceInfo['tables'].length:0" matBadgeColor="warn">Tables</span>
                                 </ng-template>
-                                <div class="row">                                       
-                                        <div class="col-12">
-                                            <mat-form-field >
-                                                <input matInput (keyup)="onApplyFilterTableKeyspace($event.target.value)" placeholder="Search"
-                                                [(ngModel)]="filterTableKeyspaceData">
-                                            </mat-form-field>                                                            
-                                        </div>                               
-                                 </div>
-                                <div class="row">                                       
-                                    <div class="col-12">
-                                        <mat-table  #table [dataSource]="tableKeyspaceInfoDataSource" >
-                                            <ng-container matColumnDef="tableName">
-                                            <mat-header-cell *matHeaderCellDef >
-                                                Nom de la Table 
-                                            </mat-header-cell>
-                                            <mat-cell *matCellDef="let name" class="columTraffic"                                       
-                                            class="actionClick"  (click)="onClickRowTable(currentConnection.name+'#'+keyspaceInfo['name']+'#'+name);">
-                                                {{name}}
-                                            </mat-cell>
-                                            </ng-container> 
-                                            <ng-container matColumnDef="tableAction">
-                                                <mat-header-cell *matHeaderCellDef >
-                                                <mat-icon class="actionAddTable" 
-                                                            (click)="onClickAddNewTable(currentConnection.name,keyspaceInfo['name'])"
-                                                             matTooltip="Ajouter table">
-                                                        add
-                                                </mat-icon> 
-                                            </mat-header-cell>   
-                                            <mat-cell *matCellDef="let name" class="columTraffic" >   
-                                                <mat-icon class="actionAddTable"  matTooltip="Editer table"
-                                                        (click)="onClickEditTable(currentConnection.name,keyspaceInfo['name'],name)" >
-                                                    create
-                                                </mat-icon>                                      
-                                            </mat-cell>                                     
-                                            </ng-container>                       
-                                            <mat-header-row *matHeaderRowDef="displayedColumnsTableKeys"></mat-header-row>
-                                            <mat-row  *matRowDef="let row; columns: displayedColumnsTableKeys;"></mat-row>         
-                                        </mat-table>
-                                    </div>
+                                <div *ngIf="keyspaceInfo['tables']">
+                                        <div class="row">                                       
+                                                <div class="col-12">
+                                                    <mat-form-field >
+                                                        <input matInput (keyup)="onApplyFilterTableKeyspace($event.target.value)" placeholder="Search"
+                                                        [(ngModel)]="filterTableKeyspaceData">
+                                                    </mat-form-field>                                                            
+                                                </div>                               
+                                        </div>
+                                        <div class="row">                                       
+                                            <div class="col-12">
+                                                <mat-table  #table [dataSource]="tableKeyspaceInfoDataSource" >
+                                                    <ng-container matColumnDef="tableName">
+                                                    <mat-header-cell *matHeaderCellDef >
+                                                        Nom de la Table 
+                                                    </mat-header-cell>
+                                                    <mat-cell *matCellDef="let name" class="columTraffic"                                       
+                                                    class="actionClick"  (click)="onClickRowTable(currentConnection.name+'#'+keyspaceInfo['name']+'#'+name);">
+                                                        {{name}}
+                                                    </mat-cell>
+                                                    </ng-container> 
+                                                    <ng-container matColumnDef="tableAction">
+                                                        <mat-header-cell *matHeaderCellDef >
+                                                        <mat-icon class="actionAddTable" 
+                                                                    (click)="onClickAddNewTable(currentConnection.name,keyspaceInfo['name'])"
+                                                                    matTooltip="Ajouter table">
+                                                                add
+                                                        </mat-icon> 
+                                                    </mat-header-cell>   
+                                                    <mat-cell *matCellDef="let name" class="columTraffic" >   
+                                                        <mat-icon class="actionAddTable"  matTooltip="Editer table"
+                                                                (click)="onClickEditTable(currentConnection.name,keyspaceInfo['name'],name)" >
+                                                            create
+                                                        </mat-icon>                                      
+                                                    </mat-cell>                                     
+                                                    </ng-container>                       
+                                                    <mat-header-row *matHeaderRowDef="displayedColumnsTableKeys"></mat-header-row>
+                                                    <mat-row  *matRowDef="let row; columns: displayedColumnsTableKeys;"></mat-row>         
+                                                </mat-table>
+                                            </div>
+                                        </div>
                                 </div>
                             </mat-tab>
                         </mat-tab-group> 
@@ -185,7 +189,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="strategy">Replication Stratégie</label>
-                                <select id="strategy" class="form-control" formControlName="strategy" >
+                                <select id="strategy" class="form-control" formControlName="strategy"  (change)="onStrategyChange()">
                                 <option value="SimpleStrategy">Simple Strategy</option>
                                 <option value="NetworkTopologyStrategy">Network Topology Strategy</option>                     
                                 </select>
@@ -194,10 +198,14 @@
                                 <label for="durableWrite">DURABLE_WRITES</label>
                                 <input id="durableWrite" class="form-control" formControlName="durableWrite" type="checkbox" >
                             </div>
-                            <div class="form-group">
+                            <div class="form-group" *ngIf="keyspaceForm.value.strategy == 'SimpleStrategy'">
                                 <label for="replication">Replication factory</label>
                                 <input id="replication" class="form-control" formControlName="replication" >
-                            </div>                                           
+                            </div>    
+                            <div class="form-group" *ngIf="keyspaceForm.value.strategy == 'NetworkTopologyStrategy'">
+                                <label for="replication">Nombre de DataCenter </label>
+                                <input id="dataCenter" class="form-control" formControlName="dataCenter" >
+                            </div>                                            
                             <div class="row">
                                 <div class="col-xs-4 col-md-4 col-lg-4">
                                     

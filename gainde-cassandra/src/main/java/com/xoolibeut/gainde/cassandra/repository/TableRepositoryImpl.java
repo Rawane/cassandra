@@ -1,6 +1,5 @@
 package com.xoolibeut.gainde.cassandra.repository;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 

@@ -2,8 +2,13 @@
 <div mat-dialog-content>
   <p>{{data.text}}</p>  
 </div>
-<div mat-dialog-actions >
-  <button mat-button   [mat-dialog-close]=""  *ngIf="data.btnCancel">Annuler</button>
-  <button mat-button [mat-dialog-close]="data.id" cdkFocusInitial [ngClass]="{'dialogActionCentral':!data.btnCancel,'dialogActionOk':data.btnCancel}">Ok</button>
+<div mat-dialog-actions class="row" >
+  <div class="col-auto mr-auto">
+    <button mat-button class="btn btn-gainder-danger"  [mat-dialog-close]=""  *ngIf="data.btnCancel">Annuler</button>
+  </div>
+  <div class="col-auto">
+    <button mat-button [mat-dialog-close]="data.id" cdkFocusInitial [ngClass]="{'btn btn-primary':true,'dialogActionCentral':!data.btnCancel,'dialogActionOk':data.btnCancel}">Ok</button>
+
+  </div>
 </div>
 

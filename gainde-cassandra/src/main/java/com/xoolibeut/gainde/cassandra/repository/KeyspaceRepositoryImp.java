@@ -22,9 +22,15 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 			throw new Exception("aucune session");
 		}
 		StringBuilder sb = new StringBuilder("CREATE KEYSPACE IF NOT EXISTS ").append(keyspaceDTO.getName())
-				.append(" WITH replication = {").append("'class':'").append(keyspaceDTO.getStrategy())
-				.append("','replication_factor':").append(keyspaceDTO.getReplication())
-				.append("} AND DURABLE_WRITES = " + keyspaceDTO.isDurableWrite() + ";");
+				.append(" WITH replication = {").append("'class':'").append(keyspaceDTO.getStrategy());
+				if("SimpleStrategy".equals(keyspaceDTO.getStrategy())){
+					sb.append("','replication_factor':").append(keyspaceDTO.getReplication());
+				}else {
+					keyspaceDTO.getDataCenter().forEach((key,value)->{
+						sb.append("','"+key+"':").append(value);
+					});					
+				}				
+				sb.append("} AND DURABLE_WRITES = " + keyspaceDTO.isDurableWrite() + ";");
 
 		String query = sb.toString();
 		session.execute(query);

@@ -17,10 +17,12 @@
     height: 18px;
     width: 14px;
 }
-.divTitleDialog{
-    background-color: sandybrown;
-}
 ::ng-deep .green-snackbar{
     background-color:green;
     color:white;
-   }
+}
+.btn-gainder-danger{
+    color: white;
+    background-color: #df5035;
+    font-size: 1rem;
+  }

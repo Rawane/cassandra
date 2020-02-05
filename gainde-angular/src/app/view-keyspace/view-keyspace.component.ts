@@ -235,8 +235,10 @@ export class ViewKeyspaceComponent implements OnInit {
   }
   onClickSaveKeyspace(){
     let  keyspaceDTO=new KeyspaceDTO(this.keyspaceForm.value['name'],this.keyspaceForm.value['strategy'],
-    this.keyspaceForm.value['replication'], this.keyspaceForm.value['durableWrite']);  
+    this.keyspaceForm.value['replication'], this.keyspaceForm.value['durableWrite'],this.keyspaceForm.value['dataCenter']);  
     this.currentKeyspaceName=this.keyspaceForm.value['name'];  
+    this.keyspaceInfo=JSON.parse(JSON.stringify(keyspaceDTO));
+    this.keyspaceInfo['tables']=[];
     this.gaindeService.saveKeyspace(this.currentConnection['name'],keyspaceDTO);
   }
   onClickShowTabColonne(){
@@ -267,6 +269,15 @@ export class ViewKeyspaceComponent implements OnInit {
   }
   onClickShowKeyspace(){
    
+  }
+  onStrategyChange(){
+    this.keyspaceForm.get('strategy').valueChanges.subscribe(val => {
+      if(val==='SimpleStrategy'){
+        this.keyspaceForm.get('replication').setValidators([Validators.required]);
+      }else{
+        this.keyspaceForm.get('replication').setValidators([]);
+      }
+    });
   }
   onZoomTable(){ 
     this.zoomData=!this.zoomData;
@@ -350,10 +361,12 @@ export class ViewKeyspaceComponent implements OnInit {
     this.keyspaceForm = this.formBuilder.group({    
       name: ['',Validators.required],
       strategy: ['',Validators.required],
-      replication: ['',Validators.required],
-      durableWrite:[true]
+      replication: [''],
+      durableWrite:[true],
+      dataCenter:[]
      
     });
+    
   }
 }
 

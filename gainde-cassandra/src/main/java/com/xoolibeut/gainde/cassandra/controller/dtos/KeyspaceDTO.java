@@ -1,7 +1,9 @@
 package com.xoolibeut.gainde.cassandra.controller.dtos;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -9,9 +11,18 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 public class KeyspaceDTO {
 	private String name;
 	private String strategy;
-	private String replication;
+	private String replication; 
+	private Map<String, String> dataCenter=new HashMap<>(); 
 	private boolean durableWrite = true;
 	private List<String> tables=new ArrayList<String>();
+
+	public Map<String, String> getDataCenter() {
+		return dataCenter;
+	}
+
+	public void setDataCenter(Map<String, String> dataCenter) {
+		this.dataCenter = dataCenter;
+	}
 
 	public String getName() {
 		return name;
