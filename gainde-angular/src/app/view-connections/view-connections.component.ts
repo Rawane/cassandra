@@ -29,6 +29,7 @@ export class ViewConnectionsComponent implements OnInit {
   saveOrUpdate:boolean=true;
   saveConnection:boolean;
   deleteConnection:boolean;
+  currentConnection:ConnectionDTO;
   constructor(private gaindeService:GaindeService,
     private formBuilder:FormBuilder,private dialog: MatDialog,private router:Router,private snackBar:MatSnackBar) { 
 
@@ -40,7 +41,7 @@ export class ViewConnectionsComponent implements OnInit {
       mapTransfert.forEach((key,item)=>{
         mapToString=mapToString+' '+item+'  value='+JSON.stringify(mapTransfert.get(item));        
       });   
-      console.log('ViewConnectionsComponent mapTransfert '+mapToString);     
+      //console.log('ViewConnectionsComponent mapTransfert '+mapToString);     
        switch (mapTransfert.get("type") as ActionHttp) {
          case ActionHttp.ALL_CONNECTION:
            this.connections=mapTransfert.get("content");           
@@ -112,6 +113,9 @@ private resetForm(){
     this.connectionForm.get('username').setValue(conn['username']);
     this.connectionForm.get('password').setValue(conn['password']);
     this.saveOrUpdate=false;
+    this.currentConnection=new ConnectionDTO(conn['name'],conn['ip'],
+    conn['port'], conn['username'],conn['password']); 
+    this.connectionForm.get('name').disable();
   }
   onClickNewConnection(){   
     this.connectionForm.get('name').setValue('');
@@ -120,6 +124,16 @@ private resetForm(){
     this.connectionForm.get('username').setValue('');
     this.connectionForm.get('password').setValue('');
     this.saveOrUpdate=true;
+    this.connectionForm.get('name').enable();
+  }
+  onClickCopyConnection(conn:JSON){   
+    this.connectionForm.get('name').setValue('Copy de '+conn['name']);
+    this.connectionForm.get('ip').setValue(conn['ip']);
+    this.connectionForm.get('port').setValue(conn['port']);
+    this.connectionForm.get('username').setValue(conn['username']);
+    this.connectionForm.get('password').setValue(conn['password']);
+    this.saveOrUpdate=true;
+    this.connectionForm.get('name').enable();
   }
   onClickConnectToCassandra(conn:JSON){
     //console.log('onConnectToCassandra  : ' + JSON.stringify(conn));   
@@ -140,9 +154,13 @@ private resetForm(){
 
   }
   onSubmitFormConnection(actionButton){   
-    //console.log('onConnectToCassandra  : ' + this.connectionForm.value['name']+'   actionButton '+actionButton);  
+    //console.log('onConnectToCassandra  : ' + this.connectionForm.value['name']+'   actionButton '+actionButton); 
+    
     let  connectDTO=new ConnectionDTO(this.connectionForm.value['name'],this.connectionForm.value['ip'],
-    this.connectionForm.value['port'], this.connectionForm.value['username'],this.connectionForm.value['password']);  
+    this.connectionForm.value['port'], this.connectionForm.value['username'],this.connectionForm.value['password']); 
+    if(this.connectionForm.get('name').disabled){
+      connectDTO.name=this.currentConnection.name;
+    } 
     if('save'===actionButton){       
         if(this.saveOrUpdate){
           this.gaindeService.saveConnection(connectDTO);       
@@ -150,7 +168,7 @@ private resetForm(){
           this.gaindeService.updateConnection(connectDTO);
         }
     }
-    else {
+    else {          
           this.gaindeService.currentConnection=connectDTO;
           this.gaindeService.connecToCassandra(connectDTO);
     }

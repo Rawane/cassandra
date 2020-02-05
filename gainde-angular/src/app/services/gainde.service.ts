@@ -28,7 +28,7 @@ export class GaindeService {
       .get<any>(environment['basePathGainde']+'/connection/all',this.httpOptions)
       .subscribe(
         (response) => {               
-         console.log('response  : ' + JSON.stringify(response));            
+        //console.log('response  : ' + JSON.stringify(response));            
            this.emitMapTransfertSubject(ActionHttp.ALL_CONNECTION,response);
         },
         (error) => {
@@ -61,8 +61,9 @@ export class GaindeService {
        this.emitMapTransfertSubject(ActionHttp.UPDATE_CONNECTION,connectionDTO);  
       },
       (error) => {
-        console.log('Erreur ! : ' + JSON.stringify(error));        
-        this.emitMapTransfertSubject(ActionHttp.UPDATE_CONNECTION,error['error']['error']);
+        console.log('Erreur ! : ' + JSON.stringify(error)); 
+        this.emitMapTransfertSubject(ActionHttp.UPDATE_CONNECTION_ERROR,error['error']['error']);    
+       
       }
     );    
   }
@@ -127,7 +128,7 @@ export class GaindeService {
       .get<JSON>(environment['basePathGainde']+'/connection/metadata/table/'+connectionName+'/'+keyspace+'/'+table,this.httpOptions)
       .subscribe(
         (response) => {               
-         console.log('response  : ' + JSON.stringify(response));   
+         //console.log('response  : ' + JSON.stringify(response));   
          this.emitMapTransfertSubject(ActionHttp.INFO_TABLE,response);   
         },
         (error) => {
@@ -141,7 +142,7 @@ export class GaindeService {
       .get<JSON[]>(environment['basePathGainde']+'/table/all/'+connectionName+'/'+keyspace+'/'+table,this.httpOptions)
       .subscribe(
         (response) => {               
-         console.log('response  : ' + JSON.stringify(response));   
+         //console.log('response  : ' + JSON.stringify(response));   
          this.emitMapTransfertSubject(ActionHttp.ALL_DATA_TABLE,response);   
         },
         (error) => {

@@ -1,0 +1,21 @@
+<div class="divTitleDialog"><h1 mat-dialog-title>Nombre de colonne</h1>
+</div>
+  <div mat-dialog-content>
+      <label >Vous pouvez ajouter ou supprimer des colonnes ultérieurement</label>
+      <div class="row" >
+        <div class="col-5"></div>
+        <div class="col-7" style="text-align:center;">
+          <input type="number" value="{{data.counter}}" class="form-control" style="width:60px;text-align:center;" > 
+        </div>
+      </div>
+  </div>
+  <div mat-dialog-actions class="row" >
+      <div class="col">
+        <button mat-button   [mat-dialog-close]="" class="btn btn-danger">Annuler</button>
+      </div>
+      <div class="col">
+        <button mat-button [mat-dialog-close]="data.counter" cdkFocusInitial class="btn btn-primary" >Valider</button>
+      </div>
+  </div>
+
+

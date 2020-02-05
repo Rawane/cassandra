@@ -1,24 +1,28 @@
 <div class="row">
     <div class="col-xs-3 col-md-6 col-lg-3">  
+        <div class="row" *ngIf="connections && connections.length>9">
+            <div class="col-md-5 col-lg-4"> 
+            </div>
+            <div class="col-md-7 col-lg-8"> 
+                <button type="button" class="btn btn-primary" matTooltip="Ajouter une connection"  (click)="onClickNewConnection()" >
+                    <mat-icon >add</mat-icon> 
+                </button>
+            </div>
+        </div>
         <mat-list>            
-            <mat-list-item *ngFor="let conn of connections">           
-             
-                      <mat-icon mat-list-icon class="iconConnection" (click)="onClickShowInfoConnection(conn)" >folder</mat-icon>
-                      <h4 mat-line (dblclick)="onDblClickConnectToCassandra(conn)" class="iconConnection">{{conn.name}}</h4>
-                    <p mat-line *ngIf="conn.ip" > {{conn.ip}}:{{conn.port}}</p>               
-                  
-                    <mat-icon class="iconConnection actionDelete" (click)="onClickRemoveConnection(conn.name)" >delete</mat-icon>                   
-                  
-            
-             
-            </mat-list-item>           
-          </mat-list>
+                <mat-list-item *ngFor="let conn of connections">     
+                    <mat-icon mat-list-icon class="iconConnection" (click)="onClickShowInfoConnection(conn)" matTooltip="Afficher">folder</mat-icon>
+                    <h4 mat-line (dblclick)="onDblClickConnectToCassandra(conn)" class="iconConnection">{{conn.name}}</h4>
+                    <p mat-line *ngIf="conn.ip" > {{conn.ip}}:{{conn.port}}</p>           
+                    <mat-icon class="iconConnection actionDelete" (click)="onClickRemoveConnection(conn.name)" matTooltip="Supprimer">delete</mat-icon>                      
+                </mat-list-item>           
+        </mat-list>
           <div>
                 <div class="row">
                     <div class="col-md-5 col-lg-4"> 
                     </div>
                     <div class="col-md-7 col-lg-8"> 
-                        <button type="button" class="btn btn-primary"   (click)="onClickNewConnection()" >
+                        <button type="button" class="btn btn-primary" matTooltip="Ajouter une connection"  (click)="onClickNewConnection()" >
                             <mat-icon >add</mat-icon> 
                         </button>
                     </div>
@@ -27,11 +31,20 @@
     </div>
     <div class="col-xs-9 col-md-6 col-lg-9"> 
         <div>
-
+            <div class="row" *ngIf="!saveOrUpdate && currentConnection"> 
+                <div class="col-xs-6 col-md-6 col-lg-6"> 
+                    <h4>{{currentConnection.name}}</h4>
+                 </div>
+                 <div class="col-xs-6 col-md-6 col-lg-6"> 
+                    <button type="button" class="btn btn-primary" matTooltip="Copier la connection"  (click)="onClickCopyConnection(currentConnection)" > 
+                         <mat-icon   >exposure_plus_2</mat-icon> 
+                    </button>
+                </div>
+            </div>
             <form [formGroup]="connectionForm" (ngSubmit)="onSubmitFormConnection(actionButton)">
                 <div class="form-group">
                     <label for="name">Nom de la Connection</label>
-                    <input id="name" class="form-control" formControlName="name" >
+                    <input id="name" class="form-control" formControlName="name" >                  
                 </div>
                 <div class="form-group">
                     <label for="ip">Hostname</label>

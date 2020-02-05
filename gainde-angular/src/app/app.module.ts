@@ -12,7 +12,7 @@ import { MatAutocompleteModule,MatListModule,MatTabsModule,MatBadgeModule,MatSte
 import { MenuComponent } from './menu/menu.component';
 import { ViewConnectionsComponent,DialogInfoConnectionComponent } from './view-connections/view-connections.component';
 import{GaindeService} from './services/gainde.service';
-import { ViewKeyspaceComponent,DialogInfoKeyspaceComponent } from './view-keyspace/view-keyspace.component';
+import { ViewKeyspaceComponent,DialogInfoKeyspaceComponent ,DialogTableColumnInfoComponent} from './view-keyspace/view-keyspace.component';
 import { EditTableComponent } from './edit-table/edit-table.component';
 
 
@@ -25,6 +25,7 @@ import { EditTableComponent } from './edit-table/edit-table.component';
     DialogInfoConnectionComponent,
     ViewKeyspaceComponent,
     DialogInfoKeyspaceComponent,
+    DialogTableColumnInfoComponent,
     EditTableComponent
     
   ],
@@ -54,7 +55,7 @@ import { EditTableComponent } from './edit-table/edit-table.component';
     MatSnackBarModule,
     MatStepperModule
   ],
-  entryComponents:[DialogInfoConnectionComponent,DialogInfoKeyspaceComponent],
+  entryComponents:[DialogInfoConnectionComponent,DialogInfoKeyspaceComponent,DialogTableColumnInfoComponent],
   providers: [GaindeService],
   bootstrap: [AppComponent]
 })

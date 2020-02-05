@@ -35,6 +35,7 @@ export class ViewKeyspaceComponent implements OnInit {
   @ViewChild(MatSort, {static: false}) sort: MatSort;
   tableInfo:JSON;
   keyspaceInfo:JSON;
+  tableKeyspaceInfoDataSource=new MatTableDataSource<JSON>();
   displayedColumns=['name','type','primaraKey','indexed'];
   displayedColumnsPrimary=['key'];
   displayedColumnsTableKeys=['tableName','tableAction'];
@@ -42,6 +43,8 @@ export class ViewKeyspaceComponent implements OnInit {
   displayedColumnsTableData: string[];
   colonneDataSource=new MatTableDataSource<JSON>();
   tableDatasDataSource=new MatTableDataSource<JSON>();
+  filterTableData='';
+  filterTableKeyspaceData='';
   bigTable:boolean=false;
   currentTableKeys:string[];
   selectedPageIndex=0;
@@ -52,6 +55,7 @@ export class ViewKeyspaceComponent implements OnInit {
   columnsSize:number;
   keyspaceForm:FormGroup; 
   paginationTableDataSize;
+  zoomData=false;
   hasChild = (_: number, node: Meta) => !!node.metas && node.metas.length > 0;
   constructor(private gaindeService:GaindeService,private router:Router,private formBuilder:FormBuilder,
    private snackBar:MatSnackBar,private dialog: MatDialog) {
@@ -71,7 +75,7 @@ export class ViewKeyspaceComponent implements OnInit {
       mapTransfert.forEach((key,item)=>{
         mapToString=mapToString+' '+item+'  value='+JSON.stringify(mapTransfert.get(item));        
       });   
-      console.log('ViewKeyspaceComponent mapTransfert '+mapToString);  
+     // console.log('ViewKeyspaceComponent mapTransfert '+mapToString);  
       switch (mapTransfert.get("type") as ActionHttp)  {
             case ActionHttp.CLOSE_CONNECTION:
             {
@@ -130,8 +134,11 @@ export class ViewKeyspaceComponent implements OnInit {
             case ActionHttp.INFO_KEYSPACE: 
             {               
                 this.keyspaceInfo=mapTransfert.get('content');
+                this.tableKeyspaceInfoDataSource.data=mapTransfert.get('content')['tables'];
+                this.tableKeyspaceInfoDataSource.filter = '';               
+                this.filterTableKeyspaceData='';
                 this.createKeyspaceVisible=true;
-                console.log('INFO_KEYSPACE  : ' + JSON.stringify(this.keyspaceInfo));
+                //console.log('INFO_KEYSPACE  : ' + JSON.stringify(this.keyspaceInfo));
                 break;   
             }
             case ActionHttp.INFO_KEYSPACE_ERROR: 
@@ -142,12 +149,13 @@ export class ViewKeyspaceComponent implements OnInit {
             case ActionHttp.ALL_DATA_TABLE:              
             { 
               this.displayedColumnsTableData=mapTransfert.get("content")['columns'];
-              console.log('displayedColumnsTableData '+JSON.stringify(this.displayedColumnsTableData));
+             // console.log('displayedColumnsTableData '+JSON.stringify(this.displayedColumnsTableData));
               this.tableDatasDataSource.data=mapTransfert.get("content")['data'];
-              this.paginationTableDataSize=mapTransfert.get("content")['data'].length;
-              console.log('data '+ this.tableDatasDataSource.data[0]['keyspace_name']);
-              this.tableDatasDataSource.paginator = this.paginator;
+              this.paginationTableDataSize=mapTransfert.get("content")['data'].length;            
+              this.tableDatasDataSource.paginator = this.paginator; 
               this.tableDatasDataSource.sort = this.sort;      
+              this.tableDatasDataSource.filter = '';
+              this.filterTableData='';
               this.tableDatasDataSource.sortingDataAccessor = (item, property) => {
                 //console.log(item)
                 switch (property) {
@@ -169,11 +177,18 @@ export class ViewKeyspaceComponent implements OnInit {
          }
       });     
   }
-  applyFilter(filterValue: string) {
+  onApplyFilter(filterValue: string) {
     this.tableDatasDataSource.filter = filterValue.trim().toLowerCase();
     if (this.tableDatasDataSource.paginator) {
         this.tableDatasDataSource.paginator.firstPage();
     }
+  }
+  onApplyFilterTableKeyspace(filterVal: string) {
+    console.log('onApplyFilterTableKeyspace '+filterVal);
+    this.tableKeyspaceInfoDataSource.filter = filterVal.trim().toLowerCase(); 
+    if (this.tableKeyspaceInfoDataSource.paginator) {
+      this.tableKeyspaceInfoDataSource.paginator.firstPage();
+  }  
   }
   onClickCloseConnection(){
     if(this.currentConnection){
@@ -184,6 +199,7 @@ export class ViewKeyspaceComponent implements OnInit {
   onClickRowNode(node){
     //console.log('onClickRowNode  : ' + JSON.stringify(node));
     this.currentNodeId=node['id']; 
+    this.treeControl.expand(node);
     if(node['type']===1){
       this.tabsTableVisible=false;
       this.addKeyspaceVisible=false;
@@ -215,6 +231,7 @@ export class ViewKeyspaceComponent implements OnInit {
     this.initForm();
     this.createKeyspaceVisible=true;
     this.addKeyspaceVisible=true;
+    this.zoomData=false;
   }
   onClickSaveKeyspace(){
     let  keyspaceDTO=new KeyspaceDTO(this.keyspaceForm.value['name'],this.keyspaceForm.value['strategy'],
@@ -225,7 +242,7 @@ export class ViewKeyspaceComponent implements OnInit {
   onClickShowTabColonne(){
       console.log('onClickShowTabColonne  : ' + JSON.stringify(this.currentTableKeys));  
       console.log('onClickShowTabColonne event : ' + this.selectedPageIndex);  
-      if(this.currentTableKeys && this.selectedPageIndex==1){
+      if(this.currentTableKeys){
         this.gaindeService.getAllDataTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
       }   
   }
@@ -241,7 +258,9 @@ export class ViewKeyspaceComponent implements OnInit {
     }
   }
   onClickAddNewTable(connectionName:string,keyspaceName:string){
-    this.router.navigate(['/editTable']);
+    console.log('onClickAddNewTable connectionName='+connectionName+' keyspace '+keyspaceName);
+    this.openDialogTableInfo(5);
+    //this.router.navigate(['/editTable']);
   }
   onClickEditTable(connectionName:string,keyspaceName:string,tableName:string){
     this.router.navigate(['/editTable']);
@@ -249,12 +268,16 @@ export class ViewKeyspaceComponent implements OnInit {
   onClickShowKeyspace(){
    
   }
-  openDialog(pTitle:string,pText:string, cancelButton:boolean,pId:string): void {
+  onZoomTable(){ 
+    this.zoomData=!this.zoomData;
+    console.log('onZoomTable  : ' + this.zoomData);
+  }
+  private openDialog(pTitle:string,pText:string, cancelButton:boolean,pId:string): void {
     const dialogRef = this.dialog.open(DialogInfoKeyspaceComponent, {
       width: '500px',
       data: {text: pText,title:pTitle,btnCancel:cancelButton,id:pId}
     });
-
+  
     dialogRef.afterClosed().subscribe(result => {     
       if(result!=null && result.length>1){
         console.log('keyspaceInfoSubscription  : ' + result);
@@ -269,6 +292,23 @@ export class ViewKeyspaceComponent implements OnInit {
 
     });
   }
+  private openDialogTableInfo(counter:number): void {
+    const dialogRefTableInfo = this.dialog.open(DialogTableColumnInfoComponent, {
+      width: '500px',
+     
+      data: {counter: counter}
+    });
+  
+    dialogRefTableInfo.afterClosed().subscribe(result => {     
+      
+      if(result!=null){
+       console.log("openDialogTableInfo "+result);
+       this.router.navigate(['/editTable']);
+      }
+
+    });
+  }
+  
   private doAfterGetInfoTable(mapTransfert: Map<string, any>) {
     this.tableInfo = mapTransfert.get('content');
     this.colonneDataSource.data = this.tableInfo['columns'];
@@ -330,3 +370,18 @@ export class DialogInfoKeyspaceComponent implements OnInit {
   }
 
 }
+
+@Component({
+  selector: 'app-dialog-table-column',
+  templateUrl: './dialog-table-column-info.component.html' ,
+  styleUrls: ['./view-keyspace.component.scss']
+})
+export class DialogTableColumnInfoComponent implements OnInit {
+
+  constructor( public dialogRef: MatDialogRef<ViewKeyspaceComponent>,@Inject(MAT_DIALOG_DATA) public data: DialogData) { }
+
+  ngOnInit() {
+  }
+
+}
+

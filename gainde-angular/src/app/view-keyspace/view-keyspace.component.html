@@ -1,17 +1,23 @@
 <div class="divConentKeyspace" *ngIf="homeKeyspaceVisible">
         <div class="row">            
-            <div class="col-xs-6 col-md-6 col-lg-8"> 
+            <div class="col-xs-6 col-md-4 col-lg-2"> 
                 <h4>{{currentConnection.name}}</h4>    
             </div>
-            <div class="col-xs-3 col-md-3 col-lg-2"> 
-                <button type="button" class="btn btn-success" (click)="onClickAddKeyspace()" >Ajouter Keyspace</button>
+            <div class="col-xs-3 col-md-2 col-lg-1"> 
+                <button type="button" class="btn btn-success" (click)="onClickAddKeyspace()" matTooltip="Ajouter Keyspace">
+                    <mat-icon >add</mat-icon> 
+                </button>
             </div>
-            <div class="col-xs-3 col-md-3 col-lg-2"> 
-                <button type="button" class="btn btn-primary" (click)="onClickCloseConnection()" >Fermer Connection</button>
+            <div class="col-xs-3 col-md-2 col-lg-1"> 
+                <button type="button" class="btn" (click)="onClickCloseConnection()" matTooltip="Fermer Connection">
+                    <mat-icon >close</mat-icon> 
+                </button>
+            </div>
+            <div class="col-md-6 col-lg-8"> 
             </div>
         </div>
-        <div class="row">    
-            <div class="col-xs-5 col-md-6 col-lg-4">            
+        <div class="row rowContent">    
+            <div   [ngClass]="{'col-xs-5 col-md-6 col-lg-4':!zoomData,'tableDataNotZomm':zoomData}">            
                 <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="police-tree">
                     <!-- This is the tree node template for leaf nodes -->
                     <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
@@ -71,40 +77,56 @@
                     </mat-nested-tree-node>
                 </mat-tree>
             </div>
-            <div class="col-xs-7 col-md-6 col-lg-8"> 
+            <div  [ngClass]="{'col-xs-7 col-md-6 col-lg-8':!zoomData,'tableDataZomm col-xs-12 col-md-12 col-lg-12':zoomData}"> 
                 <div  *ngIf="createKeyspaceVisible && !tabsTableVisible">
                     <div *ngIf="!addKeyspaceVisible">
-                        <div class="row" >                             
-                            <div class="col-md-5 col-lg-4"> 
+                        <div class="row" *ngIf="keyspaceInfo" >                             
+                            <div class="col-md-3 col-lg-2"> 
                             </div>
-                            <div class="col-md-7 col-lg-8"> 
-                                <h4>{{keyspaceInfo.name}}</h4> 
+                            <div class="col-md-10 col-lg-10"> 
+                                <div class="row" > 
+                                    <div class="col"> 
+                                            <h4>{{keyspaceInfo.name}}</h4>              
+                                              
+                                     </div>
+                                        <div class="col">                                                                     
+                                            <button type="button" class="btn btn-success" 
+                                                (click)="onClickAddNewTable(currentConnection.name,keyspaceInfo['name'])"
+                                                matTooltip="Ajouter Table">
+                                                    <mat-icon >add</mat-icon> 
+                                                </button>
+                                        </div>
+                                </div>
+                                
                             </div>
+                           
                         </div>
-                        <mat-tab-group class="tabKeyspace" (click)="onClickShowKeyspace()" [(selectedIndex)]="selectedKeysPageIndex">
-                            <mat-tab label="Infos"> 
-                                <div class="row keyspaceRow">
-                                    <label  class="col-sm-2 col-form-label">Nom</label>
-                                    <div class="col-sm-10">
-                                      <span>{{keyspaceInfo['name']}}</span>
+                        <mat-tab-group class="tabTableGainde" (click)="onClickShowKeyspace()" [(selectedIndex)]="selectedKeysPageIndex">
+                            <mat-tab label="Infos" > 
+                                <div *ngIf="keyspaceInfo">
+                                    <div class="row keyspaceRow">                                   
+                                        <label  class="col col-form-label">Nom</label>                                 
+                                        <div class="col">
+                                        <span>{{keyspaceInfo['name']}}</span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="row keyspaceRow">
-                                    <label  class="col-sm-2 col-form-label">Réplication Stratégy</label>
-                                    <div class="col-sm-10">
-                                      <span>{{keyspaceInfo['strategy']}}</span>
+                                    <div class="row keyspaceRow">     
+                                        <label  class="col col-form-label">Réplication Stratégy</label>                               
+                                        <div class="col">
+                                        <span>{{keyspaceInfo['strategy']}}</span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="row keyspaceRow">
-                                    <label  class="col-sm-2 col-form-label">Réplication Factor</label>
-                                    <div class="col-sm-10">
-                                      <span>{{keyspaceInfo['replication']}}</span>
+                                    <div class="row keyspaceRow">
+                                        <label  class="col col-form-label">Réplication Factor</label>
+                                        <div class="col">
+                                        <span>{{keyspaceInfo['replication']}}</span>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="row keyspaceRow">
-                                    <label  class="col-sm-2 col-form-label">DURABLE_WRITES</label>
-                                    <div class="col-sm-10">
-                                      <span >{{keyspaceInfo['durableWrite']}}</span>
+                                    <div class="row keyspaceRow">
+                                        <label  class="col col-form-label">DURABLE_WRITES</label>
+                                        <div class="col">
+                                        <span >{{keyspaceInfo['durableWrite']}}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </mat-tab>
@@ -112,33 +134,46 @@
                                 <ng-template matTabLabel>
                                     <span [matBadge]="keyspaceInfo['tables'].length" matBadgeColor="warn">Tables</span>
                                 </ng-template>
-                                <mat-table  #table [dataSource]="keyspaceInfo.tables" >
-                                    <ng-container matColumnDef="tableName">
-                                      <mat-header-cell *matHeaderCellDef >
-                                          Nom de la Table 
-                                    </mat-header-cell>
-                                      <mat-cell *matCellDef="let name" class="columTraffic"                                       
-                                      class="actionClick"  (click)="onClickRowTable(currentConnection.name+'#'+keyspaceInfo['name']+'#'+name);">
-                                        {{name}}
-                                     </mat-cell>
-                                    </ng-container> 
-                                    <ng-container matColumnDef="tableAction">
-                                        <mat-header-cell *matHeaderCellDef >
-                                         <mat-icon class="actionAddTable" 
-                                                     (click)="onClickAddNewTable(currentConnection.name,keyspaceInfo['name'])" >
-                                                add
-                                        </mat-icon> 
-                                      </mat-header-cell>   
-                                      <mat-cell *matCellDef="let name" class="columTraffic" >   
-                                        <mat-icon class="actionAddTable" 
-                                                 (click)="onClickEditTable(currentConnection.name,keyspaceInfo['name'],name)" >
-                                            create
-                                         </mat-icon>                                      
-                                     </mat-cell>                                     
-                                      </ng-container>                       
-                                    <mat-header-row *matHeaderRowDef="displayedColumnsTableKeys"></mat-header-row>
-                                     <mat-row  *matRowDef="let row; columns: displayedColumnsTableKeys;"></mat-row>         
-                                  </mat-table>
+                                <div class="row">                                       
+                                        <div class="col-12">
+                                            <mat-form-field >
+                                                <input matInput (keyup)="onApplyFilterTableKeyspace($event.target.value)" placeholder="Search"
+                                                [(ngModel)]="filterTableKeyspaceData">
+                                            </mat-form-field>                                                            
+                                        </div>                               
+                                 </div>
+                                <div class="row">                                       
+                                    <div class="col-12">
+                                        <mat-table  #table [dataSource]="tableKeyspaceInfoDataSource" >
+                                            <ng-container matColumnDef="tableName">
+                                            <mat-header-cell *matHeaderCellDef >
+                                                Nom de la Table 
+                                            </mat-header-cell>
+                                            <mat-cell *matCellDef="let name" class="columTraffic"                                       
+                                            class="actionClick"  (click)="onClickRowTable(currentConnection.name+'#'+keyspaceInfo['name']+'#'+name);">
+                                                {{name}}
+                                            </mat-cell>
+                                            </ng-container> 
+                                            <ng-container matColumnDef="tableAction">
+                                                <mat-header-cell *matHeaderCellDef >
+                                                <mat-icon class="actionAddTable" 
+                                                            (click)="onClickAddNewTable(currentConnection.name,keyspaceInfo['name'])"
+                                                             matTooltip="Ajouter table">
+                                                        add
+                                                </mat-icon> 
+                                            </mat-header-cell>   
+                                            <mat-cell *matCellDef="let name" class="columTraffic" >   
+                                                <mat-icon class="actionAddTable"  matTooltip="Editer table"
+                                                        (click)="onClickEditTable(currentConnection.name,keyspaceInfo['name'],name)" >
+                                                    create
+                                                </mat-icon>                                      
+                                            </mat-cell>                                     
+                                            </ng-container>                       
+                                            <mat-header-row *matHeaderRowDef="displayedColumnsTableKeys"></mat-header-row>
+                                            <mat-row  *matRowDef="let row; columns: displayedColumnsTableKeys;"></mat-row>         
+                                        </mat-table>
+                                    </div>
+                                </div>
                             </mat-tab>
                         </mat-tab-group> 
                     </div>
@@ -187,7 +222,7 @@
                         <h4>{{tableInfo.name}}</h4> 
                     </div>
                 </div>
-                    <mat-tab-group class="tabInfoConent" (click)="onClickShowTabColonne()" [(selectedIndex)]="selectedPageIndex">
+                    <mat-tab-group class="tabTableGainde"   [(selectedIndex)]="selectedPageIndex">
                         <mat-tab label="Infos">
                             <div >
                                 <mat-table  #table [dataSource]="tableInfo.primaryKey"   >
@@ -219,11 +254,25 @@
                                   </mat-table> 
                             </div>
                         </mat-tab>
-                        <mat-tab label="Données">
-                            <div *ngIf="displayedColumnsTableData && !bigTable">
-                                <mat-form-field>
-                                    <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
-                                  </mat-form-field>
+                        <mat-tab >
+                            <ng-template matTabLabel>
+                                <span   (click)="onClickShowTabColonne()">Données</span>
+                            </ng-template>
+                            <div *ngIf="displayedColumnsTableData && !bigTable">                               
+                                    <div class="row">                                       
+                                        <div class="col-12">
+                                            <mat-form-field style="margin-left:20px;">
+                                                <input matInput (keyup)="onApplyFilter($event.target.value)" placeholder="Filter"
+                                                [(ngModel)]="filterTableData">
+                                            </mat-form-field>
+                                            
+                                                <mat-icon  (click)="onZoomTable()" style="margin-left: 20px;" class="actionClick" matTooltip="Agrandir">
+                                                    {{zoomData?'zoom_out':'zoom_in'}}
+                                                </mat-icon> 
+                                         
+                                        </div>                                      
+                                       
+                                     </div>
                                 <mat-table  #table [dataSource]="tableDatasDataSource" matSort >
                                     <ng-container  *ngFor="let colName of displayedColumnsTableData" [matColumnDef]="colName">
                                         <mat-header-cell *matHeaderCellDef mat-sort-header>
@@ -236,10 +285,10 @@
                                     </ng-container>                                                        
                                     <mat-header-row  *matHeaderRowDef="displayedColumnsTableData"></mat-header-row>
                                     <mat-row  *matRowDef="let row; columns: displayedColumnsTableData;"></mat-row>         
-                                </mat-table>  
-                                <mat-paginator    [length]="paginationTableDataSize"   [pageSize]="10"  [showFirstLastButtons]="true">
-                                </mat-paginator>                             
+                                </mat-table>                                                            
                              </div>
+                             <mat-paginator    [length]="paginationTableDataSize"   [pageSize]="10"  [showFirstLastButtons]="true" [hidden]="!tableDatasDataSource.data.length && !bigTable">
+                            </mat-paginator>  
                         </mat-tab>
                         <mat-tab >
                             <ng-template matTabLabel>
