@@ -64,9 +64,9 @@ public class TableRepositoryImpl implements TableRepository {
 		}
 		List<ColumnMetadata> columns = cluster.getMetadata().getKeyspace(keyspaceName).getTable(tableName).getColumns();
 		ResultSet resulSet = session.execute(QueryBuilder.select().from(keyspaceName, tableName));
-		ResultSet rs = session.execute("SELECT cql_version FROM system.local;");
-		Row rowOne = rs.one();
-		LOGGER.info("rowOne  " + rowOne);
+		//ResultSet rs = session.execute("SELECT cql_version FROM system.local;");
+		//Row rowOne = rs.one();
+		//LOGGER.info("rowOne  " + rowOne);
 		ObjectMapper mapper = new ObjectMapper();		
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
