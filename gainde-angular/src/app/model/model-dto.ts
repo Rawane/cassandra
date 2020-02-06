@@ -49,13 +49,15 @@ export enum ActionHttp{
     REMOVE_TABLE,
     REMOVE_TABLE_ERROR,
     ALL_DATA_TABLE,
-    ALL_DATA_TABLE_ERROR
+    ALL_DATA_TABLE_ERROR,
+    ADD_TABLE,
+    ADD_TABLE_ERROR
 }
 export class TableDTO {
     columns:Array<ColumnDTO>=new Array();
     indexColumns:Array<IndexColumn>=new Array();
     constructor( 
-        public tableName:string
+        public name:string
        ){
 
     }
@@ -79,3 +81,34 @@ export class IndexColumn {
        ){
     }   
 }
+
+export const TypeColonnes = [
+    {name:'ASCII',value:1}, 
+    {name:'TEXT',value:10},
+    {name:'BIGINT',value:2},
+    {name:'BLOB',value:3},
+    {name:'BOOLEAN',value:4},
+    {name:'COUNTER',value:5},
+    {name:'DECIMAL',value:6},
+    {name:'DOUBLE',value:7},
+    {name:'FLOAT',value:8},
+    {name:'INT',value:9},
+    {name:'TIMESTAMP',value:11},
+    {name:'UUID',value:12},
+    {name:'VARCHAR',value:13},
+    {name:'VARINT',value:14},
+    {name:'TIMEUUID',value:15},
+    {name:'INET',value:16},
+    {name:'DATE',value:17},
+    {name:'TIME',value:18},
+    {name:'SMALLINT',value:19},
+    {name:'TINYINT',value:20},
+    {name:'DURATION',value:21}
+];
+export const TypeColonnesCollect = [
+    {name:'LIST',value:32},
+    {name:'SET',value:33},
+    {name:'MAP',value:34}
+
+];
+export const TypeColonnesAll=TypeColonnes.concat(TypeColonnesCollect);

@@ -41,40 +41,18 @@
                     </div> 
                       <div class="col-2">          
                           <select class="form-control" formControlName="type" placeholder="type de colonne" (change)="onValueTypeChange(i)">
-                            <option value="1">ASCII</option> 
-                            <option value="10">TEXT</option> 
-                            <option value="2">BIGINT</option>  
-                            <option value="3">BLOB</option> 
-                            <option value="4">BOOLEAN</option> 
-                            <option value="5">COUNTER</option> 
-                            <option value="6">DECIMAL</option> 
-                            <option value="7">DOUBLE</option> 
-                            <option value="8">FLOAT</option> 
-                            <option value="9">INT</option>                             
-                            <option value="11">TIMESTAMP</option> 
-                            <option value="12">UUID</option> 
-                            <option value="13">VARCHAR</option> 
-                            <option value="14">VARINT</option> 
-                            <option value="15">TIMEUUID</option> 
-                            <option value="16">INET</option> 
-                            <option value="17">DATE</option> 
-                            <option value="18">TIME</option> 
-                            <option value="19">SMALLINT</option> 
-                            <option value="20">TINYINT</option> 
-                            <option value="21">DURATION</option> 
-                            <option value="32">LIST</option> 
-                            <option value="33">SET</option> 
-                            <option value="34">MAP</option>                                                           
+                            <option *ngFor="let type of optionsTypeAll" [value]="type.value">{{type.name}}</option>                                                                                   
                           </select>   
                       </div>   
                       <div class="col-1">
-                        <input type="checkbox" class="gaindeFormControl" formControlName="primaryKey" >  
+                        <input type="checkbox" class="gaindeFormControl" formControlName="primaryKey" (change)="onCheckPrimaryChange(i)">  
                     </div> 
                     <div class="col-1">
                       <input type="checkbox" class="gaindeFormControl" formControlName="indexed"  (click)="onCheckIndexChange(i)">                      
                   </div>   
                     <div class="col-1">
-                      <button type="button" class="btn btn-danger"  matTooltip="Supprimer une Ligne" (click)="onRemoveLineColumn(i)">
+                      <button type="button" class="btn btn-danger"  *ngIf="ligneColumns.length>1"
+                      matTooltip="Supprimer une Ligne" (click)="onRemoveLineColumn(i)">
                       <mat-icon >
                         remove
                       </mat-icon> 
@@ -86,52 +64,12 @@
                 </div>           
                  <div class="col-3">    
                   <select class="form-control columnOptionel" formControlName="typeList"  *ngIf="column.value.type<=34 && column.value.type>=32">                    
-                    <option value="1">ASCII</option> 
-                    <option value="10">TEXT</option> 
-                    <option value="2">BIGINT</option>  
-                    <option value="3">BLOB</option> 
-                    <option value="4">BOOLEAN</option> 
-                    <option value="5">COUNTER</option> 
-                    <option value="6">DECIMAL</option> 
-                    <option value="7">DOUBLE</option> 
-                    <option value="8">FLOAT</option> 
-                    <option value="9">INT</option>                             
-                    <option value="11">TIMESTAMP</option> 
-                    <option value="12">UUID</option> 
-                    <option value="13">VARCHAR</option> 
-                    <option value="14">VARINT</option> 
-                    <option value="15">TIMEUUID</option> 
-                    <option value="16">INET</option> 
-                    <option value="17">DATE</option> 
-                    <option value="18">TIME</option> 
-                    <option value="19">SMALLINT</option> 
-                    <option value="20">TINYINT</option> 
-                    <option value="21">DURATION</option>                                                                                
+                    <option *ngFor="let type of optionsType" [value]="type.value">{{type.name}}</option>                                                                              
                   </select>   
                  </div> 
                    <div class="col-2">                   
                      <select class="form-control columnOptionel" formControlName="typeMap"  *ngIf="column.value.type==34">                     
-                      <option value="1">ASCII</option> 
-                      <option value="10">TEXT</option> 
-                      <option value="2">BIGINT</option>  
-                      <option value="3">BLOB</option> 
-                      <option value="4">BOOLEAN</option> 
-                      <option value="5">COUNTER</option> 
-                      <option value="6">DECIMAL</option> 
-                      <option value="7">DOUBLE</option> 
-                      <option value="8">FLOAT</option> 
-                      <option value="9">INT</option>                             
-                      <option value="11">TIMESTAMP</option> 
-                      <option value="12">UUID</option> 
-                      <option value="13">VARCHAR</option> 
-                      <option value="14">VARINT</option> 
-                      <option value="15">TIMEUUID</option> 
-                      <option value="16">INET</option> 
-                      <option value="17">DATE</option> 
-                      <option value="18">TIME</option> 
-                      <option value="19">SMALLINT</option> 
-                      <option value="20">TINYINT</option> 
-                      <option value="21">DURATION</option>                                                                                
+                      <option *ngFor="let type of optionsType" [value]="type.value">{{type.name}}</option>                                                                                
                     </select>                           
                    </div>   
                   

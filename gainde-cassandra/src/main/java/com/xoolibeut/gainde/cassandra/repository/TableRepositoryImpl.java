@@ -36,11 +36,20 @@ public class TableRepositoryImpl implements TableRepository {
 		}
 		Create createTable = SchemaBuilder.createTable(keyspaceName, tableDTO.getName()).ifNotExists();
 		tableDTO.getColumns().forEach(column -> {
-			DataType datype = GaindeUtil.getDataType(Integer.parseInt(column.getType()));
+			Integer typeList=null;
+			Integer typeMap=null;
+			if(column.getTypeList()!=null) {
+				typeList=Integer.parseInt(column.getTypeList());
+			}
+			if(column.getTypeMap()!=null) {
+				typeMap=Integer.parseInt(column.getTypeMap());
+			}
+			DataType datype = GaindeUtil.getDataType(Integer.parseInt(column.getType()),typeList,typeMap);
 			if (column.isPrimaraKey()) {
 				createTable.addPartitionKey(column.getName(), datype);
-			}
+			}else {
 			createTable.addColumn(column.getName(), datype);
+			}
 		});
 		session.execute(createTable);
 		tableDTO.getIndexColumns().forEach(indexColumn -> {

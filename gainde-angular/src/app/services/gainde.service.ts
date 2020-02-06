@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {HttpClient,HttpHeaders} from '@angular/common/http';
 import {Subject} from 'rxjs'
 import {environment} from '../../environments/environment';
-import {ConnectionDTO, KeyspaceDTO,ActionHttp,GaindeItem} from '../model/model-dto';
+import {ConnectionDTO, KeyspaceDTO,ActionHttp,GaindeItem, TableDTO} from '../model/model-dto';
 
 @Injectable()
 export class GaindeService {
@@ -219,6 +219,20 @@ export class GaindeService {
       (error) => {
         console.log('Erreur ! : ' + JSON.stringify(error));          
          this.emitMapTransfertSubject(ActionHttp.REMOVE_TABLE_ERROR,error['error']['error']);  
+      }
+    );    
+  }
+  saveTable(tableDTO:TableDTO,connectionName:string,keyspaceName:string){
+    this.httpClient
+    .post<JSON>(environment['basePathGainde']+'/table/create/'+connectionName+'/'+keyspaceName,tableDTO,this.httpOptions)
+    .subscribe(
+      (response) => {            
+        console.log('response  : ' + JSON.stringify(response));        
+       
+      },
+      (error) => {     
+        console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
+        this.emitMapTransfertSubject(ActionHttp.ADD_TABLE_ERROR,error['error']['error']);        
       }
     );    
   }

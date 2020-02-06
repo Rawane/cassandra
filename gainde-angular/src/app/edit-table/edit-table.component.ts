@@ -3,7 +3,7 @@ import {FormGroup,FormBuilder,Validators,FormArray} from '@angular/forms';
 import {GaindeService} from '../services/gainde.service';
 import {Router} from '@angular/router';
 import {Subscription} from 'rxjs';
-import {GaindeItem,TableDTO,ColumnDTO,IndexColumn} from '../model/model-dto';
+import {GaindeItem,TableDTO,ColumnDTO,IndexColumn,TypeColonnesAll,TypeColonnes} from '../model/model-dto';
 @Component({
   selector: 'app-edit-table',
   templateUrl: './edit-table.component.html',
@@ -13,6 +13,8 @@ export class EditTableComponent implements OnInit {
 formTable:FormGroup;
 ligneColumns: FormArray;
 currentGaindeItem:GaindeItem;
+optionsTypeAll=TypeColonnesAll;
+optionsType=TypeColonnes;
   constructor(private gaindeService:GaindeService,private router:Router,
     private formBuilder:FormBuilder) { }
 
@@ -28,12 +30,13 @@ currentGaindeItem:GaindeItem;
     });
     
     this.ligneColumns = this.formTable.get('ligneColumns') as FormArray;
-    if(this.currentGaindeItem)
-    {
-      for(let i=0;i<this.currentGaindeItem.counter-1;i++){
-        this.ligneColumns.push(this.createLigneColumn());
-      }
-  }
+    this.ligneColumns.controls[0].get('primaryKey').setValidators([Validators.required]); 
+      if(this.currentGaindeItem)
+     {
+        for(let i=0;i<this.currentGaindeItem.counter-1;i++){
+          this.ligneColumns.push(this.createLigneColumn());
+        }
+     }
   }
   private createLigneColumn(): FormGroup {
     return this.formBuilder.group({
@@ -53,6 +56,7 @@ currentGaindeItem:GaindeItem;
   onRemoveLineColumn(index:number){
     this.ligneColumns.removeAt(index);
   }
+
   onCheckIndexChange(index:number){
     let controlForm=this.ligneColumns.at(index);
     //console.log('onCheckIndexChange '+index+' controlForm  '+controlForm);    
@@ -72,12 +76,41 @@ currentGaindeItem:GaindeItem;
       }
     });  
   } 
+
+  onCheckPrimaryChange(index:number){
+    let controlForm=this.ligneColumns.at(index);
+    let val=controlForm.value['primaryKey'];
+    //controlForm.get('primaryKey').valueChanges.subscribe(val => {
+    //console.log('onCheckIndexChange '+index+' controlForm  '+val);    
+        if(val){
+           controlForm.get('indexed').setValue(''); 
+           controlForm.get('primaryKey').setValidators([Validators.required]); 
+           for (let ctrlForm of this.ligneColumns.controls) {
+            ctrlForm.get('primaryKey').setValidators([]);
+           }     
+        }else{
+          let count:number=0;          
+          for (let ctrlForm of this.ligneColumns.controls) {
+            console.log('onCheckPrimaryChange count --- '+count);
+            if(!ctrlForm.value['primaryKey']){
+                  count++;                 
+            } 
+          }
+           if(count==this.ligneColumns.length){           
+            controlForm.get('primaryKey').setValidators([Validators.required]); 
+            //console.log('onCheckPrimaryChange count '+count+' controlForm  '+this.ligneColumns.length+'  '+this.ligneColumns.controls.length);
+         
+          }
+
+        }
+      //});
+  } 
   onValueTypeChange(index:number){
     let controlForm=this.ligneColumns.at(index);
-     console.log('onValueTypeChange '+index+' controlForm  '+controlForm.value['type']);  
+    // console.log('onValueTypeChange '+index+' controlForm  '+controlForm.value['type']);  
      let val=controlForm.value['type'];  
      
-      console.log('onValueTypeChange '+index+' control   val '+val);
+     // console.log('onValueTypeChange '+index+' control   val '+val);
       if(val==='32' || val==='33'){
         controlForm.get('typeList').setValidators([Validators.required]);
               
@@ -122,6 +155,7 @@ currentGaindeItem:GaindeItem;
       tableDTO.columns.push(colonneDTO);
     }
     console.log('onSubmitTable   '+JSON.stringify(tableDTO));  
-   
+   this.gaindeService.saveTable(tableDTO,this.currentGaindeItem.connectionName,
+    this.currentGaindeItem.keyspaceName);
   }
 }
