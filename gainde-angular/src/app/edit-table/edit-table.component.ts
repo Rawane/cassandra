@@ -74,8 +74,9 @@ currentGaindeItem:GaindeItem;
   } 
   onValueTypeChange(index:number){
     let controlForm=this.ligneColumns.at(index);
-     console.log('onValueTypeChange '+index+' controlForm  '+controlForm);    
-     controlForm.get('type').valueChanges.subscribe(val => {
+     console.log('onValueTypeChange '+index+' controlForm  '+controlForm.value['type']);  
+     let val=controlForm.value['type'];  
+     
       console.log('onValueTypeChange '+index+' control   val '+val);
       if(val==='32' || val==='33'){
         controlForm.get('typeList').setValidators([Validators.required]);
@@ -90,7 +91,7 @@ currentGaindeItem:GaindeItem;
           controlForm.get('typeMap').setValidators([]);
         }
       }
-    });  
+    
   }   
   onSubmitTable(){   
     let tableDTO:TableDTO=new TableDTO(this.formTable.value['name']);   

@@ -40,7 +40,7 @@
                         <input class="form-control" formControlName="name">  
                     </div> 
                       <div class="col-2">          
-                          <select class="form-control" formControlName="type" placeholder="type de colonne" (select)="onValueTypeChange(i)">
+                          <select class="form-control" formControlName="type" placeholder="type de colonne" (change)="onValueTypeChange(i)">
                             <option value="1">ASCII</option> 
                             <option value="10">TEXT</option> 
                             <option value="2">BIGINT</option>  
