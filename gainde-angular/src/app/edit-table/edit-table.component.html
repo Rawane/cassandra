@@ -1,9 +1,9 @@
 <mat-horizontal-stepper [linear]="true" #stepper selectedIndex="2">
     <mat-step disabled="true">
-        <ng-template matStepLabel>Connection</ng-template>
+        <ng-template matStepLabel>{{currentGaindeItem.connectionName}}</ng-template>
     </mat-step>
     <mat-step  disabled="true">
-        <ng-template matStepLabel>Keyspace</ng-template>
+        <ng-template matStepLabel>{{currentGaindeItem.keyspaceName}}</ng-template>
     </mat-step>
     <mat-step >
       <ng-template matStepLabel>Create Table</ng-template>
@@ -19,43 +19,142 @@
            </div>
           <label class="col-3" for="name">Nom de la Table</label>
           <div class="col-5">
-            <input id="name" class="form-control" formControlName="name" >
+            <input id="name" class="form-control" formControlName="name" appAutofocus >
         </div>
       </div>   
       <div class="row">
         <div class="col-4">
-
         </div>
         <label class="col-3" >Nom de la colonne</label>
-        <label class="col-5" >type de la colonne</label>
+        <label class="col-2" >type de la colonne</label>
+        <label class="col-1" >Clé Primaire?</label>
+        <label class="col-1" >Indexer?</label>
       </div>   
       <div formArrayName="ligneColumns"
-            *ngFor="let item of formTable.get('ligneColumns').controls; let i = index;">
-            <div class="row" [formGroupName]="i">  
-              <div class="col-4">
-
-              </div>           
-              <div class="col-3">
-                 <input class="form-control" formControlName="name" placeholder="">  
-              </div> 
-              <div class="col-5">          
-                  <select id="type" class="form-control" formControlName="type" placeholder="type de colonne">
-                      <option value="Text">Text</option>                            
+            *ngFor="let column of formTable.get('ligneColumns').controls; let i = index;">
+            <div  [formGroupName]="i">  
+              <div class="row editLineColumn">
+                   <div class="col-4">
+                   </div>           
+                    <div class="col-3">
+                        <input class="form-control" formControlName="name">  
+                    </div> 
+                      <div class="col-2">          
+                          <select class="form-control" formControlName="type" placeholder="type de colonne" (select)="onValueTypeChange(i)">
+                            <option value="1">ASCII</option> 
+                            <option value="10">TEXT</option> 
+                            <option value="2">BIGINT</option>  
+                            <option value="3">BLOB</option> 
+                            <option value="4">BOOLEAN</option> 
+                            <option value="5">COUNTER</option> 
+                            <option value="6">DECIMAL</option> 
+                            <option value="7">DOUBLE</option> 
+                            <option value="8">FLOAT</option> 
+                            <option value="9">INT</option>                             
+                            <option value="11">TIMESTAMP</option> 
+                            <option value="12">UUID</option> 
+                            <option value="13">VARCHAR</option> 
+                            <option value="14">VARINT</option> 
+                            <option value="15">TIMEUUID</option> 
+                            <option value="16">INET</option> 
+                            <option value="17">DATE</option> 
+                            <option value="18">TIME</option> 
+                            <option value="19">SMALLINT</option> 
+                            <option value="20">TINYINT</option> 
+                            <option value="21">DURATION</option> 
+                            <option value="32">LIST</option> 
+                            <option value="33">SET</option> 
+                            <option value="34">MAP</option>                                                           
+                          </select>   
+                      </div>   
+                      <div class="col-1">
+                        <input type="checkbox" class="gaindeFormControl" formControlName="primaryKey" >  
+                    </div> 
+                    <div class="col-1">
+                      <input type="checkbox" class="gaindeFormControl" formControlName="indexed"  (click)="onCheckIndexChange(i)">                      
+                  </div>   
+                    <div class="col-1">
+                      <button type="button" class="btn btn-danger"  matTooltip="Supprimer une Ligne" (click)="onRemoveLineColumn(i)">
+                      <mat-icon >
+                        remove
+                      </mat-icon> 
+                      </button>        
+                    </div>   
+              </div>  
+              <div class="row editLineColumn">
+                <div class="col-4">
+                </div>           
+                 <div class="col-3">    
+                  <select class="form-control columnOptionel" formControlName="typeList"  *ngIf="column.value.type<=34 && column.value.type>=32">                    
+                    <option value="1">ASCII</option> 
+                    <option value="10">TEXT</option> 
+                    <option value="2">BIGINT</option>  
+                    <option value="3">BLOB</option> 
+                    <option value="4">BOOLEAN</option> 
+                    <option value="5">COUNTER</option> 
+                    <option value="6">DECIMAL</option> 
+                    <option value="7">DOUBLE</option> 
+                    <option value="8">FLOAT</option> 
+                    <option value="9">INT</option>                             
+                    <option value="11">TIMESTAMP</option> 
+                    <option value="12">UUID</option> 
+                    <option value="13">VARCHAR</option> 
+                    <option value="14">VARINT</option> 
+                    <option value="15">TIMEUUID</option> 
+                    <option value="16">INET</option> 
+                    <option value="17">DATE</option> 
+                    <option value="18">TIME</option> 
+                    <option value="19">SMALLINT</option> 
+                    <option value="20">TINYINT</option> 
+                    <option value="21">DURATION</option>                                                                                
                   </select>   
-              </div>                          
+                 </div> 
+                   <div class="col-2">                   
+                     <select class="form-control columnOptionel" formControlName="typeMap"  *ngIf="column.value.type==34">                     
+                      <option value="1">ASCII</option> 
+                      <option value="10">TEXT</option> 
+                      <option value="2">BIGINT</option>  
+                      <option value="3">BLOB</option> 
+                      <option value="4">BOOLEAN</option> 
+                      <option value="5">COUNTER</option> 
+                      <option value="6">DECIMAL</option> 
+                      <option value="7">DOUBLE</option> 
+                      <option value="8">FLOAT</option> 
+                      <option value="9">INT</option>                             
+                      <option value="11">TIMESTAMP</option> 
+                      <option value="12">UUID</option> 
+                      <option value="13">VARCHAR</option> 
+                      <option value="14">VARINT</option> 
+                      <option value="15">TIMEUUID</option> 
+                      <option value="16">INET</option> 
+                      <option value="17">DATE</option> 
+                      <option value="18">TIME</option> 
+                      <option value="19">SMALLINT</option> 
+                      <option value="20">TINYINT</option> 
+                      <option value="21">DURATION</option>                                                                                
+                    </select>                           
+                   </div>   
+                  
+                 <div class="col-3">                   
+                   <input class="form-control columnOptionel" formControlName="indexName" *ngIf="column.value.indexed" >
+               </div>   
+                 
+           </div>  
+              
             </div>
-        </div>
+           
+      </div>
       
       <div class="row" style="margin-top: 30px;">
-          <div class="col-xs-4 col-md-4 col-lg-4">              
+          <div class="col-xs-0 col-md-4 col-lg-4">              
           </div>
-          <div class="col-xs-4 col-md-4 col-lg-4">
+          <div class="col-xs-6 col-md-4 col-lg-4">
               <button type="button" class="btn btn-primary"  matTooltip="Ajouter une Ligne" (click)="onClickAddLigneColumn()">
                 <mat-icon >add</mat-icon> 
                    
               </button> 
           </div>
-          <div class="col-xs-4 col-md-4 col-lg-4">
+          <div class="col-xs-6 col-md-4 col-lg-4">
             <button type="submit" class="btn btn-success boutonSave" [disabled]="formTable.invalid" >
               Enregistrer 
           </button> 

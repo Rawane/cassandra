@@ -10,10 +10,9 @@ import {MatSort} from '@angular/material/sort';
 import {MatDialog, MatDialogRef,MAT_DIALOG_DATA} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {GaindeService} from '../services/gainde.service';
-import {ConnectionDTO} from '../model/connection-dto';
-import {KeyspaceDTO} from '../model/keyspace-dto';
+import {ConnectionDTO,KeyspaceDTO,ActionHttp,GaindeItem} from '../model/model-dto';
 import{DialogData} from '../view-connections/view-connections.component';
-import {ActionHttp} from '../model/action-http';
+
 interface Meta {
   name:string; 
   metas:Meta[];
@@ -261,6 +260,7 @@ export class ViewKeyspaceComponent implements OnInit {
   }
   onClickAddNewTable(connectionName:string,keyspaceName:string){
     console.log('onClickAddNewTable connectionName='+connectionName+' keyspace '+keyspaceName);
+    this.gaindeService.currentGaindeItem=new GaindeItem(connectionName,keyspaceName,'',null);
     this.openDialogTableInfo(5);
     //this.router.navigate(['/editTable']);
   }
@@ -314,6 +314,7 @@ export class ViewKeyspaceComponent implements OnInit {
       
       if(result!=null){
        console.log("openDialogTableInfo "+result);
+       this.gaindeService.currentGaindeItem.counter=result;
        this.router.navigate(['/editTable']);
       }
 

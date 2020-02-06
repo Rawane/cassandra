@@ -2,15 +2,15 @@ import { Injectable } from '@angular/core';
 import {HttpClient,HttpHeaders} from '@angular/common/http';
 import {Subject} from 'rxjs'
 import {environment} from '../../environments/environment';
-import {ConnectionDTO} from '../model/connection-dto';
-import {KeyspaceDTO} from '../model/keyspace-dto';
-import {ActionHttp} from '../model/action-http';
+import {ConnectionDTO, KeyspaceDTO,ActionHttp,GaindeItem} from '../model/model-dto';
+
 @Injectable()
 export class GaindeService {
   mapTransfert=new Map<string,any>();
   mapTransfertSubject=new Subject<Map<String,any>>();  
   currentMetaConnection:any;
   currentConnection:ConnectionDTO;
+  currentGaindeItem:GaindeItem;
   httpOptions = {
     headers: new HttpHeaders({
       'Accept':  'application/json'     

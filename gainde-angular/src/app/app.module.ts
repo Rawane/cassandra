@@ -11,9 +11,10 @@ import {MatProgressSpinnerModule,MatCardModule,MatTreeModule,MatDialogModule } f
 import { MatAutocompleteModule,MatListModule,MatTabsModule,MatBadgeModule,MatStepperModule} from "@angular/material";
 import { MenuComponent } from './menu/menu.component';
 import { ViewConnectionsComponent,DialogInfoConnectionComponent } from './view-connections/view-connections.component';
-import{GaindeService} from './services/gainde.service';
+import{ GaindeService} from './services/gainde.service';
 import { ViewKeyspaceComponent,DialogInfoKeyspaceComponent ,DialogTableColumnInfoComponent} from './view-keyspace/view-keyspace.component';
 import { EditTableComponent } from './edit-table/edit-table.component';
+import { AutofocusDirective } from './directive/autofocus.directive';
 
 
 
@@ -26,7 +27,8 @@ import { EditTableComponent } from './edit-table/edit-table.component';
     ViewKeyspaceComponent,
     DialogInfoKeyspaceComponent,
     DialogTableColumnInfoComponent,
-    EditTableComponent
+    EditTableComponent,
+    AutofocusDirective
     
   ],
   imports: [

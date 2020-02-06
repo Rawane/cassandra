@@ -52,18 +52,20 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 	}
 
 	public List<GaindeMetadataDTO> getAllMetadatas(String connectionName) {
-		List<GaindeMetadataDTO> gaindeMetadatas=new ArrayList<GaindeMetadataDTO>() ;
-		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);			
+		List<GaindeMetadataDTO> gaindeMetadatas = new ArrayList<GaindeMetadataDTO>();
+		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
 		if (cluster != null) {
 			List<KeyspaceMetadata> keyspaceMetadatas = cluster.getMetadata().getKeyspaces();
 			if (keyspaceMetadatas != null) {
 				keyspaceMetadatas.forEach(metadata -> {
-					GaindeMetadataDTO gaindeFirstChild = new GaindeMetadataDTO(metadata.getName(),connectionName+"#"+metadata.getName(),1);
+					GaindeMetadataDTO gaindeFirstChild = new GaindeMetadataDTO(metadata.getName(),
+							connectionName + "#" + metadata.getName(), 1);
 					gaindeMetadatas.add(gaindeFirstChild);
 					Collection<TableMetadata> tables = metadata.getTables();
 					if (tables != null) {
 						tables.forEach(table -> {
-							gaindeFirstChild.addMeta(new GaindeMetadataDTO(table.getName(),gaindeFirstChild.getId()+"#"+table.getName(),2));
+							gaindeFirstChild.addMeta(new GaindeMetadataDTO(table.getName(),
+									gaindeFirstChild.getId() + "#" + table.getName(), 2));
 						});
 
 					}
@@ -118,7 +120,7 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 		if (cluster != null) {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(keyspaceName);
 			if (keyspaceMetadata != null) {
-				TableMetadata tableMetadata = keyspaceMetadata.getTable(tableName);				
+				TableMetadata tableMetadata = keyspaceMetadata.getTable(tableName);
 				if (tableMetadata != null) {
 					tableInfoDTO.setName(tableMetadata.getName());
 					Collection<IndexMetadata> indexMetadatas = tableMetadata.getIndexes();
@@ -158,14 +160,17 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 
 	@Override
 	public void closeConnectioncassandra(String connectionName) throws Exception {
-		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		if (session != null) {
-			session.close();
+		GaindeSession gaindeSession = GaindeSessionConnection.getInstance().removeConnection(connectionName);
+		if (gaindeSession != null) {
+			Cluster cluster = gaindeSession.getCluster();
+			Session session = gaindeSession.getSession();
+			if (session != null) {
+				session.close();
+			}
+			if (cluster != null) {
+				cluster.close();
+			}
 		}
-		if (cluster != null) {
-			cluster.close();
-		}
-		GaindeSessionConnection.getInstance().removeConnection(connectionName);
+
 	}
 }

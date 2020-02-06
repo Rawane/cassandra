@@ -56,12 +56,13 @@ public class ConnectionController {
 		try {
 			boolean result = connectionRepository.updateConnection(connectionDTO);
 			if (result) {
+				cassandraRepository.closeConnectioncassandra(connectionDTO.getName());
 				return ResponseEntity.status(200).body("{\"message\":\"maj\"}");
 			}
 			return ResponseEntity.status(401).body("{\"message\":\"maj ko\"}");
-		} catch (IOException ioException) {
-			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+		} catch (Exception exception) {
+			LOGGER.error("erreur", exception);
+			return ResponseEntity.status(400).body("{\"error\":\"" + exception.getMessage() + "\"}");
 		}
 	}
 

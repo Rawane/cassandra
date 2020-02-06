@@ -3,10 +3,10 @@ import {FormGroup,FormBuilder,Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {Subscription} from 'rxjs';
 import {GaindeService} from '../services/gainde.service';
-import {ConnectionDTO} from '../model/connection-dto';
+import {ConnectionDTO,ActionHttp} from '../model/model-dto';
 import {MatDialog, MatDialogRef,MAT_DIALOG_DATA} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {ActionHttp} from '../model/action-http';
+
 
 export interface DialogData {
   text: string;

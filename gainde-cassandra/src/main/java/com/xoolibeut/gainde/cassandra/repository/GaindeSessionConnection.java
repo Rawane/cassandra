@@ -49,7 +49,7 @@ public class GaindeSessionConnection {
 			mapSessions.get(name).getCluster().close();
 		}
 	}
-	public void removeConnection(String name) {
-		mapSessions.remove(name);
+	public GaindeSession removeConnection(String name) {
+		return mapSessions.remove(name);
 	}
 }
