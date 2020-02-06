@@ -4,17 +4,17 @@
             <div class="col-md-5 col-lg-4"> 
             </div>
             <div class="col-md-7 col-lg-8"> 
-                <button type="button" class="btn btn-primary" matTooltip="Ajouter une connection"  (click)="onClickNewConnection()" >
+                <button type="button" class="btn btn-gainde" matTooltip="Ajouter une connection"  (click)="onClickNewConnection()" >
                     <mat-icon >add</mat-icon> 
                 </button>
             </div>
         </div>
         <mat-list>            
                 <mat-list-item *ngFor="let conn of connections">     
-                    <mat-icon mat-list-icon class="iconConnection" (click)="onClickShowInfoConnection(conn)" matTooltip="Afficher">folder</mat-icon>
+                    <mat-icon mat-list-icon class="iconConnection icon-gainde" (click)="onClickShowInfoConnection(conn)" matTooltip="Afficher">folder</mat-icon>
                     <h4 mat-line (dblclick)="onDblClickConnectToCassandra(conn)" class="iconConnection">{{conn.name}}</h4>
                     <p mat-line *ngIf="conn.ip" > {{conn.ip}}:{{conn.port}}</p>           
-                    <mat-icon class="iconConnection actionDelete" (click)="onClickRemoveConnection(conn.name)" matTooltip="Supprimer">delete</mat-icon>                      
+                    <mat-icon class="iconConnection icon-gainde" (click)="onClickRemoveConnection(conn.name)" matTooltip="Supprimer">delete</mat-icon>                      
                 </mat-list-item>           
         </mat-list>
           <div>
@@ -22,7 +22,7 @@
                     <div class="col-md-5 col-lg-4"> 
                     </div>
                     <div class="col-md-7 col-lg-8"> 
-                        <button type="button" class="btn btn-primary" matTooltip="Ajouter une connection"  (click)="onClickNewConnection()" >
+                        <button type="button" class="btn btn-gainde" matTooltip="Ajouter une connection"  (click)="onClickNewConnection()" >
                             <mat-icon >add</mat-icon> 
                         </button>
                     </div>
@@ -64,7 +64,7 @@
                 </div>
                 <div class="row">
                     <div class="col-xs-4 col-md-4 col-lg-4">
-                        <button type="submit" class="btn btn-primary" [disabled]="connectionForm.invalid" (click)="actionButton = 'connection'">
+                        <button type="submit" class="btn btn-gainde" [disabled]="connectionForm.invalid" (click)="actionButton = 'connection'">
                             Connection
                         </button>
                     </div>
