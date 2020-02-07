@@ -13,7 +13,7 @@ import { MenuComponent } from './menu/menu.component';
 import { ViewConnectionsComponent,DialogInfoConnectionComponent } from './view-connections/view-connections.component';
 import{ GaindeService} from './services/gainde.service';
 import { ViewKeyspaceComponent,DialogInfoKeyspaceComponent ,DialogTableColumnInfoComponent} from './view-keyspace/view-keyspace.component';
-import { EditTableComponent } from './edit-table/edit-table.component';
+import { EditTableComponent ,DialogInfoTableComponent} from './edit-table/edit-table.component';
 import { AutofocusDirective } from './directive/autofocus.directive';
 
 
@@ -26,6 +26,7 @@ import { AutofocusDirective } from './directive/autofocus.directive';
     DialogInfoConnectionComponent,
     ViewKeyspaceComponent,
     DialogInfoKeyspaceComponent,
+    DialogInfoTableComponent,
     DialogTableColumnInfoComponent,
     EditTableComponent,
     AutofocusDirective
@@ -57,7 +58,11 @@ import { AutofocusDirective } from './directive/autofocus.directive';
     MatSnackBarModule,
     MatStepperModule
   ],
-  entryComponents:[DialogInfoConnectionComponent,DialogInfoKeyspaceComponent,DialogTableColumnInfoComponent],
+  entryComponents:[
+  DialogInfoConnectionComponent,
+  DialogInfoKeyspaceComponent,
+  DialogTableColumnInfoComponent,
+  DialogInfoTableComponent],
   providers: [GaindeService],
   bootstrap: [AppComponent]
 })

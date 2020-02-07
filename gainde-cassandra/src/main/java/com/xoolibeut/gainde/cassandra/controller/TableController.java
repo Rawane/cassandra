@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,12 +26,23 @@ public class TableController {
 	@Autowired
 	private TableRepository tableRepository;
 
-	@PostMapping("/create/{connectionName}/{kespace}")
+	@PostMapping("/{connectionName}/{kespace}")
 	public ResponseEntity<String> createTable(@PathVariable("connectionName") String connectionName,
 			@PathVariable("kespace") String keyspaceName, @RequestBody TableDTO tableDTO) {
 		try {
 			tableRepository.createTable(tableDTO, connectionName, keyspaceName);
 			return ResponseEntity.status(201).body("{\"message\":\"création ok\"}");
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+		}
+	}
+	@DeleteMapping("/{connectionName}/{kespace}/{tableName}")
+	public ResponseEntity<String> dropTable(@PathVariable("connectionName") String connectionName,
+			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName) {
+		try {
+			tableRepository.dropTable(connectionName, keyspaceName,tableName);
+			return ResponseEntity.status(204).build();
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");

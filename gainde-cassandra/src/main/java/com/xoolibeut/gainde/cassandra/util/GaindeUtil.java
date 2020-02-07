@@ -96,6 +96,15 @@ public class GaindeUtil {
 		case 21:
 			dataType = DataType.duration();
 			break;
+		case 22:
+			dataType = DataType.list(getDataType(typeOplist, null, null));
+			break;		
+		case 23:
+			dataType = DataType.map(getDataType(typeOplist, null, null), getDataType(typeopMap, null, null));
+			break;
+		case 24:
+			dataType = DataType.set(getDataType(typeOplist, null, null));
+			break;
 		case 32:
 			dataType = DataType.list(getDataType(typeOplist, null, null));
 			break;

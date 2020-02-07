@@ -153,6 +153,22 @@ public class ConnectionController {
 			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
 		}
 	}
+	@GetMapping("/metadata/table/type/{name}/{keysp}/{table}")
+	public ResponseEntity<String> getTableInfoTypeNative(@PathVariable("name") String connectionName,
+			@PathVariable("keysp") String keyspaceName, @PathVariable("table") String tableName) {
+		try {
+			TableInfoDTO tableInfo = cassandraRepository.getTableInfo(connectionName, keyspaceName, tableName);
+			long rows = cassandraRepository.countAllRows(connectionName, keyspaceName, tableName);
+			List<ColonneTableDTO> colonneTableDTOs = cassandraRepository.getAllColumnsTypeNative(connectionName, keyspaceName,
+					tableName);
+			tableInfo.setColumns(colonneTableDTOs);
+			tableInfo.setRows(rows);
+			ObjectMapper mapper = new ObjectMapper();
+			return ResponseEntity.status(200).body(mapper.writeValueAsString(tableInfo));
+		} catch (Exception ioException) {
+			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+		}
+	}
 
 	@GetMapping("/table/rows/{name}/{keysp}/{table}")
 	public ResponseEntity<String> countAllrows(@PathVariable("name") String connectionName,

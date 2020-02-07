@@ -13,6 +13,7 @@ public interface ConnectionCassandraRepository {
 	List<GaindeMetadataDTO> getAllMetadatas(String connectionName);
 
 	List<ColonneTableDTO> getAllColumns(String connectionName, String keyspaceName, String tableName);
+	List<ColonneTableDTO> getAllColumnsTypeNative(String connectionName, String keyspaceName, String tableName);
 
 	TableInfoDTO getTableInfo(String connectionName, String keyspaceName, String tableName);
 

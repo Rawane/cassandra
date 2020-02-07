@@ -1,16 +1,16 @@
 <mat-horizontal-stepper [linear]="true" #stepper selectedIndex="2">
     <mat-step disabled="true">
-        <ng-template matStepLabel>{{currentGaindeItem.connectionName}}</ng-template>
+        <ng-template matStepLabel>{{currentGaindeEdit.connectionName}}</ng-template>
     </mat-step>
     <mat-step  disabled="true">
-        <ng-template matStepLabel>{{currentGaindeItem.keyspaceName}}</ng-template>
+        <ng-template matStepLabel>{{currentGaindeEdit.keyspaceName}}</ng-template>
     </mat-step>
     <mat-step >
       <ng-template matStepLabel>Create Table</ng-template>
      
     </mat-step>
   </mat-horizontal-stepper>
-  <div>
+  <div *ngIf="formTable">
 
     <form [formGroup]="formTable" (ngSubmit)="onSubmitTable()">
       <div class="row form-group">
@@ -18,8 +18,13 @@
 
            </div>
           <label class="col-3" for="name">Nom de la Table</label>
-          <div class="col-5">
+          <div class="col-3">
             <input id="name" class="form-control" formControlName="name" appAutofocus >
+        </div>
+        <div class="col-2">
+          <button type="button" class="btn btn-primary"  matTooltip="Ajouter une Ligne" (click)="onClickAddLigneColumn()">
+            <mat-icon >add</mat-icon>                
+          </button>
         </div>
       </div>   
       <div class="row">
@@ -63,12 +68,12 @@
                 <div class="col-4">
                 </div>           
                  <div class="col-3">    
-                  <select class="form-control columnOptionel" formControlName="typeList"  *ngIf="column.value.type<=34 && column.value.type>=32">                    
+                  <select class="form-control columnOptionel" formControlName="typeList"  *ngIf="column.value.type<=24 && column.value.type>=22">                    
                     <option *ngFor="let type of optionsType" [value]="type.value">{{type.name}}</option>                                                                              
                   </select>   
                  </div> 
                    <div class="col-2">                   
-                     <select class="form-control columnOptionel" formControlName="typeMap"  *ngIf="column.value.type==34">                     
+                     <select class="form-control columnOptionel" formControlName="typeMap"  *ngIf="column.value.type==23">                     
                       <option *ngFor="let type of optionsType" [value]="type.value">{{type.name}}</option>                                                                                
                     </select>                           
                    </div>   
@@ -93,7 +98,7 @@
               </button> 
           </div>
           <div class="col-xs-6 col-md-4 col-lg-4">
-            <button type="submit" class="btn btn-success boutonSave" [disabled]="formTable.invalid" >
+            <button type="submit" class="btn btn-success boutonSave" [disabled]="formTable.invalid || !validPrimaryKey" >
               Enregistrer 
           </button> 
           </div>

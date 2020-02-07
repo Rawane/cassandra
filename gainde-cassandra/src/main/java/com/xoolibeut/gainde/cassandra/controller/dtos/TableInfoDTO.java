@@ -5,7 +5,7 @@ import java.util.List;
 public class TableInfoDTO {
 	private String name;
 	private List<String> primaryKey;
-	private List<IndexColumn> index;
+	private List<IndexColumn> indexColumns;
 	private List<ColonneTableDTO> columns;
 	private long rows;
 
@@ -25,14 +25,7 @@ public class TableInfoDTO {
 		this.primaryKey = primaryKey;
 	}
 
-	public List<IndexColumn> getIndex() {
-		return index;
-	}
-
-	public void setIndex(List<IndexColumn> index) {
-		this.index = index;
-	}
-
+	
 	public List<ColonneTableDTO> getColumns() {
 		return columns;
 	}
@@ -47,6 +40,14 @@ public class TableInfoDTO {
 
 	public void setRows(long rows) {
 		this.rows = rows;
+	}
+
+	public List<IndexColumn> getIndexColumns() {
+		return indexColumns;
+	}
+
+	public void setIndexColumns(List<IndexColumn> indexColumns) {
+		this.indexColumns = indexColumns;
 	}
 
 }

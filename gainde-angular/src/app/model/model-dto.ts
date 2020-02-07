@@ -15,13 +15,27 @@ export class KeyspaceDTO {
     }
    
 }
-export class GaindeItem {
-    constructor( public connectionName: string,public keyspaceName:string,
-        public tableName:string,public counter:number
+export class GaindeCommunication {
+    connectionName: string;
+    keyspaceName:string;
+    tableName:string;
+    counter:number;
+    back:VIEW_ECRAN;
+    content:any;
+    connection:ConnectionDTO;
+    constructor( 
        ){
 
-    }
-   
+    }   
+}
+export enum VIEW_ECRAN{
+    KEYSPACE,
+    CONNECTION,
+    EDIT_TABLE,
+    KEYSPACE_HOME,
+    KEYSPACE_NEW,
+    KEYSPACE_INFO_TABLE,
+    KEYSPACE_INFO
 }
 export enum ActionHttp{
     ALL_CONNECTION,
@@ -51,7 +65,9 @@ export enum ActionHttp{
     ALL_DATA_TABLE,
     ALL_DATA_TABLE_ERROR,
     ADD_TABLE,
-    ADD_TABLE_ERROR
+    ADD_TABLE_ERROR,
+    EDIT_TABLE,
+    EDIT_TABLE_ERROR
 }
 export class TableDTO {
     columns:Array<ColumnDTO>=new Array();
@@ -106,9 +122,9 @@ export const TypeColonnes = [
     {name:'DURATION',value:21}
 ];
 export const TypeColonnesCollect = [
-    {name:'LIST',value:32},
-    {name:'SET',value:33},
-    {name:'MAP',value:34}
+    {name:'LIST',value:22},
+    {name:'SET',value:24},
+    {name:'MAP',value:23}
 
 ];
 export const TypeColonnesAll=TypeColonnes.concat(TypeColonnesCollect);

@@ -3,7 +3,7 @@ import {FormGroup,FormBuilder,Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {Subscription} from 'rxjs';
 import {GaindeService} from '../services/gainde.service';
-import {ConnectionDTO,ActionHttp} from '../model/model-dto';
+import {ConnectionDTO,ActionHttp,GaindeCommunication} from '../model/model-dto';
 import {MatDialog, MatDialogRef,MAT_DIALOG_DATA} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 
@@ -36,12 +36,13 @@ export class ViewConnectionsComponent implements OnInit {
   }
   ngOnInit() {
     //init Obersver
-    this.allNotificationSubscription=this.gaindeService.mapTransfertSubject.subscribe((mapTransfert: Map<string,any>) => {
+    this.gaindeService.testCSPGateway();
+    this.allNotificationSubscription=this.gaindeService.mapTransfertViewConnectionSubject.subscribe((mapTransfert: Map<string,any>) => {
       let mapToString='';
       mapTransfert.forEach((key,item)=>{
         mapToString=mapToString+' '+item+'  value='+JSON.stringify(mapTransfert.get(item));        
       });   
-      //console.log('ViewConnectionsComponent mapTransfert '+mapToString);     
+      console.log('ViewConnectionsComponent mapTransfert '+mapTransfert.get("type"));     
        switch (mapTransfert.get("type") as ActionHttp) {
          case ActionHttp.ALL_CONNECTION:
            this.connections=mapTransfert.get("content");           
@@ -67,7 +68,7 @@ export class ViewConnectionsComponent implements OnInit {
             this.openDialog('Info connection',"Erreur de suppression",false,'');
             break;
           case ActionHttp.CONNECT_TO:
-            this.gaindeService.currentMetaConnection=mapTransfert.get("content");
+            this.gaindeService.currentGainde.content=mapTransfert.get("content");
             this.router.navigate(['/viewKeyspace']);
             break;
           case ActionHttp.CONNECT_TO_ERROR:
@@ -92,7 +93,7 @@ export class ViewConnectionsComponent implements OnInit {
 
   openSnackBar(message: string, action: string) {
     this.snackBar.open(message, action, {
-      duration: 3000,
+      duration: 2000,
       // here specify the position
       verticalPosition: 'top',
       panelClass: ['green-snackbar']
@@ -149,7 +150,8 @@ private resetForm(){
     //console.log('onConnectToCassandra  : ' + JSON.stringify(conn));
     let  connectDTO=new ConnectionDTO(conn['name'],conn['ip'],
     conn['port'], conn['username'],conn['password']); 
-    this.gaindeService.currentConnection=connectDTO;
+    this.gaindeService.currentGainde=new GaindeCommunication(); 
+    this.gaindeService.currentGainde.connection=connectDTO;
     this.gaindeService.connecToCassandra(connectDTO);
 
   }
@@ -168,8 +170,9 @@ private resetForm(){
           this.gaindeService.updateConnection(connectDTO);
         }
     }
-    else {          
-          this.gaindeService.currentConnection=connectDTO;
+    else {    
+          this.gaindeService.currentGainde=new GaindeCommunication();       
+          this.gaindeService.currentGainde.connection=connectDTO;
           this.gaindeService.connecToCassandra(connectDTO);
     }
   }

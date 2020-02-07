@@ -16,6 +16,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.schemabuilder.Create;
+import com.datastax.driver.core.schemabuilder.Drop;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.datastax.driver.core.schemabuilder.SchemaStatement;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -57,6 +58,15 @@ public class TableRepositoryImpl implements TableRepository {
 					.onTable(keyspaceName, tableDTO.getName()).andColumn(indexColumn.getColumName());
 			session.execute(createIndex);
 		});
+
+	}
+	public void dropTable(String connectionName, String keyspaceName,String tableName) throws Exception {
+		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
+		if (session == null) {
+			throw new Exception("aucune session");
+		}
+		 Drop dropTable = SchemaBuilder.dropTable(keyspaceName, tableName).ifExists();		
+		 session.execute(dropTable);	
 
 	}
 

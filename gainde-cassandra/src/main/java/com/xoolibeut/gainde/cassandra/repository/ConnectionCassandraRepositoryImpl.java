@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import com.datastax.driver.core.AuthProvider;
@@ -27,6 +29,7 @@ import com.xoolibeut.gainde.cassandra.controller.dtos.TableInfoDTO;
 
 @Repository
 public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRepository {
+	private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionCassandraRepositoryImpl.class);
 
 	public void connnectTocassandra(ConnectionDTO connectionDTO) throws Exception {
 
@@ -96,11 +99,51 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 					});
 
 					columnMetadatas.forEach(columMeta -> {
-						DataType dataType = columMeta.getType();
-						System.out.println("dataType " + dataType);
+
 						ColonneTableDTO colonneDTO = new ColonneTableDTO();
 						colonneDTO.setName(columMeta.getName());
 						colonneDTO.setType(columMeta.getType().getName().name());
+						colonneDTO.setIndexed(listIndex.contains(columMeta.getName()));
+						colonneDTO.setPrimaraKey(listPrimaryKey.contains(columMeta.getName()));
+						listColumDTO.add(colonneDTO);
+
+					});
+				}
+
+			}
+
+		}
+		return listColumDTO;
+	}
+
+	public List<ColonneTableDTO> getAllColumnsTypeNative(String connectionName, String keyspaceName, String tableName) {
+		List<ColonneTableDTO> listColumDTO = new ArrayList<>();
+		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
+		if (cluster != null) {
+			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(keyspaceName);
+			if (keyspaceMetadata != null) {
+				TableMetadata tableMetadata = keyspaceMetadata.getTable(tableName);
+				if (tableMetadata != null) {
+					List<ColumnMetadata> columnMetadatas = tableMetadata.getColumns();
+					Collection<IndexMetadata> indexMetadatas = tableMetadata.getIndexes();
+					List<String> listIndex = new ArrayList<>();
+					indexMetadatas.forEach(index -> {
+						listIndex.add(index.getTarget());
+					});
+					List<String> listPrimaryKey = new ArrayList<>();
+					List<ColumnMetadata> metadatas = tableMetadata.getPrimaryKey();
+					metadatas.forEach(primaryKey -> {
+						listPrimaryKey.add(primaryKey.getName());
+					});
+
+					columnMetadatas.forEach(columMeta -> {
+						DataType dataType = columMeta.getType();
+						LOGGER.info("dataType " + dataType);
+						LOGGER.info("dataType " + columMeta.getType().getName().name() + "  "
+								+ columMeta.getType().getName().ordinal());
+						ColonneTableDTO colonneDTO = new ColonneTableDTO();
+						colonneDTO.setName(columMeta.getName());
+						colonneDTO.setType("" + columMeta.getType().getName().ordinal());
 						colonneDTO.setIndexed(listIndex.contains(columMeta.getName()));
 						colonneDTO.setPrimaraKey(listPrimaryKey.contains(columMeta.getName()));
 						listColumDTO.add(colonneDTO);
@@ -129,7 +172,7 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 						IndexColumn indexColumn = new IndexColumn(index.getName(), index.getTarget());
 						listIndexColumns.add(indexColumn);
 					});
-					tableInfoDTO.setIndex(listIndexColumns);
+					tableInfoDTO.setIndexColumns(listIndexColumns);
 					List<String> listPrimaryKey = new ArrayList<>();
 					List<ColumnMetadata> metadatas = tableMetadata.getPrimaryKey();
 					metadatas.forEach(primaryKey -> {

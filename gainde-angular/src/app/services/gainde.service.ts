@@ -2,15 +2,17 @@ import { Injectable } from '@angular/core';
 import {HttpClient,HttpHeaders} from '@angular/common/http';
 import {Subject} from 'rxjs'
 import {environment} from '../../environments/environment';
-import {ConnectionDTO, KeyspaceDTO,ActionHttp,GaindeItem, TableDTO} from '../model/model-dto';
+import {ConnectionDTO, KeyspaceDTO,ActionHttp,GaindeCommunication, TableDTO} from '../model/model-dto';
 
 @Injectable()
 export class GaindeService {
   mapTransfert=new Map<string,any>();
-  mapTransfertSubject=new Subject<Map<String,any>>();  
-  currentMetaConnection:any;
-  currentConnection:ConnectionDTO;
-  currentGaindeItem:GaindeItem;
+  mapTransfertViewConnectionSubject=new Subject<Map<String,any>>();  
+  mapTransfertViewKeyspaceSubject=new Subject<Map<String,any>>();  
+  mapTransfertViewEditTableSubject=new Subject<Map<String,any>>();  
+  //currentMetaConnection:any;
+  //currentConnection:ConnectionDTO;
+  currentGainde:GaindeCommunication=new GaindeCommunication();
   httpOptions = {
     headers: new HttpHeaders({
       'Accept':  'application/json'     
@@ -18,10 +20,20 @@ export class GaindeService {
   };
   constructor(private httpClient:HttpClient) { }
   
-  emitMapTransfertSubject(action:ActionHttp,content:any) {
+  emitMapTransfertConnectionsSubject(action:ActionHttp,content:any) {
     this.mapTransfert.set("content",content);
     this.mapTransfert.set("type",action);
-    this.mapTransfertSubject.next(this.mapTransfert);
+    this.mapTransfertViewConnectionSubject.next(this.mapTransfert);
+  }
+  emitMapTransfertKeyspaceSubject(action:ActionHttp,content:any) {
+    this.mapTransfert.set("content",content);
+    this.mapTransfert.set("type",action);
+    this.mapTransfertViewKeyspaceSubject.next(this.mapTransfert);
+  }
+  emitMapTransfertEditTableSubject(action:ActionHttp,content:any) {
+    this.mapTransfert.set("content",content);
+    this.mapTransfert.set("type",action);
+    this.mapTransfertViewEditTableSubject.next(this.mapTransfert);
   }
   getAllConnections() {   
     this.httpClient
@@ -29,11 +41,11 @@ export class GaindeService {
       .subscribe(
         (response) => {               
         //console.log('response  : ' + JSON.stringify(response));            
-           this.emitMapTransfertSubject(ActionHttp.ALL_CONNECTION,response);
+           this.emitMapTransfertConnectionsSubject(ActionHttp.ALL_CONNECTION,response);
         },
         (error) => {
           console.log('Erreur ! : ' + error);         
-           this.emitMapTransfertSubject(ActionHttp.ALL_CONNECTION_ERROR,error['error']['error']);
+           this.emitMapTransfertConnectionsSubject(ActionHttp.ALL_CONNECTION_ERROR,error['error']['error']);
         }
       );
       
@@ -44,11 +56,11 @@ export class GaindeService {
     .subscribe(
       (response) => {            
        console.log('response  : ' + JSON.stringify(response));      
-       this.emitMapTransfertSubject(ActionHttp.SAVE_CONNECTION,connectionDTO);
+       this.emitMapTransfertConnectionsSubject(ActionHttp.SAVE_CONNECTION,connectionDTO);
       },
       (error) => {
         console.log('Erreur ! : ' + JSON.stringify(error));          
-        this.emitMapTransfertSubject(ActionHttp.SAVE_CONNECTION_ERROR,error['error']['error']);
+        this.emitMapTransfertConnectionsSubject(ActionHttp.SAVE_CONNECTION_ERROR,error['error']['error']);
       }
     );    
   }
@@ -58,11 +70,11 @@ export class GaindeService {
     .subscribe(
       (response) => {            
        console.log('response  : ' + JSON.stringify(response));         
-       this.emitMapTransfertSubject(ActionHttp.UPDATE_CONNECTION,connectionDTO);  
+       this.emitMapTransfertConnectionsSubject(ActionHttp.UPDATE_CONNECTION,connectionDTO);  
       },
       (error) => {
         console.log('Erreur ! : ' + JSON.stringify(error)); 
-        this.emitMapTransfertSubject(ActionHttp.UPDATE_CONNECTION_ERROR,error['error']['error']);    
+        this.emitMapTransfertConnectionsSubject(ActionHttp.UPDATE_CONNECTION_ERROR,error['error']['error']);    
        
       }
     );    
@@ -73,11 +85,11 @@ export class GaindeService {
     .subscribe(
       (response) => {            
        console.log('response  : ' + JSON.stringify(response));   
-       this.emitMapTransfertSubject(ActionHttp.DELETE_CONNECTION,name);  
+       this.emitMapTransfertConnectionsSubject(ActionHttp.DELETE_CONNECTION,name);  
       },
       (error) => {
         console.log('Erreur ! : ' + JSON.stringify(error));            
-        this.emitMapTransfertSubject(ActionHttp.DELETE_CONNECTION_ERROR,error['error']['error']);  
+        this.emitMapTransfertConnectionsSubject(ActionHttp.DELETE_CONNECTION_ERROR,error['error']['error']);  
       }
     );    
   }
@@ -87,11 +99,11 @@ export class GaindeService {
     .subscribe(
       (response) => {            
       // console.log('response  : ' + JSON.stringify(response));      
-       this.refreshAllMeta(connectionDTO.name,ActionHttp.CONNECT_TO);
+       this.refreshAllMeta(connectionDTO.name,ActionHttp.CONNECT_TO,true);
       },
       (error) => {     
         console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
-        this.emitMapTransfertSubject(ActionHttp.CONNECT_TO_ERROR,error['error']['error']);        
+        this.emitMapTransfertConnectionsSubject(ActionHttp.CONNECT_TO_ERROR,error['error']['error']);        
       }
     );    
   }
@@ -101,11 +113,11 @@ export class GaindeService {
       .subscribe(
         (response) => {               
         // console.log('response  : ' + JSON.stringify(response));       
-         this.emitMapTransfertSubject(ActionHttp.ALL_META,response);       
+         this.emitMapTransfertKeyspaceSubject(ActionHttp.ALL_META,response);       
         },
         (error) => {
           console.log('Erreur ! : ' + error);           
-          this.emitMapTransfertSubject(ActionHttp.ALL_META_ERROR,error['error']['error']);        
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.ALL_META_ERROR,error['error']['error']);        
         }
       );      
   }  
@@ -115,11 +127,11 @@ export class GaindeService {
       .subscribe(
         (response) => {               
           console.log('response  : ' + JSON.stringify(response));     
-          this.emitMapTransfertSubject(ActionHttp.CLOSE_CONNECTION,response);   
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.CLOSE_CONNECTION,response);   
         },
         (error) => {
           console.log('Erreur ! : ' + error);
-          this.emitMapTransfertSubject(ActionHttp.CLOSE_CONNECTION_ERROR,error['error']['error']);   
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.CLOSE_CONNECTION_ERROR,error['error']['error']);   
         }
       );      
   }  
@@ -129,11 +141,25 @@ export class GaindeService {
       .subscribe(
         (response) => {               
          //console.log('response  : ' + JSON.stringify(response));   
-         this.emitMapTransfertSubject(ActionHttp.INFO_TABLE,response);   
+         this.emitMapTransfertKeyspaceSubject(ActionHttp.INFO_TABLE,response);   
         },
         (error) => {
           console.log('Erreur ! : ' + error['error']['error']);
-          this.emitMapTransfertSubject(ActionHttp.INFO_TABLE_ERROR,error['error']['error']);   
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.INFO_TABLE_ERROR,error['error']['error']);   
+        }
+      );      
+  }
+  getInfoTableEdit(connectionName:string,keyspace:string,table:string) {   
+    this.httpClient
+      .get<JSON>(environment['basePathGainde']+'/connection/metadata/table/type/'+connectionName+'/'+keyspace+'/'+table,this.httpOptions)
+      .subscribe(
+        (response) => {               
+         //console.log('response  : ' + JSON.stringify(response));   
+         this.emitMapTransfertEditTableSubject(ActionHttp.EDIT_TABLE,response);   
+        },
+        (error) => {
+          console.log('Erreur ! : ' + error['error']['error']);
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.EDIT_TABLE_ERROR,error['error']['error']);   
         }
       );      
   }
@@ -143,11 +169,11 @@ export class GaindeService {
       .subscribe(
         (response) => {               
          //console.log('response  : ' + JSON.stringify(response));   
-         this.emitMapTransfertSubject(ActionHttp.ALL_DATA_TABLE,response);   
+         this.emitMapTransfertKeyspaceSubject(ActionHttp.ALL_DATA_TABLE,response);   
         },
         (error) => {
           console.log('Erreur ! : ' + error);        
-          this.emitMapTransfertSubject(ActionHttp.ALL_DATA_TABLE_ERROR,error['error']['error']); 
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.ALL_DATA_TABLE_ERROR,error['error']['error']); 
         }
       );      
   } 
@@ -157,25 +183,29 @@ export class GaindeService {
     .subscribe(
       (response) => {            
        console.log('response  : ' + JSON.stringify(response));       
-       this.refreshAllMeta(connectionName,ActionHttp.SAVE_KEYSPACE);
+       this.refreshAllMeta(connectionName,ActionHttp.SAVE_KEYSPACE,false);
       },
       (error) => {
         console.log('Erreur ! : ' + JSON.stringify(error));          
-         this.emitMapTransfertSubject(ActionHttp.SAVE_KEYSPACE_ERROR,error['error']['error']);  
+         this.emitMapTransfertKeyspaceSubject(ActionHttp.SAVE_KEYSPACE_ERROR,error['error']['error']);  
       }
     );    
   }  
-  private refreshAllMeta(name:string,action:ActionHttp) {   
+  private refreshAllMeta(name:string,action:ActionHttp,connectTo:boolean) {   
     this.httpClient
       .get<any>(environment['basePathGainde']+'/connection/metadata/all/'+name,this.httpOptions)
       .subscribe(
         (response) => {               
-        // console.log('response  : ' + JSON.stringify(response)); 
-          this.emitMapTransfertSubject(action,response); 
+        // console.log('response  : ' + JSON.stringify(response));
+        if(connectTo) {
+          this.emitMapTransfertConnectionsSubject(action,response);
+        }else{
+          this.emitMapTransfertKeyspaceSubject(action,response); 
+        } 
         },
         (error) => {
           console.log('Erreur ! : ' + error);              
-          this.emitMapTransfertSubject(action,error['error']['error']);  
+          this.emitMapTransfertKeyspaceSubject(action,error['error']['error']);  
         }
       );      
   } 
@@ -185,11 +215,11 @@ export class GaindeService {
       .subscribe(
         (response) => {               
           // console.log('response  : ' + JSON.stringify(response));                 
-          this.emitMapTransfertSubject(ActionHttp.INFO_KEYSPACE,response);  
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.INFO_KEYSPACE,response);  
         },
         (error) => {
           console.log('Erreur ! : ' + error);
-          this.emitMapTransfertSubject(ActionHttp.INFO_KEYSPACE_ERROR,error['error']['error']);  
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.INFO_KEYSPACE_ERROR,error['error']['error']);  
         }
       );      
   }  
@@ -199,12 +229,12 @@ export class GaindeService {
     .subscribe(
       (response) => {            
        console.log('response  : ' + JSON.stringify(response));      
-       this.refreshAllMeta(connectionName,ActionHttp.REMOVE_KEYSPACE);
+       this.refreshAllMeta(connectionName,ActionHttp.REMOVE_KEYSPACE,false);
        
       },
       (error) => {
         console.log('Erreur ! : ' + JSON.stringify(error));      
-        this.emitMapTransfertSubject(ActionHttp.REMOVE_KEYSPACE_ERROR,error['error']['error']);  
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.REMOVE_KEYSPACE_ERROR,error['error']['error']);  
       }
     );    
   }
@@ -213,28 +243,44 @@ export class GaindeService {
     .delete<JSON>(environment['basePathGainde']+'/table/'+connectionName+'/'+keyspcaeName+'/'+tableName,this.httpOptions)
     .subscribe(
       (response) => {            
-       console.log('response  : ' + JSON.stringify(response));      
-             
+       console.log('response  : ' + JSON.stringify(response));  
+       this.refreshAllMeta(connectionName,ActionHttp.REMOVE_TABLE,false); 
       },
       (error) => {
         console.log('Erreur ! : ' + JSON.stringify(error));          
-         this.emitMapTransfertSubject(ActionHttp.REMOVE_TABLE_ERROR,error['error']['error']);  
+         this.emitMapTransfertKeyspaceSubject(ActionHttp.REMOVE_TABLE_ERROR,error['error']['error']);  
       }
     );    
   }
   saveTable(tableDTO:TableDTO,connectionName:string,keyspaceName:string){
     this.httpClient
-    .post<JSON>(environment['basePathGainde']+'/table/create/'+connectionName+'/'+keyspaceName,tableDTO,this.httpOptions)
+    .post<JSON>(environment['basePathGainde']+'/table/'+connectionName+'/'+keyspaceName,tableDTO,this.httpOptions)
     .subscribe(
       (response) => {            
         console.log('response  : ' + JSON.stringify(response));        
-       
+        this.emitMapTransfertEditTableSubject(ActionHttp.ADD_TABLE,tableDTO.name);  
       },
       (error) => {     
         console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
-        this.emitMapTransfertSubject(ActionHttp.ADD_TABLE_ERROR,error['error']['error']);        
+        this.emitMapTransfertEditTableSubject(ActionHttp.ADD_TABLE_ERROR,error['error']['error']);        
       }
     );    
   }
-  
+
+  testCSPGateway(){
+   
+    this.httpOptions.headers=this.httpOptions.headers.set('Accept','*/*');
+    //this.httpOptions.headers=this.httpOptions.headers.set('Authorization','azazazazazazaza');
+   // this.httpOptions.headers=this.httpOptions.headers.set('test-header','test');
+    this.httpClient
+    .get('https://api-mig.gidn.urssaf.fr/api/reporting/page.html',{headers:this.httpOptions.headers, responseType: 'text' as 'text'})
+    .subscribe(
+      (response) => {       
+        console.log('Response ! : ' + JSON.stringify(response));
+      },
+      (error) => {
+        console.log('Erreur ! : ' + JSON.stringify(error));
+      }
+    );
+  }
 }

@@ -78,8 +78,8 @@
                 </mat-tree>
             </div>
             <div  [ngClass]="{'col-xs-7 col-md-6 col-lg-8':!zoomData,'tableDataZomm col-xs-12 col-md-12 col-lg-12':zoomData}"> 
-                <div  *ngIf="createKeyspaceVisible && !tabsTableVisible">
-                    <div *ngIf="!addKeyspaceVisible">
+                <div  *ngIf="partVisible==4 || partVisible==6">
+                    <div *ngIf="partVisible==6">
                         <div class="row" *ngIf="keyspaceInfo" >                             
                             <div class="col-md-3 col-lg-2"> 
                             </div>
@@ -171,7 +171,18 @@
                                                             create
                                                         </mat-icon>                                      
                                                     </mat-cell>                                     
-                                                    </ng-container>                       
+                                                    </ng-container>   
+                                                    <ng-container matColumnDef="actionremove">
+                                                        <mat-header-cell *matHeaderCellDef >
+                                                            
+                                                    </mat-header-cell>   
+                                                    <mat-cell *matCellDef="let name" class="columTraffic" >   
+                                                        <mat-icon class="actionAddTable"  matTooltip="Supprimer table"
+                                                                (click)="onClickRemoveTable(currentConnection.name,keyspaceInfo['name'],name)" >
+                                                            delete
+                                                        </mat-icon>                                      
+                                                    </mat-cell>                                     
+                                                    </ng-container>                     
                                                     <mat-header-row *matHeaderRowDef="displayedColumnsTableKeys"></mat-header-row>
                                                     <mat-row  *matRowDef="let row; columns: displayedColumnsTableKeys;"></mat-row>         
                                                 </mat-table>
@@ -181,7 +192,7 @@
                             </mat-tab>
                         </mat-tab-group> 
                     </div>
-                    <div *ngIf="addKeyspaceVisible">
+                    <div *ngIf="partVisible==4">
                         <form [formGroup]="keyspaceForm" (ngSubmit)="onClickSaveKeyspace()">
                             <div class="form-group">
                                 <label for="name">Nom du Keyspace</label>
@@ -222,7 +233,7 @@
                         </form>
                     </div>
                 </div>
-                <div *ngIf="tabsTableVisible"> 
+                <div *ngIf="partVisible==5"> 
                     <div class="row" > 
                          <div class="col-md-5 col-lg-4"> 
                         </div>
@@ -244,7 +255,7 @@
                                      <mat-row class="actionClick"   *matRowDef="let row; columns: displayedColumnsPrimary;"></mat-row>         
                                   </mat-table> 
                                   <mat-divider class="dividerTable"></mat-divider>
-                                  <mat-table  #table [dataSource]="tableInfo.index"   >
+                                  <mat-table  #table [dataSource]="tableInfo.indexColumns"  *ngIf="tableInfo.indexColumns.length>0" >
                                     <ng-container matColumnDef="name">
                                       <mat-header-cell *matHeaderCellDef >Colonne </mat-header-cell>
                                       <mat-cell *matCellDef="let ptabIndex" class="columTraffic" >

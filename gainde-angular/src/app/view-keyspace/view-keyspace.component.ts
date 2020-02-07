@@ -10,7 +10,7 @@ import {MatSort} from '@angular/material/sort';
 import {MatDialog, MatDialogRef,MAT_DIALOG_DATA} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {GaindeService} from '../services/gainde.service';
-import {ConnectionDTO,KeyspaceDTO,ActionHttp,GaindeItem} from '../model/model-dto';
+import {ConnectionDTO,KeyspaceDTO,ActionHttp,VIEW_ECRAN} from '../model/model-dto';
 import{DialogData} from '../view-connections/view-connections.component';
 
 interface Meta {
@@ -25,10 +25,8 @@ interface Meta {
 export class ViewKeyspaceComponent implements OnInit {
   treeControl = new NestedTreeControl<Meta>(node => node.metas);
   dataSource = new MatTreeNestedDataSource<Meta>();
+  partVisible:VIEW_ECRAN;
   homeKeyspaceVisible:boolean=false;
-  tabsTableVisible:boolean=false;
-  createKeyspaceVisible:boolean=false;
-  addKeyspaceVisible:boolean=false;
   allNotificationSubscription:Subscription;
   @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
   @ViewChild(MatSort, {static: false}) sort: MatSort;
@@ -37,7 +35,7 @@ export class ViewKeyspaceComponent implements OnInit {
   tableKeyspaceInfoDataSource=new MatTableDataSource<JSON>();
   displayedColumns=['name','type','primaraKey','indexed'];
   displayedColumnsPrimary=['key'];
-  displayedColumnsTableKeys=['tableName','tableAction'];
+  displayedColumnsTableKeys=['tableName','tableAction','actionremove'];
   displayedColumnsIndex=['name','indexName'];
   displayedColumnsTableData: string[];
   colonneDataSource=new MatTableDataSource<JSON>();
@@ -62,19 +60,38 @@ export class ViewKeyspaceComponent implements OnInit {
     }
 
   ngOnInit() {
-    this.currentConnection=this.gaindeService.currentConnection;
-    if(this.gaindeService.currentMetaConnection){
-      this.dataSource.data=this.gaindeService.currentMetaConnection;
-      this.homeKeyspaceVisible=true;      
+    this.currentConnection=this.gaindeService.currentGainde.connection;
+    if(this.gaindeService.currentGainde.content){
+      this.dataSource.data=this.gaindeService.currentGainde.content;
+      let content=this.gaindeService.currentGainde.content;
+      let kName=this.gaindeService.currentGainde.keyspaceName;
+      this.homeKeyspaceVisible=true;    
+      if(kName){
+          for (let i = 0; i < content.length; i++) {
+            if (content[i]['name'] === kName) {
+              this.treeControl.expand(content[i]);
+              this.currentNodeId = content[i]['id'];
+              let tableName=this.gaindeService.currentGainde.tableName;
+              let connectionName=this.gaindeService.currentGainde.connectionName;
+              if(tableName){
+                this.currentNodeId = content[i]['id']+'#'+tableName;
+                content[i]['metas'].push({"name":tableName,id:this.currentNodeId,"type":2,"metas":[]});
+                this.gaindeService.getInfoTable(connectionName,kName,tableName);
+                this.currentTableKeys=this.currentNodeId.split("#");
+              }
+              break;
+            }
+          }
+      }
     }
 
 
-    this.allNotificationSubscription=this.gaindeService.mapTransfertSubject.subscribe((mapTransfert: Map<string,any>) => {
+    this.allNotificationSubscription=this.gaindeService.mapTransfertViewKeyspaceSubject.subscribe((mapTransfert: Map<string,any>) => {
       let mapToString='';
       mapTransfert.forEach((key,item)=>{
         mapToString=mapToString+' '+item+'  value='+JSON.stringify(mapTransfert.get(item));        
       });   
-     // console.log('ViewKeyspaceComponent mapTransfert '+mapToString);  
+     console.log('ViewKeyspaceComponent mapTransfert '+mapTransfert.get("type"));  
       switch (mapTransfert.get("type") as ActionHttp)  {
             case ActionHttp.CLOSE_CONNECTION:
             {
@@ -88,8 +105,8 @@ export class ViewKeyspaceComponent implements OnInit {
             }
             case ActionHttp.REMOVE_KEYSPACE:
             {
-                this.gaindeService.currentMetaConnection=mapTransfert.get('content');
-                this.dataSource.data=this.gaindeService.currentMetaConnection;
+                this.gaindeService.currentGainde.content=mapTransfert.get('content');
+                this.dataSource.data=this.gaindeService.currentGainde.content;
                 this.openSnackBar('Le keyspace  a été  supprimée','');
                 break;
             }               
@@ -100,9 +117,24 @@ export class ViewKeyspaceComponent implements OnInit {
             }
             case ActionHttp.REMOVE_TABLE:
             {
-              this.gaindeService.currentMetaConnection=mapTransfert.get('content');
-              this.dataSource.data=this.gaindeService.currentMetaConnection;
+              this.gaindeService.currentGainde.content=mapTransfert.get('content');
+              let content=this.gaindeService.currentGainde.content;
+              this.dataSource.data=content;
               this.openSnackBar('La table a été supprimée','');
+              let kName=this.gaindeService.currentGainde.keyspaceName;
+              let connectionName=this.gaindeService.currentGainde.connectionName;
+              this.gaindeService.getKeyspaceInfo(connectionName,kName);
+              
+              if(kName){
+                for (let i = 0; i < content.length; i++) {
+                  if (content[i]['name'] === kName) {
+                    this.treeControl.expand(content[i]);
+                    this.currentNodeId = content[i]['id'];                
+                    break;
+                  }
+                }
+            }
+             
               break;
             }
             case ActionHttp.REMOVE_TABLE_ERROR:
@@ -136,7 +168,7 @@ export class ViewKeyspaceComponent implements OnInit {
                 this.tableKeyspaceInfoDataSource.data=mapTransfert.get('content')['tables'];
                 this.tableKeyspaceInfoDataSource.filter = '';               
                 this.filterTableKeyspaceData='';
-                this.createKeyspaceVisible=true;
+                this.partVisible=VIEW_ECRAN.KEYSPACE_INFO;
                 //console.log('INFO_KEYSPACE  : ' + JSON.stringify(this.keyspaceInfo));
                 break;   
             }
@@ -200,10 +232,9 @@ export class ViewKeyspaceComponent implements OnInit {
     this.currentNodeId=node['id']; 
     this.treeControl.expand(node);
     if(node['type']===1){
-      this.tabsTableVisible=false;
-      this.addKeyspaceVisible=false;
+      this.partVisible=VIEW_ECRAN.KEYSPACE_INFO;
       this.currentTableKeys=node['id'].split("#");
-      this.gaindeService.getKeyspaceInfo(this.currentTableKeys[0],this.currentTableKeys[1]);
+      this.gaindeService.getKeyspaceInfo(this.currentTableKeys[0],this.currentTableKeys[1]);      
     }else{       
       this.currentTableKeys=node['id'].split("#");
       this.gaindeService.getInfoTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
@@ -217,19 +248,29 @@ export class ViewKeyspaceComponent implements OnInit {
     //console.log('onClickRowNode  : ' + JSON.stringify(node));
     this.currentNodeId=node['id']; 
     this.currentTableKeys=this.currentNodeId.split("#");
+    this.gaindeService.currentGainde.connectionName =this.currentTableKeys[0];
+    this.gaindeService.currentGainde.keyspaceName =this.currentTableKeys[1]; 
     if(node['type']===1){
-      this.tabsTableVisible=false;
+      this.partVisible=VIEW_ECRAN.KEYSPACE_HOME;
+      this.currentKeyspaceName=this.currentTableKeys[1];
       this.openDialog('Confirmation de suppression',"Voulez-vous supprimer le keyspace "+this.currentTableKeys[1]+"?",true,this.currentNodeId);
-    }else{       
-      this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la table "+this.currentTableKeys[2]+"?",true,this.currentNodeId);
+    }else{  
+      this.currentKeyspaceName=this.currentTableKeys[1];    
+      //this.gaindeService.currentGainde.tableName =this.currentTableKeys[2];  
+      this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la table "+this.currentTableKeys[2]+" du keyspace"+this.currentTableKeys[1]+"?",true,this.currentNodeId);
     }
   }
-  
-  onClickAddKeyspace(){
-    this.tabsTableVisible=false;
+  onClickRemoveTable(connectionName:string,keyspaceName:string,tableName:string){
+    //console.log('onClickRowNode  : ' + JSON.stringify(node));
+    let key:string=connectionName+'#'+keyspaceName+'#'+tableName;
+    this.currentKeyspaceName=keyspaceName;   
+    this.gaindeService.currentGainde.connectionName =connectionName;
+    this.gaindeService.currentGainde.keyspaceName =keyspaceName; 
+    this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la table "+tableName+" du keyspace "+keyspaceName+"?",true,key);
+  }
+  onClickAddKeyspace(){    
     this.initForm();
-    this.createKeyspaceVisible=true;
-    this.addKeyspaceVisible=true;
+    this.partVisible=VIEW_ECRAN.KEYSPACE_NEW;
     this.zoomData=false;
   }
   onClickSaveKeyspace(){
@@ -260,11 +301,16 @@ export class ViewKeyspaceComponent implements OnInit {
   }
   onClickAddNewTable(connectionName:string,keyspaceName:string){
     console.log('onClickAddNewTable connectionName='+connectionName+' keyspace '+keyspaceName);
-    this.gaindeService.currentGaindeItem=new GaindeItem(connectionName,keyspaceName,'',null);
-    this.openDialogTableInfo(5);
-    //this.router.navigate(['/editTable']);
+    this.gaindeService.currentGainde.connectionName=connectionName;
+    this.gaindeService.currentGainde.keyspaceName=keyspaceName;  
+    this.gaindeService.currentGainde.tableName=null;   
+    this.openDialogTableInfo(5);    
   }
   onClickEditTable(connectionName:string,keyspaceName:string,tableName:string){
+    console.log('onClickEditTable connectionName='+connectionName+' keyspace '+keyspaceName+' table name '+tableName);   
+    this.gaindeService.currentGainde.connectionName=connectionName;
+    this.gaindeService.currentGainde.keyspaceName=keyspaceName;  
+    this.gaindeService.currentGainde.tableName=tableName; 
     this.router.navigate(['/editTable']);
   }
   onClickShowKeyspace(){
@@ -314,7 +360,7 @@ export class ViewKeyspaceComponent implements OnInit {
       
       if(result!=null){
        console.log("openDialogTableInfo "+result);
-       this.gaindeService.currentGaindeItem.counter=result;
+       this.gaindeService.currentGainde.counter=result;
        this.router.navigate(['/editTable']);
       }
 
@@ -325,11 +371,11 @@ export class ViewKeyspaceComponent implements OnInit {
     this.tableInfo = mapTransfert.get('content');
     this.colonneDataSource.data = this.tableInfo['columns'];
     this.columnsSize = this.tableInfo['columns'].length;
-    this.tabsTableVisible = true;
-    if (this.gaindeService.currentMetaConnection && this.currentKeyspaceName) {
-      for (let i = 0; i < this.gaindeService.currentMetaConnection.length; i++) {
-        if (this.gaindeService.currentMetaConnection[i]['name'] === this.currentKeyspaceName) {
-          this.treeControl.expand(this.gaindeService.currentMetaConnection[i]);
+    this.partVisible=VIEW_ECRAN.KEYSPACE_INFO_TABLE;
+    if (this.gaindeService.currentGainde.content && this.currentKeyspaceName) {
+      for (let i = 0; i < this.gaindeService.currentGainde.content.length; i++) {
+        if (this.gaindeService.currentGainde.content[i]['name'] === this.currentKeyspaceName) {
+          this.treeControl.expand(this.gaindeService.currentGainde.content[i]);
         }
       }
     }
@@ -337,22 +383,23 @@ export class ViewKeyspaceComponent implements OnInit {
 
   private doAfterSaveKeyspace(mapTransfert: Map<string, any>) {
     this.dataSource.data = mapTransfert.get('content');
-    this.gaindeService.currentMetaConnection = mapTransfert.get('content');
-    if (this.gaindeService.currentMetaConnection && this.currentKeyspaceName) {
-      for (let i = 0; i < this.gaindeService.currentMetaConnection.length; i++) {
-        if (this.gaindeService.currentMetaConnection[i]['name'] === this.currentKeyspaceName) {
-          this.treeControl.expand(this.gaindeService.currentMetaConnection[i]);
-          this.currentNodeId = this.gaindeService.currentMetaConnection[i]['id'];
+    this.gaindeService.currentGainde.content = mapTransfert.get('content');
+    let content=this.gaindeService.currentGainde.content;
+    if (content && this.currentKeyspaceName) {
+      for (let i = 0; i < content.length; i++) {
+        if (content[i]['name'] === this.currentKeyspaceName) {
+          this.treeControl.expand(content[i]);
+          this.currentNodeId = content[i]['id'];
         }
       }
       this.openSnackBar('Le keyspace ' + this.currentKeyspaceName + ' a été ajouté avec succès', '');
-      this.addKeyspaceVisible = false;
+      this.partVisible=VIEW_ECRAN.KEYSPACE_INFO;
     }
   }
 
  private openSnackBar(message: string, action: string) {
     this.snackBar.open(message, action, {
-      duration: 3000,
+      duration: 2000,
       // here specify the position
       verticalPosition: 'top',
       panelClass: ['green-snackbar']
