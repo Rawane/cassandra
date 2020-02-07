@@ -1,0 +1,198 @@
+<div class="row">
+    <div class="col-xs-3 col-md-2 col-lg-3">   
+          <div class="critereRecherche">      
+            <form [formGroup]="searchForm" (ngSubmit)="onSubmitForm()">
+              <button type="submit" class="btn btn-primary" [disabled]="searchForm.invalid">Soumettre</button>
+                <div class="form-group">
+                    <label for="environnement">Environnement</label>
+                    <select id="environnement" class="form-control" formControlName="environnement" (change)="onChangeValueEnvironnement()">
+                      <option value="GIPN">Production</option>
+                      <option value="GIDN">Developemment</option>
+                      <option value="GIVN">Validation</option>
+                      <option value="MIG">Dev Migration</option>
+                      <option value="GIIN-CLEA1">Intégration Cléa1</option>
+                      <option value="GIIN-CLEA1">Intégration Cléa1</option>
+                      <option value="GIIN-C1">Intégration C1</option>
+                      <option value="GIIN-C2">Intégration C2</option>
+                      <option value="cspp">CSPP</option>
+                      <option value="gippn">Pré Production</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="topology">topology</label>
+                    <select id="topology" class="form-control" formControlName="topology" (change)="onChangeValueTopology()">
+                      <option value="Tous">Tous</option>
+                      <option value="DMZ">DMZ</option>
+                      <option value="INTRA">INTRA</option>                     
+                    </select>
+                  </div>
+                  <div class="form-group" *ngIf="searchForm.value.topology!='Tous'">
+                    <label for="instance">Instance</label>
+                    <select id="instance" class="form-control" formControlName="instance">
+                      <option value="Tous">Tous</option>
+                      <option [value]="instanceUnit.name" *ngFor="let instanceUnit of instance; let i = index">{{instanceUnit.name}}</option>                                       
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="timeInterval">Time Interval</label>
+                    <select id="timeInterval" class="form-control" formControlName="timeInterval">
+                      <option value="10m">10 minutes</option>
+                      <option value="30m">30 minutes</option>
+                      <option value="1h">1 heure</option>
+                      <option value="2h">2 heures</option>
+                      <option value="3h">3 heures</option>
+                      <option value="5h">5 Heures</option>
+                      <option value="10h">10 Heures</option>
+                      <option value="24h">1 jour</option>
+                      <option value="48h">2 jours</option>
+                      <option value="72h">3 jours</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="transactionId">Transaction Id</label>
+                    <input id="transactionId" class="form-control" formControlName="transactionId" >
+                  </div>
+                  <div class="form-group">
+                    <label for="transactionStatus">Transaction Status</label>
+                    <select id="transactionStatus" class="form-control" formControlName="transactionStatus">    
+                      <option value="">Tous</option>                
+                      <option value="Pass">PASS</option>
+                      <option value="Fail">BLOCK</option>
+                      <option value="Error">EXCEPTION</option>                      
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <select id="subject" class="form-control" formControlName="subject">
+                      <option *ngFor="let option of arraySubjectOptions | async" [value]="option">{{option}}</option>                      
+                    </select>
+                  </div>
+                  <div class="form-group"> 
+                    <label for="path">Path</label>                  
+                    <mat-form-field>
+                      <input type="text" matInput formControlName="path" [matAutocomplete]="auto">
+                    </mat-form-field>
+                    <mat-autocomplete #auto="matAutocomplete">
+                      <mat-option *ngFor="let option of filteredPaths | async" [value]="option">{{option}}</mat-option>
+                    </mat-autocomplete>
+                  </div>
+                  <div class="form-group">
+                    <label for="status">http Status</label>                    
+                    <input id="status" class="form-control" formControlName="status" >
+                  </div>
+                  <div class="form-group">
+                    <label for="method">Méthod</label>
+                    <select id="method" class="form-control" formControlName="method">
+                      <option value=""></option>
+                      <option value="GET">GET</option>
+                      <option value="POST">POST</option>
+                      <option value="OPTIONS">OPTIONS</option>
+                      <option value="DELETE">DELETE</option>
+                      <option value="PATCH">PATCH</option>
+                      <option value="HEAD">HEAD</option>
+                      <option value="PUT">PUT</option>
+                      <option value="CONNECT">CONNECT</option>
+                      <option value="TRACE">TRACE</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="duration">Duration</label>
+                    <select id="duration" class="form-control" formControlName="duration">                    
+                      <option value="gt">Greather than</option>
+                      <option value="lt">Less than</option>
+                      <option value="eq">Equals to</option>                      
+                    </select>
+                    <input id="durationIn" class="form-control" formControlName="durationIn" >
+                  </div>
+                  <div class="form-group">
+                    <label for="maxResults">Max Résult</label>
+                    <input id="maxResults" class="form-control" formControlName="maxResults" >
+                  </div>
+              <button type="submit" class="btn btn-primary" [disabled]="searchForm.invalid">Soumettre</button>
+            </form>
+         </div>
+    </div>
+    <div class="col-xs-9 col-md-10 col-lg-9">
+      <div *ngIf="!trafficDataSource.data.length" class="trafficContent">
+        Aucun Résultat!
+      </div>
+      <div  class="trafficContent">
+        <div class="row">
+          <div class="col-xs-4 col-md-2 col-lg-4"> 
+            <mat-form-field class="searchTraffic" *ngIf="trafficDataSource.data.length">
+              <input matInput (keyup)="onApplyFilter($event.target.value)" placeholder="Filter">
+            </mat-form-field>  
+          </div>   
+          <div class="col-xs-4 col-md-6 col-lg-4"> 
+            <mat-form-field class="searchTraffic">             
+              <mat-icon matPrefix (click)="onSearchByAccesToken()" class="iconSearch">search</mat-icon>      
+              <input  matInput type="search" placeholder="AcccesToken" class="search-input searchTrafficInput"  [(ngModel)]="authorization" >
+            </mat-form-field>
+           </div>
+           <div class="col-xs-4 col-md-4 col-lg-4"> 
+                <button class="btn btn-primary btn-action-traffic"  (click)="onStopTraffic()">Stop traffic</button>
+                <button class="btn btn-success btn-action-traffic"  (click)="onStartTraffic()">Start traffic</button>
+           </div>
+        </div>   
+      <div class="divTableContent mat-elevation-z8 row"> 
+        <div class="col-xs-12 col-lg-12  col-md-12">   
+          <mat-card *ngIf="isLoading" 
+            style="display: flex; justify-content: center; align-items: center">
+            <mat-progress-spinner  class="mat-spinner-color"
+              color="primary" 
+              mode="indeterminate">
+            </mat-progress-spinner>
+          </mat-card>      
+	    <mat-table  #table [dataSource]="trafficDataSource"  matSort *ngIf="!isLoading">
+        <ng-container matColumnDef="method">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Méthod </mat-header-cell>
+          <mat-cell *matCellDef="let traffic" class="columTraffic" > <span class="mobile-label">Méthod:</span><mat-icon  *ngIf="traffic.status<=400" class="columSatusOk">thumb_up</mat-icon> <mat-icon  *ngIf=" traffic.status>=400" class="columSatusFailed">thumb_down</mat-icon>{{traffic.method}} </mat-cell>
+        </ng-container>         
+        <ng-container matColumnDef="status">
+          <mat-header-cell *matHeaderCellDef class="columTraffic" mat-sort-header> Status</mat-header-cell>
+          <mat-cell *matCellDef="let traffic"  [ngClass]="{'columTraffic':true,'columSatusOK': traffic.status==200, 'columSatusFailed': traffic.status>=400}" >  <span class="mobile-label">Status:</span> {{traffic.status}} </mat-cell>
+        </ng-container> 
+        <ng-container matColumnDef="path">
+          <mat-header-cell *matHeaderCellDef  mat-sort-header>Path </mat-header-cell>
+          <mat-cell *matCellDef="let traffic"  [matTooltip]="traffic.uri"  class="columTraffic truncate-cell" >
+             <span class="mobile-label">Path:</span> {{traffic.uri}} </mat-cell>
+        </ng-container>       
+        
+        <ng-container matColumnDef="service">
+          <mat-header-cell *matHeaderCellDef mat-sort-header> Service </mat-header-cell>
+          <mat-cell *matCellDef="let traffic"  [matTooltip]="traffic.serviceName"  class="truncate-cell-short columTraffic"> <span class="mobile-label">Service:</span>{{traffic.serviceName}} </mat-cell>
+        </ng-container>       
+        <ng-container matColumnDef="operation">
+          <mat-header-cell *matHeaderCellDef mat-sort-header> Opération  </mat-header-cell>
+          <mat-cell *matCellDef="let traffic"  [matTooltip]="traffic.operation"  class="truncate-cell-short columTraffic"><span class="mobile-label">Opération:</span> {{traffic.operation}} </mat-cell>
+        </ng-container>     
+        <ng-container matColumnDef="subject">
+          <mat-header-cell *matHeaderCellDef mat-sort-header> Subject </mat-header-cell>
+          <mat-cell *matCellDef="let traffic"  [matTooltip]="traffic.subject"  class="truncate-cell-short columTraffic"> <span class="mobile-label">Subject:</span>{{traffic.subject}} </mat-cell>
+        </ng-container>  
+        <ng-container matColumnDef="duration">
+          <mat-header-cell *matHeaderCellDef mat-sort-header> Durée</mat-header-cell>
+          <mat-cell *matCellDef="let traffic" class="columTraffic">  <span class="mobile-label">Durée:</span>{{traffic.duration}} </mat-cell>
+        </ng-container> 
+        <ng-container matColumnDef="dateTime">
+          <mat-header-cell *matHeaderCellDef mat-sort-header> Date/Time </mat-header-cell>
+          <mat-cell *matCellDef="let traffic" class="columTraffic"> <span class="mobile-label">Date/Time:</span>{{traffic.timestamp | date:'MM/dd/yyyy HH:mm:ss'}} </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="group">
+          <mat-header-cell *matHeaderCellDef mat-sort-header> Groupe </mat-header-cell>
+          <mat-cell *matCellDef="let traffic"  class="columTraffic"><span class="mobile-label">Groupe:</span> {{traffic.group}} </mat-cell>
+        </ng-container> 
+        <ng-container matColumnDef="server">
+          <mat-header-cell *matHeaderCellDef mat-sort-header> Serveur </mat-header-cell>
+          <mat-cell *matCellDef="let traffic"  class="columTraffic"><span class="mobile-label">Serveur:</span> {{traffic.server}} </mat-cell>
+        </ng-container> 
+         <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+         <mat-row class="actionClick" (click)="onClickRowTraffic(row)"  *matRowDef="let row; columns: displayedColumns;"></mat-row>         
+      </mat-table> 
+      </div>  
+      </div>    
+    </div>
+    <mat-paginator [length]="resultsLength" [pageSize]="10"  [hidden]="!trafficDataSource.data.length"></mat-paginator>
+  </div>
+</div>
+

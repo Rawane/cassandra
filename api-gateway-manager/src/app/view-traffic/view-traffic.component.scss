@@ -1,0 +1,95 @@
+  .trafficPaginator{
+    display: none;
+  }
+  .critereRecherche{
+    padding: 1rem;
+    box-sizing: border-box;
+  }   
+  .truncate-cell {
+    max-width: 15rem; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .truncate-cell-short {
+    max-width: 8rem; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  } 
+  .mat-cell {
+    padding: 8px;
+  }
+  .mat-header-cell { 
+     text-align: center;  
+}
+.searchTraffic{
+  padding: 0.5rem;
+  min-width: 20rem; 
+}
+.searchTrafficInput{
+  box-sizing: border-box;
+  
+}
+.iconSearch{
+  cursor: pointer;
+}
+.btn-action-traffic{
+  margin-left: 1rem; 
+}
+.divTableContent {
+  display: flex;
+  flex-direction: column;  
+ // max-height: 500px;
+  //min-width: 600px;
+}
+.columTraffic{
+  text-align: center;
+  padding: 8px;
+}
+.columSatusFailed{
+  color:red;
+}
+.columSatusOk{
+  color: green;
+}
+.actionClick{
+  cursor: pointer;
+}
+.mat-table {
+  overflow: auto;
+  width: 100%;
+ // max-height: 500px;
+}
+.mat-spinner-color::ng-deep circle{
+  stroke: green !important;
+  }
+.mobile-label {
+  display: none;
+}
+@media(max-width: 600px) {
+  .mobile-label {
+    width: 80px;
+    display: inline-block;
+    font-weight: bold;
+    margin-right: 10px;
+  }
+
+  .mat-header-row {
+    display: none;
+  }
+
+  .mat-row { 
+    flex-direction: column;
+    align-items: start;
+    padding: 8px 24px;
+  }
+  .truncate-cell {
+    max-width: 20rem;   
+  }
+  .truncate-cell-short {
+    max-width: 20rem;    
+  }  
+  
+}
+

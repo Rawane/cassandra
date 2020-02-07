@@ -1,0 +1,45 @@
+.dicDetailTrafficLineAction{
+    margin-bottom: 20px;
+}
+.truncate-header{   
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .content-header{
+    width:100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .lineSepaTarrfic{
+    width: 100%;
+    height: 15px;
+    background-color:#407ca0;
+    margin-top: 5px;
+    margin-bottom:10px;
+  }
+  .traceEroor{
+    color: red;
+  }
+  
+.police-tree-invisible {
+  display: none;
+}
+
+.police-tree ul,
+.police-tree li {
+  margin-top: 0;
+  margin-bottom: 0;
+  list-style-type: none;
+}
+.iconSuccess{
+  color: green;
+}
+.iconWarning{
+  color:orange;
+}
+.buttonTree{
+  border: none;
+  background: transparent;
+}
