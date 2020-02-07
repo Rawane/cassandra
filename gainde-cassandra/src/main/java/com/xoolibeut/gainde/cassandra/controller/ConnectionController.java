@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ColonneTableDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ConnectionDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.GaindeMetadataDTO;
-import com.xoolibeut.gainde.cassandra.controller.dtos.TableInfoDTO;
+import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
 import com.xoolibeut.gainde.cassandra.repository.ConnectionCassandraRepository;
 import com.xoolibeut.gainde.cassandra.repository.ConnectionRepository;
 
@@ -141,7 +141,7 @@ public class ConnectionController {
 	public ResponseEntity<String> getTableInfo(@PathVariable("name") String connectionName,
 			@PathVariable("keysp") String keyspaceName, @PathVariable("table") String tableName) {
 		try {
-			TableInfoDTO tableInfo = cassandraRepository.getTableInfo(connectionName, keyspaceName, tableName);
+			TableDTO tableInfo = cassandraRepository.getTableInfo(connectionName, keyspaceName, tableName);
 			long rows = cassandraRepository.countAllRows(connectionName, keyspaceName, tableName);
 			List<ColonneTableDTO> colonneTableDTOs = cassandraRepository.getAllColumns(connectionName, keyspaceName,
 					tableName);
@@ -157,7 +157,7 @@ public class ConnectionController {
 	public ResponseEntity<String> getTableInfoTypeNative(@PathVariable("name") String connectionName,
 			@PathVariable("keysp") String keyspaceName, @PathVariable("table") String tableName) {
 		try {
-			TableInfoDTO tableInfo = cassandraRepository.getTableInfo(connectionName, keyspaceName, tableName);
+			TableDTO tableInfo = cassandraRepository.getTableInfo(connectionName, keyspaceName, tableName);
 			long rows = cassandraRepository.countAllRows(connectionName, keyspaceName, tableName);
 			List<ColonneTableDTO> colonneTableDTOs = cassandraRepository.getAllColumnsTypeNative(connectionName, keyspaceName,
 					tableName);

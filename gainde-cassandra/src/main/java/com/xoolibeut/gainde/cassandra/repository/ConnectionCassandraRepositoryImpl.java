@@ -25,7 +25,7 @@ import com.xoolibeut.gainde.cassandra.controller.dtos.ColonneTableDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ConnectionDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.GaindeMetadataDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.IndexColumn;
-import com.xoolibeut.gainde.cassandra.controller.dtos.TableInfoDTO;
+import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
 
 @Repository
 public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRepository {
@@ -144,6 +144,13 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 						ColonneTableDTO colonneDTO = new ColonneTableDTO();
 						colonneDTO.setName(columMeta.getName());
 						colonneDTO.setType("" + columMeta.getType().getName().ordinal());
+						if (columMeta.getType().getTypeArguments().size() == 1) {
+							colonneDTO.setTypeList("" + columMeta.getType().getTypeArguments().get(0).getName().ordinal());
+						}
+						if (columMeta.getType().getTypeArguments().size() == 2) {
+							colonneDTO.setTypeList("" + columMeta.getType().getTypeArguments().get(0).getName().ordinal());
+							colonneDTO.setTypeMap("" + columMeta.getType().getTypeArguments().get(1).getName().ordinal());
+						}
 						colonneDTO.setIndexed(listIndex.contains(columMeta.getName()));
 						colonneDTO.setPrimaraKey(listPrimaryKey.contains(columMeta.getName()));
 						listColumDTO.add(colonneDTO);
@@ -157,8 +164,8 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 		return listColumDTO;
 	}
 
-	public TableInfoDTO getTableInfo(String connectionName, String keyspaceName, String tableName) {
-		TableInfoDTO tableInfoDTO = new TableInfoDTO();
+	public TableDTO getTableInfo(String connectionName, String keyspaceName, String tableName) {
+		TableDTO tableInfoDTO = new TableDTO();
 		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
 		if (cluster != null) {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(keyspaceName);
