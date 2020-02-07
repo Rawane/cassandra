@@ -24,7 +24,7 @@ export interface DialogData {
 export class ViewConnectionsComponent implements OnInit {
   connectionForm:FormGroup; 
   connections:any;
-  metaConnection:any;
+  //metaConnection:any;
   allNotificationSubscription:Subscription;
   saveOrUpdate:boolean=true;
   saveConnection:boolean;
@@ -36,7 +36,7 @@ export class ViewConnectionsComponent implements OnInit {
   }
   ngOnInit() {
     //init Obersver
-    this.gaindeService.testCSPGateway();
+    //this.gaindeService.testCSPGateway();
     this.allNotificationSubscription=this.gaindeService.mapTransfertViewConnectionSubject.subscribe((mapTransfert: Map<string,any>) => {
       let mapToString='';
       mapTransfert.forEach((key,item)=>{

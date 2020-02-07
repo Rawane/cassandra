@@ -187,12 +187,12 @@ validPrimaryKey:boolean=false;
      let val=controlForm.value['type'];  
      
      // console.log('onValueTypeChange '+index+' control   val '+val);
-      if(val==='32' || val==='33'){
+      if(val==='22' || val==='24'){
         controlForm.get('typeList').setValidators([Validators.required]);
               
       }else{
         controlForm.get('typeList').setValidators([]);
-        if(val==='34'){
+        if(val==='23'){
           controlForm.get('typeList').setValidators([Validators.required]);
           controlForm.get('typeMap').setValidators([Validators.required]);
         }else{
@@ -215,10 +215,10 @@ validPrimaryKey:boolean=false;
       if(controlForm.value['indexed']){
         colonneDTO.indexed=true;
       }      
-      if(colonneDTO.type=='32' || colonneDTO.type=='33' ){
+      if(colonneDTO.type=='22' || colonneDTO.type=='24' ){
         colonneDTO.typeList=controlForm.value['typeList'];
       }
-      if(colonneDTO.type=='34'){
+      if(colonneDTO.type=='23'){
         colonneDTO.typeList=controlForm.value['typeList'];
         colonneDTO.typeMap=controlForm.value['typeMap'];
       }

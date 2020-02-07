@@ -58,33 +58,42 @@ export class ViewKeyspaceComponent implements OnInit {
    private snackBar:MatSnackBar,private dialog: MatDialog) {
       
     }
-
+initEcranWithCurrentData(){
+  if(this.gaindeService.currentGainde.content){
+    this.dataSource.data=this.gaindeService.currentGainde.content;
+    let content=this.gaindeService.currentGainde.content;
+    let kName=this.gaindeService.currentGainde.keyspaceName;
+    this.homeKeyspaceVisible=true;    
+    if(kName){
+        for (let i = 0; i < content.length; i++) {
+          if (content[i]['name'] === kName) {
+            this.treeControl.expand(content[i]);
+            this.currentNodeId = content[i]['id'];
+            let tableName=this.gaindeService.currentGainde.tableName;
+            let connectionName=this.gaindeService.currentGainde.connectionName;
+            if(tableName){
+              this.currentNodeId = content[i]['id']+'#'+tableName;
+              let verif:boolean=false;
+              for(let tableK of content[i]['metas']){
+                if(tableK['id']==this.currentNodeId){
+                  verif=true;
+                  break;
+                }
+              }if(!verif){
+                  content[i]['metas'].push({"name":tableName,id:this.currentNodeId,"type":2,"metas":[]});                 
+              }
+              this.gaindeService.getInfoTable(connectionName,kName,tableName);
+              this.currentTableKeys=this.currentNodeId.split("#");
+            }
+            break;
+          }
+        }
+    }
+  }
+}
   ngOnInit() {
     this.currentConnection=this.gaindeService.currentGainde.connection;
-    if(this.gaindeService.currentGainde.content){
-      this.dataSource.data=this.gaindeService.currentGainde.content;
-      let content=this.gaindeService.currentGainde.content;
-      let kName=this.gaindeService.currentGainde.keyspaceName;
-      this.homeKeyspaceVisible=true;    
-      if(kName){
-          for (let i = 0; i < content.length; i++) {
-            if (content[i]['name'] === kName) {
-              this.treeControl.expand(content[i]);
-              this.currentNodeId = content[i]['id'];
-              let tableName=this.gaindeService.currentGainde.tableName;
-              let connectionName=this.gaindeService.currentGainde.connectionName;
-              if(tableName){
-                this.currentNodeId = content[i]['id']+'#'+tableName;
-                content[i]['metas'].push({"name":tableName,id:this.currentNodeId,"type":2,"metas":[]});
-                this.gaindeService.getInfoTable(connectionName,kName,tableName);
-                this.currentTableKeys=this.currentNodeId.split("#");
-              }
-              break;
-            }
-          }
-      }
-    }
-
+   this.initEcranWithCurrentData();
 
     this.allNotificationSubscription=this.gaindeService.mapTransfertViewKeyspaceSubject.subscribe((mapTransfert: Map<string,any>) => {
       let mapToString='';
