@@ -1,16 +1,17 @@
 <mat-horizontal-stepper [linear]="true" #stepper selectedIndex="2">
     <mat-step disabled="true">
-        <ng-template matStepLabel>{{currentGaindeEdit.connectionName}}</ng-template>
+        <ng-template matStepLabel>{{currentGainde.connectionName}}</ng-template>
     </mat-step>
     <mat-step  disabled="true">
-        <ng-template matStepLabel>{{currentGaindeEdit.keyspaceName}}</ng-template>
+        <ng-template matStepLabel>{{currentGainde.keyspaceName}}</ng-template>
     </mat-step>
     <mat-step >
-      <ng-template matStepLabel>Edit Table</ng-template>
+      <ng-template matStepLabel>Create Table</ng-template>
      
     </mat-step>
   </mat-horizontal-stepper>
   <div *ngIf="formTable">
+
     <form [formGroup]="formTable" (ngSubmit)="onSubmitTable()">
       <div class="row form-group">
            <div class="col-4">
@@ -49,15 +50,14 @@
                           </select>   
                       </div>   
                       <div class="col-1">
-                        <input type="checkbox" class="gaindeFormControl" formControlName="primaryKey"  
-                        disabled="column.value.primaryKey">  
+                        <input type="checkbox" class="gaindeFormControl" formControlName="primaryKey" (change)="onCheckPrimaryChange(i)">  
                     </div> 
                     <div class="col-1">
                       <input type="checkbox" class="gaindeFormControl" formControlName="indexed"  (click)="onCheckIndexChange(i)">                      
                   </div>   
                     <div class="col-1">
-                      <button type="button" class="btn btn-danger"  *ngIf="!column.value.primaryKey"
-                      matTooltip="Supprimer une Ligne" (click)="onRemoveLineColumn(i)"  >
+                      <button type="button" class="btn btn-danger"  *ngIf="ligneColumns.length>1"
+                      matTooltip="Supprimer une Ligne" (click)="onRemoveLineColumn(i)">
                       <mat-icon >
                         remove
                       </mat-icon> 
@@ -79,7 +79,7 @@
                    </div>   
                   
                  <div class="col-3">                   
-                   <input class="form-control columnOptionel" formControlName="indexName" *ngIf="column.value.indexed" (change)="onIndexNameValueChange(i)">
+                   <input class="form-control columnOptionel" formControlName="indexName" *ngIf="column.value.indexed" >
                </div>   
                  
            </div>  
@@ -98,7 +98,7 @@
               </button> 
           </div>
           <div class="col-xs-6 col-md-4 col-lg-4">
-            <button type="submit" class="btn btn-success boutonSave" [disabled]="formTable.invalid || !validIndex" >
+            <button type="submit" class="btn btn-success boutonSave" [disabled]="formTable.invalid || !validPrimaryKey" >
               Enregistrer 
           </button> 
           </div>

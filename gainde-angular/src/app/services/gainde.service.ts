@@ -9,7 +9,8 @@ export class GaindeService {
   mapTransfert=new Map<string,any>();
   mapTransfertViewConnectionSubject=new Subject<Map<String,any>>();  
   mapTransfertViewKeyspaceSubject=new Subject<Map<String,any>>();  
-  mapTransfertViewEditTableSubject=new Subject<Map<String,any>>();  
+  mapTransfertViewAddTableSubject=new Subject<Map<String,any>>();  
+  mapTransfertViewEditTableSubject=new Subject<Map<String,any>>();
   //currentMetaConnection:any;
   //currentConnection:ConnectionDTO;
   currentGainde:GaindeCommunication=new GaindeCommunication();
@@ -34,6 +35,11 @@ export class GaindeService {
     this.mapTransfert.set("content",content);
     this.mapTransfert.set("type",action);
     this.mapTransfertViewEditTableSubject.next(this.mapTransfert);
+  }
+  emitMapTransfertAddTableSubject(action:ActionHttp,content:any) {
+    this.mapTransfert.set("content",content);
+    this.mapTransfert.set("type",action);
+    this.mapTransfertViewAddTableSubject.next(this.mapTransfert);
   }
   getAllConnections() {   
     this.httpClient
@@ -258,15 +264,33 @@ export class GaindeService {
     .subscribe(
       (response) => {            
         console.log('response  : ' + JSON.stringify(response));        
-        this.emitMapTransfertEditTableSubject(ActionHttp.ADD_TABLE,tableDTO.name);  
+        this.emitMapTransfertAddTableSubject(ActionHttp.ADD_TABLE,tableDTO.name);  
       },
       (error) => {     
         console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
-        this.emitMapTransfertEditTableSubject(ActionHttp.ADD_TABLE_ERROR,error['error']['error']);        
+        this.emitMapTransfertAddTableSubject(ActionHttp.ADD_TABLE_ERROR,error['error']['error']);        
       }
     );    
   }
-
+  updateTable(oldTableDTO:TableDTO,tableDTO:TableDTO,connectionName:string,keyspaceName:string){
+    let coupleTableDTO={
+      "oldTableDTO":oldTableDTO,
+      "tableDTO":tableDTO
+    }
+    this.httpClient
+    .put<JSON>(environment['basePathGainde']+'/table/'+connectionName+'/'+keyspaceName,coupleTableDTO,this.httpOptions)
+    .subscribe(
+      (response) => {            
+        console.log('response  : ' + JSON.stringify(response));        
+        this.emitMapTransfertEditTableSubject(ActionHttp.UPDATE_TABLE,tableDTO.name);  
+      },
+      (error) => {     
+        console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
+        this.emitMapTransfertEditTableSubject(ActionHttp.UPDATE_TABLE_ERROR,error['error']['error']);        
+      }
+    );    
+  }
+  
   testCSPGateway(){
    
     this.httpOptions.headers=this.httpOptions.headers.set('Accept','*/*');

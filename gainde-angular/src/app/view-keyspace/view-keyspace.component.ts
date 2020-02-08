@@ -322,6 +322,13 @@ initEcranWithCurrentData(){
     this.gaindeService.currentGainde.tableName=tableName; 
     this.router.navigate(['/editTable']);
   }
+  onClickEditCurrentTable(){    
+    console.log('onClickEditTableView ='+JSON.stringify(this.currentTableKeys));   
+    this.gaindeService.currentGainde.connectionName=this.currentTableKeys[0];
+    this.gaindeService.currentGainde.keyspaceName=this.currentTableKeys[1];  
+    this.gaindeService.currentGainde.tableName=this.currentTableKeys[2]; 
+    this.router.navigate(['/editTable']);
+  }
   onClickShowKeyspace(){
    
   }
@@ -370,7 +377,7 @@ initEcranWithCurrentData(){
       if(result!=null){
        console.log("openDialogTableInfo "+result);
        this.gaindeService.currentGainde.counter=result;
-       this.router.navigate(['/editTable']);
+       this.router.navigate(['/addTable']);
       }
 
     });

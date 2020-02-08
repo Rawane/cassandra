@@ -15,6 +15,7 @@ import{ GaindeService} from './services/gainde.service';
 import { ViewKeyspaceComponent,DialogInfoKeyspaceComponent ,DialogTableColumnInfoComponent} from './view-keyspace/view-keyspace.component';
 import { EditTableComponent ,DialogInfoTableComponent} from './edit-table/edit-table.component';
 import { AutofocusDirective } from './directive/autofocus.directive';
+import { AddTableComponent,DialogAddInfoTableComponent } from './add-table/add-table.component';
 
 
 
@@ -29,7 +30,9 @@ import { AutofocusDirective } from './directive/autofocus.directive';
     DialogInfoTableComponent,
     DialogTableColumnInfoComponent,
     EditTableComponent,
-    AutofocusDirective
+    AutofocusDirective,
+    AddTableComponent,
+    DialogAddInfoTableComponent
     
   ],
   imports: [
@@ -62,7 +65,9 @@ import { AutofocusDirective } from './directive/autofocus.directive';
   DialogInfoConnectionComponent,
   DialogInfoKeyspaceComponent,
   DialogTableColumnInfoComponent,
-  DialogInfoTableComponent],
+  DialogInfoTableComponent,
+  DialogAddInfoTableComponent
+  ],
   providers: [GaindeService],
   bootstrap: [AppComponent]
 })

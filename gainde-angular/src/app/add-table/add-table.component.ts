@@ -8,83 +8,63 @@ import {Subscription} from 'rxjs';
 import {GaindeCommunication,TableDTO,ColumnDTO,IndexColumn,TypeColonnesAll,TypeColonnes,ActionHttp} from '../model/model-dto';
 import{DialogData} from '../view-connections/view-connections.component';
 @Component({
-  selector: 'app-edit-table',
-  templateUrl: './edit-table.component.html',
-  styleUrls: ['./edit-table.component.scss']
+  selector: 'app-add-table',
+  templateUrl: './add-table.component.html',
+  styleUrls: ['./add-table.component.scss']
 })
-export class EditTableComponent implements OnInit {
+export class AddTableComponent implements OnInit {
 allNotificationSubscription:Subscription;
 formTable:FormGroup;
 ligneColumns: FormArray;
-currentGaindeEdit:GaindeCommunication;
+currentGainde:GaindeCommunication;
 optionsTypeAll=TypeColonnesAll;
 optionsType=TypeColonnes;
-oldTableDTO:TableDTO;
-validIndex:boolean=true;
+validPrimaryKey:boolean=false;
   constructor(private gaindeService:GaindeService,private router:Router,
     private formBuilder:FormBuilder,private snackBar:MatSnackBar,private dialog: MatDialog) { }
 
   ngOnInit() {
-    this.allNotificationSubscription=this.gaindeService.mapTransfertViewEditTableSubject.subscribe((mapTransfert: Map<string,any>) => {
+    this.currentGainde=this.gaindeService.currentGainde;
+    this.allNotificationSubscription=this.gaindeService.mapTransfertViewAddTableSubject.subscribe((mapTransfert: Map<string,any>) => {
       let mapToString='';
         mapTransfert.forEach((key,item)=>{
         mapToString=mapToString+' '+item+'  value='+JSON.stringify(mapTransfert.get(item));        
       });   
-     console.log('EditTableComponent mapTransfert '+mapTransfert.get("type"));  
+     console.log('AddTableComponent mapTransfert '+mapTransfert.get("type"));  
       switch (mapTransfert.get("type") as ActionHttp)  {
-            case ActionHttp.UPDATE_TABLE:
+            case ActionHttp.ADD_TABLE:
             { this.gaindeService.currentGainde.tableName=mapTransfert.get("content");
               this.router.navigate(['/viewKeyspace']);
                 break;
             }
-            case ActionHttp.UPDATE_TABLE_ERROR:
-            {   this.openDialog('Mis à jour de table ',mapTransfert.get("content"),false,'');
+            case ActionHttp.ADD_TABLE_ERROR:
+            {   this.openDialog('Ajout de table ',mapTransfert.get("content"),false,'');
                 break;
-            }
-            case ActionHttp.EDIT_TABLE:
-              {  this.oldTableDTO=mapTransfert.get("content");
-                if(this.oldTableDTO){
-                  this.editForm();                  
-                }
-                break;
-              }
+            }            
             default:
               break;
          }
         });
-    this.currentGaindeEdit=this.gaindeService.currentGainde;
-    let tableName=this.currentGaindeEdit.tableName;
-    if(tableName){
-     this.gaindeService.getInfoTableEdit(this.currentGaindeEdit.connectionName,this.currentGaindeEdit.keyspaceName,tableName);
-    }
+      this.initForm();  
+    
    
   }
-  private editForm(){
-    let tableDTO=this.oldTableDTO;
-    //console.log("editForm "+JSON.stringify(tableDTO));
+  private initForm(){
     this.formTable = this.formBuilder.group({    
-      name: [tableDTO.name,Validators.required],
-      ligneColumns:this.formBuilder.array([ ])
+      name: ['',Validators.required],
+      ligneColumns:this.formBuilder.array([ this.createLigneColumn()])
      
-    }); 
-   this.ligneColumns = this.formTable.get('ligneColumns') as FormArray;   
-    tableDTO.columns.forEach((columnDTO)=>{
-      let indexColumn=null;
-      if(tableDTO.indexColumns && tableDTO.indexColumns.length>0)
-      {//console.log("editForm indexColumns "+JSON.stringify(tableDTO.indexColumns));
-        for(let indexCol of tableDTO.indexColumns )
-        {   if(indexCol.columName==columnDTO.name)
-            {
-              indexColumn=indexCol;
-             break;
-          }
+    });   
+    
+    this.ligneColumns = this.formTable.get('ligneColumns') as FormArray;   
+      if(this.currentGainde)
+     {
+        for(let i=0;i<this.currentGainde.counter-1;i++){
+          this.ligneColumns.push(this.createLigneColumn());
         }
-      }
-      let formGroupEdit=this.editLigneColumn(columnDTO,indexColumn);
-      this.ligneColumns.push(formGroupEdit);
-    });
-      
+     }
   }
+  
   private createLigneColumn(): FormGroup {
     return this.formBuilder.group({
       name: ['',Validators.required],
@@ -96,72 +76,58 @@ validIndex:boolean=true;
       typeMap:''
     });
   }
-  private editLigneColumn(columnDTO:ColumnDTO,indexColumn:IndexColumn): FormGroup {
-      //console.log('editLigneColumn '+columnDTO.name+' type '+columnDTO.type+'  '+indexColumn);  
-      let formGroup=this.formBuilder.group({
-      name:[columnDTO.name,Validators.required],
-      type:[columnDTO.type,Validators.required],
-      primaryKey:columnDTO.primaraKey,
-      indexed:{value: columnDTO.indexed, disabled:columnDTO.primaraKey},
-      indexName:'',
-      typeList:columnDTO.typeList,
-      typeMap:columnDTO.typeMap
-     });
-     if(columnDTO.indexed && indexColumn){
-        formGroup.get('indexName').setValue(indexColumn.name);
-       // formGroup.get('indexName').setValidators([Validators.required]);
-     }     
-
-    return formGroup;
-  }
   onClickAddLigneColumn() {
-    //this.ligneColumns = this.formTable.get('ligneColumns') as FormArray;
     this.ligneColumns.push(this.createLigneColumn());
   }
   onRemoveLineColumn(index:number){
     this.ligneColumns.removeAt(index);
+    this.validatePrimaryKey();
   }
 
   onCheckIndexChange(index:number){
-    let controlForm=this.ligneColumns.at(index);   
+    let controlForm=this.ligneColumns.at(index);
+    //console.log('onCheckIndexChange '+index+' controlForm  '+controlForm);    
      controlForm.get('indexed').valueChanges.subscribe(val => {
       //console.log('onCheckIndexChange '+index+' control  '+controlForm.value['indexName']);
       if(val){
-        controlForm.get('indexName').setValidators([Validators.required]);              
+        controlForm.get('indexName').setValidators([Validators.required]);
+        if( controlForm.value['primaryKey']){
+          controlForm.get('primaryKey').setValue(false);
+          this.validatePrimaryKey();   
+        }
+       
         if(!controlForm.value['indexName'] || controlForm.value['indexName']=='')
         {
-          controlForm.get('indexName').setValue('Index_'+controlForm.value['name']);          
-        } 
+           controlForm.get('indexName').setValue('Index_'+controlForm.value['name']);
+          
+        }   
          
       }else{
         controlForm.get('indexName').setValue('');
-        controlForm.get('indexName').setValidators([]);   
-        console.log('onCheckIndexChange validator enlevé '+controlForm.value['indexName']) ;
-        this.validateIndex();   
+        controlForm.get('indexName').setValidators([]);       
       }
     });  
    
   } 
-  onIndexNameValueChange(index:number){    
-    let controlForm=this.ligneColumns.at(index); 
-    console.log('onIndexNameValueChange  '+controlForm+'  '+index) ;
-    console.log('onIndexNameValueChange  '+controlForm.value['indexName']) ;
-    let val=controlForm.value['indexed'] ;
-    if(val){ 
-      this.validateIndex();  
-    }
-   
-  } 
 
-  validateIndex():boolean{         
+  onCheckPrimaryChange(index:number){
+    let controlForm=this.ligneColumns.at(index);   
+    let val=controlForm.value['primaryKey'];      
+        if(val){
+           controlForm.get('indexed').setValue('');          
+        }
+    this.validatePrimaryKey();
+  }
+  
+  validatePrimaryKey():boolean{         
     for (let ctrlForm of this.ligneColumns.controls) {    
-      if(ctrlForm.value['indexed'] && (!ctrlForm.value['indexName'] || ctrlForm.value['indexName']=='')){   
-        this.validIndex=false;     
-           return false;              
+      if(ctrlForm.value['primaryKey']){   
+        this.validPrimaryKey=true;     
+           return true;              
       } 
     }
-    this.validIndex=true;    
-    return true;
+    this.validPrimaryKey=false;    
+    return false;
   }
   onValueTypeChange(index:number){
     let controlForm=this.ligneColumns.at(index);
@@ -213,8 +179,8 @@ validIndex:boolean=true;
       tableDTO.columns.push(colonneDTO);
     }
     console.log('onSubmitTable   '+JSON.stringify(tableDTO));  
-   this.gaindeService.updateTable(this.oldTableDTO,tableDTO,this.currentGaindeEdit.connectionName,
-    this.currentGaindeEdit.keyspaceName);
+   this.gaindeService.saveTable(tableDTO,this.currentGainde.connectionName,
+    this.currentGainde.keyspaceName);
   }
   private openSnackBar(message: string, action: string) {
     this.snackBar.open(message, action, {
@@ -225,7 +191,7 @@ validIndex:boolean=true;
     });
 }
   private openDialog(pTitle:string,pText:string, cancelButton:boolean,pId:string): void {
-    const dialogRef = this.dialog.open(DialogInfoTableComponent, {
+    const dialogRef = this.dialog.open(DialogAddInfoTableComponent, {
       width: '500px',
       data: {text: pText,title:pTitle,btnCancel:cancelButton,id:pId}
     });
@@ -240,13 +206,13 @@ validIndex:boolean=true;
   }
 }
 @Component({
-  selector: 'app-dialog-info-table',
-  templateUrl: './dialog-info-table.component.html' ,
-  styleUrls: ['./edit-table.component.scss']
+  selector: 'add-app-dialog-info-table',
+  templateUrl: '../edit-table/dialog-info-table.component.html' ,
+  styleUrls: ['./add-table.component.scss']
 })
-export class DialogInfoTableComponent implements OnInit {
+export class DialogAddInfoTableComponent implements OnInit {
 
-  constructor( public dialogRef: MatDialogRef<EditTableComponent>,@Inject(MAT_DIALOG_DATA) public data: DialogData) { }
+  constructor( public dialogRef: MatDialogRef<AddTableComponent>,@Inject(MAT_DIALOG_DATA) public data: DialogData) { }
 
   ngOnInit() {
   }
