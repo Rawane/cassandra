@@ -1,5 +1,6 @@
 package com.xoolibeut.gainde.cassandra.repository;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -14,6 +15,7 @@ import com.datastax.driver.core.PagingState;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.Drop;
@@ -23,6 +25,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.xoolibeut.gainde.cassandra.controller.dtos.ColonneTableDTO;
+import com.xoolibeut.gainde.cassandra.controller.dtos.IndexColumn;
 import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
 import com.xoolibeut.gainde.cassandra.util.GaindeUtil;
 
@@ -37,19 +41,19 @@ public class TableRepositoryImpl implements TableRepository {
 		}
 		Create createTable = SchemaBuilder.createTable(keyspaceName, tableDTO.getName()).ifNotExists();
 		tableDTO.getColumns().forEach(column -> {
-			Integer typeList=null;
-			Integer typeMap=null;
-			if(column.getTypeList()!=null) {
-				typeList=Integer.parseInt(column.getTypeList());
+			Integer typeList = null;
+			Integer typeMap = null;
+			if (column.getTypeList() != null) {
+				typeList = Integer.parseInt(column.getTypeList());
 			}
-			if(column.getTypeMap()!=null) {
-				typeMap=Integer.parseInt(column.getTypeMap());
+			if (column.getTypeMap() != null) {
+				typeMap = Integer.parseInt(column.getTypeMap());
 			}
-			DataType datype = GaindeUtil.getDataType(Integer.parseInt(column.getType()),typeList,typeMap);
+			DataType datype = GaindeUtil.getDataType(Integer.parseInt(column.getType()), typeList, typeMap);
 			if (column.isPrimaraKey()) {
 				createTable.addPartitionKey(column.getName(), datype);
-			}else {
-			createTable.addColumn(column.getName(), datype);
+			} else {
+				createTable.addColumn(column.getName(), datype);
 			}
 		});
 		session.execute(createTable);
@@ -60,17 +64,121 @@ public class TableRepositoryImpl implements TableRepository {
 		});
 
 	}
-	public void dropTable(String connectionName, String keyspaceName,String tableName) throws Exception {
+
+	public void dropTable(String connectionName, String keyspaceName, String tableName) throws Exception {
 		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
 		if (session == null) {
 			throw new Exception("aucune session");
 		}
-		 Drop dropTable = SchemaBuilder.dropTable(keyspaceName, tableName).ifExists();		
-		 session.execute(dropTable);	
+		Drop dropTable = SchemaBuilder.dropTable(keyspaceName, tableName).ifExists();
+		session.execute(dropTable);
 
 	}
 
-	public void alterTable(TableDTO tableDTO, String connectionName, String keyspaceName) throws Exception {
+	public void alterTable(TableDTO oldTableDTO, TableDTO tableDTO, String connectionName, String keyspaceName)
+			throws Exception {
+		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
+		if (session == null) {
+			throw new Exception("aucune session");
+		}
+		List<ColonneTableDTO> colonneRemoved = new ArrayList<>();
+		List<ColonneTableDTO> colonneAdded = new ArrayList<>();
+		List<ColonneTableDTO> colonneAlter = new ArrayList<>();
+		List<IndexColumn> indexColumnRemoved = new ArrayList<>();
+		List<IndexColumn> indexColumnAdded = new ArrayList<>();
+		tableDTO.getColumns().forEach(column -> {
+			if (!column.isPrimaraKey()) {
+				if (oldTableDTO.getColumns().contains(column)) {
+					int index = oldTableDTO.getColumns().indexOf(column);
+					ColonneTableDTO oldColum = oldTableDTO.getColumns().get(index);
+					Integer typeList = null;
+					Integer typeMap = null;
+					if (column.getTypeList() != null) {
+						typeList = Integer.parseInt(column.getTypeList());
+					}
+					if (column.getTypeMap() != null) {
+						typeMap = Integer.parseInt(column.getTypeMap());
+					}
+					DataType dataType = GaindeUtil.getDataType(Integer.parseInt(column.getType()), typeList, typeMap);
+					Integer oldTypeList = null;
+					Integer oldTypeMap = null;
+					if (oldColum.getTypeList() != null) {
+						oldTypeList = Integer.parseInt(oldColum.getTypeList());
+					}
+					if (oldColum.getTypeMap() != null) {
+						oldTypeMap = Integer.parseInt(oldColum.getTypeMap());
+					}
+					DataType oldDataType = GaindeUtil.getDataType(Integer.parseInt(oldColum.getType()), oldTypeList,
+							oldTypeMap);
+					if (!(dataType.getName().name().equals(oldDataType.getName().name()))) {
+						colonneAlter.add(column);
+					}
+				} else {
+					colonneAdded.add(column);
+				}
+			}
+		});
+		oldTableDTO.getColumns().forEach(column -> {
+			if (!column.isPrimaraKey()) {
+				if (!tableDTO.getColumns().contains(column)) {
+					colonneRemoved.add(column);
+				}
+			}
+		});
+
+		tableDTO.getIndexColumns().forEach(indexC -> {
+			if (!oldTableDTO.getIndexColumns().contains(indexC)) {
+				indexColumnAdded.add(indexC);
+			}
+		});
+		oldTableDTO.getIndexColumns().forEach(indexC -> {
+			if (!tableDTO.getIndexColumns().contains(indexC)) {
+				indexColumnRemoved.add(indexC);
+			}
+		});
+		// Exécution de la requete
+		colonneRemoved.forEach(column -> {
+			SchemaStatement schema = SchemaBuilder.alterTable(keyspaceName, oldTableDTO.getName())
+					.dropColumn(column.getName());
+			session.execute(schema);
+		});
+		colonneAlter.forEach(column -> {
+			Integer typeList = null;
+			Integer typeMap = null;
+			if (column.getTypeList() != null) {
+				typeList = Integer.parseInt(column.getTypeList());
+			}
+			if (column.getTypeMap() != null) {
+				typeMap = Integer.parseInt(column.getTypeMap());
+			}
+			 Statement schema = SchemaBuilder.alterTable(keyspaceName, oldTableDTO.getName())
+					.alterColumn(column.getName())
+					.type(GaindeUtil.getDataType(Integer.parseInt(column.getType()), typeList, typeMap)).enableTracing();
+			session.execute(schema);
+		});
+		colonneAdded.forEach(column -> {
+			Integer typeList = null;
+			Integer typeMap = null;
+			if (column.getTypeList() != null) {
+				typeList = Integer.parseInt(column.getTypeList());
+			}
+			if (column.getTypeMap() != null) {
+				typeMap = Integer.parseInt(column.getTypeMap());
+			}
+			SchemaStatement schema = SchemaBuilder.alterTable(keyspaceName, oldTableDTO.getName())
+					.addColumn(column.getName())
+					.type(GaindeUtil.getDataType(Integer.parseInt(column.getType()), typeList, typeMap));
+			session.execute(schema);
+		});
+		indexColumnRemoved.forEach(indexC -> {
+			Drop drop = SchemaBuilder.dropIndex(keyspaceName, indexC.getName());
+			session.execute(drop);
+		});
+		indexColumnAdded.forEach(indexC -> {
+			SchemaStatement createIndex = SchemaBuilder.createIndex(indexC.getName())
+					.onTable(keyspaceName, oldTableDTO.getName()).andColumn(indexC.getColumName());
+			session.execute(createIndex);
+		});
 
 	}
 
@@ -83,10 +191,10 @@ public class TableRepositoryImpl implements TableRepository {
 		}
 		List<ColumnMetadata> columns = cluster.getMetadata().getKeyspace(keyspaceName).getTable(tableName).getColumns();
 		ResultSet resulSet = session.execute(QueryBuilder.select().from(keyspaceName, tableName));
-		//ResultSet rs = session.execute("SELECT cql_version FROM system.local;");
-		//Row rowOne = rs.one();
-		//LOGGER.info("rowOne  " + rowOne);
-		ObjectMapper mapper = new ObjectMapper();		
+		// ResultSet rs = session.execute("SELECT cql_version FROM system.local;");
+		// Row rowOne = rs.one();
+		// LOGGER.info("rowOne " + rowOne);
+		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
 		ArrayNode listColumnsName = mapper.createArrayNode();
@@ -94,8 +202,8 @@ public class TableRepositoryImpl implements TableRepository {
 		columns.forEach(column -> {
 			listColumnsName.add(column.getName());
 		});
-		rootNode.set("columns",listColumnsName);
-		
+		rootNode.set("columns", listColumnsName);
+
 		while (iter.hasNext()) {
 			Row row = iter.next();
 			ObjectNode rowNode = mapper.createObjectNode();
@@ -110,7 +218,7 @@ public class TableRepositoryImpl implements TableRepository {
 			arrayNode.add(rowNode);
 
 		}
-		rootNode.set("data",arrayNode);
+		rootNode.set("data", arrayNode);
 		return rootNode;
 	}
 

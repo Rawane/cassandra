@@ -9,12 +9,14 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.xoolibeut.gainde.cassandra.controller.dtos.CoupleTableDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
 import com.xoolibeut.gainde.cassandra.repository.TableRepository;
 
@@ -32,6 +34,17 @@ public class TableController {
 		try {
 			tableRepository.createTable(tableDTO, connectionName, keyspaceName);
 			return ResponseEntity.status(201).body("{\"message\":\"création ok\"}");
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+		}
+	}
+	@PutMapping("/{connectionName}/{kespace}")
+	public ResponseEntity<String> updateTable(@PathVariable("connectionName") String connectionName,
+			@PathVariable("kespace") String keyspaceName, @RequestBody CoupleTableDTO coupleTableDTO) {
+		try {
+			tableRepository.alterTable(coupleTableDTO.getOldTableDTO(),coupleTableDTO.getTableDTO(), connectionName, keyspaceName);
+			return ResponseEntity.status(201).body("{\"message\":\"maj ok\"}");
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
