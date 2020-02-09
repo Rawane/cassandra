@@ -3,6 +3,7 @@ package com.xoolibeut.gainde.cassandra.repository;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,10 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.TableMetadata;
+import com.datastax.driver.core.querybuilder.Clause;
+import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Update.Where;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.Drop;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
@@ -82,7 +86,7 @@ public class TableRepositoryImpl implements TableRepository {
 		if (session == null) {
 			throw new Exception("aucune session");
 		}
-		if(!oldTableDTO.getName().equals(tableDTO.getName())) {
+		if (!oldTableDTO.getName().equals(tableDTO.getName())) {
 			throw new Exception("Vous ne pouvez pas modifier le nom de la table");
 		}
 		List<ColonneTableDTO> colonneRemoved = new ArrayList<>();
@@ -155,9 +159,10 @@ public class TableRepositoryImpl implements TableRepository {
 			if (column.getTypeMap() != null) {
 				typeMap = Integer.parseInt(column.getTypeMap());
 			}
-			 Statement schema = SchemaBuilder.alterTable(keyspaceName, oldTableDTO.getName())
+			Statement schema = SchemaBuilder.alterTable(keyspaceName, oldTableDTO.getName())
 					.alterColumn(column.getName())
-					.type(GaindeUtil.getDataType(Integer.parseInt(column.getType()), typeList, typeMap)).enableTracing();
+					.type(GaindeUtil.getDataType(Integer.parseInt(column.getType()), typeList, typeMap))
+					.enableTracing();
 			session.execute(schema);
 		});
 		colonneAdded.forEach(column -> {
@@ -197,38 +202,38 @@ public class TableRepositoryImpl implements TableRepository {
 		List<ColumnMetadata> columns = table.getColumns();
 		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
 		List<String> partionKeys = new ArrayList<String>();
-		partionMetaKeys.forEach(columnMeta->{
+		partionMetaKeys.forEach(columnMeta -> {
 			partionKeys.add(columnMeta.getName());
 		});
-		ResultSet resulSet = session.execute(QueryBuilder.select().from(keyspaceName, tableName));	
+		ResultSet resulSet = session.execute(QueryBuilder.select().from(keyspaceName, tableName));
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
 		ArrayNode listColumnsName = mapper.createArrayNode();
-		
+
 		List<ObjectNode> columnsNodes = new ArrayList<ObjectNode>();
 		Iterator<Row> iter = resulSet.iterator();
 		columns.forEach(column -> {
 			ObjectNode jsonColumn = mapper.createObjectNode();
-			jsonColumn.put("name",column.getName());
-			jsonColumn.put("primaryKey",partionKeys.contains(column.getName()));	
-			jsonColumn.put("type",column.getType().getName().name());	
+			jsonColumn.put("name", column.getName());
+			jsonColumn.put("primaryKey", partionKeys.contains(column.getName()));
+			jsonColumn.put("type", column.getType().getName().name());
 			columnsNodes.add(jsonColumn);
 		});
-		columnsNodes.sort((col1,col2)->{
-			if(col1.get("primaryKey").asBoolean()) {
-				if(col2.get("primaryKey").asBoolean()) {
+		columnsNodes.sort((col1, col2) -> {
+			if (col1.get("primaryKey").asBoolean()) {
+				if (col2.get("primaryKey").asBoolean()) {
 					return 0;
 				}
 				return -1;
-			}else {
-				if(col2.get("primaryKey").asBoolean()) {
+			} else {
+				if (col2.get("primaryKey").asBoolean()) {
 					return 1;
 				}
 				return 2;
-			}			
+			}
 		});
-		columnsNodes.forEach(jsonCol -> {			
+		columnsNodes.forEach(jsonCol -> {
 			listColumnsName.add(jsonCol);
 		});
 		rootNode.set("columns", listColumnsName);
@@ -270,4 +275,53 @@ public class TableRepositoryImpl implements TableRepository {
 		}
 	}
 
+	public void insertData(String connectionName, String keyspaceName, String tableName, Map<String, Object> map)
+			throws Exception {
+		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
+		if (session == null) {
+			throw new Exception("aucune session");
+		}
+		Insert insert = QueryBuilder.insertInto(keyspaceName, tableName).values(new ArrayList<String>(map.keySet()),
+				new ArrayList<Object>(map.values()));
+		session.execute(insert);
+	}
+
+	public void updateData(String connectionName, String keyspaceName, String tableName, JsonNode map)
+			throws Exception {
+		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
+		if (session == null) {
+			throw new Exception("aucune session");
+		}
+		JsonNode dataNode = map.get("data");
+		ArrayNode arrayNode = (ArrayNode) map.get("primaryKeys");
+		List<String> primaryKeys = new ArrayList<String>();
+		List<String> primaryValues = new ArrayList<String>();
+		arrayNode.forEach(node -> {
+			primaryKeys.add(node.asText());
+			primaryValues.add(dataNode.get(node.asText()).asText());
+		});
+
+		if (primaryKeys.isEmpty()) {
+			throw new Exception("Aucun clé primaire pour where clause");
+		}
+		Clause clause = QueryBuilder.eq(primaryKeys.get(0), primaryValues.get(0));
+		if (primaryKeys.size() > 1) {
+			//QueryBuilder.eq
+		}
+		Iterator<String> iterField = dataNode.fieldNames();
+		while (iterField.hasNext()) {
+			String key = iterField.next();
+			if (!primaryKeys.contains(key)) {
+				Where where = QueryBuilder.update(keyspaceName, tableName)
+						.with(QueryBuilder.set(key, dataNode.get(key).asText())).where(clause);
+				if (primaryKeys.size() > 1) {
+					for(int i=1;i<primaryKeys.size();i++) {
+						where.and(QueryBuilder.eq(primaryKeys.get(i), primaryValues.get(i)));
+					}
+				}
+				session.execute(where);
+			}
+		}
+
+	}
 }

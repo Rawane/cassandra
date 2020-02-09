@@ -189,35 +189,7 @@ initEcranWithCurrentData(){
             }
             case ActionHttp.ALL_DATA_TABLE:              
             { 
-              if(mapTransfert.get("content")['columns']){
-                this.displayedColumnsTableData=[];
-                mapTransfert.get("content")['columns'].forEach(col=>{
-                  console.log('columns '+JSON.stringify(col));
-                  this.displayedColumnsTableData.push(col['name']);
-                });
-                this.displayedColumnsTableData.push('action_gainde');
-              }
-             
-              this.dispColumnsHeadTableData=mapTransfert.get("content")['columns'];
-              
-             console.log('displayedColumnsTableData '+JSON.stringify(this.displayedColumnsTableData));
-             console.log('dispColumnsHeadTableData '+JSON.stringify(this.dispColumnsHeadTableData));
-            
-              this.tableDatasDataSource.data=mapTransfert.get("content")['data'];              
-              this.paginationTableDataSize=mapTransfert.get("content")['data'].length;            
-              this.tableDatasDataSource.paginator = this.paginator; 
-              this.tableDatasDataSource.sort = this.sort;      
-              this.tableDatasDataSource.filter = '';
-              this.filterTableData='';
-              this.tableDatasDataSource.sortingDataAccessor = (item, property) => {
-                //console.log(item)
-                switch (property) {
-                  case 'fromDate': {
-                    return new Date(item['timestamp']*1000);
-                  }
-                  default: return item[property];
-                }
-              };
+              this.doAfterGetAllData(mapTransfert);
               break;
             }
             case ActionHttp.ALL_DATA_TABLE_ERROR: 
@@ -225,11 +197,64 @@ initEcranWithCurrentData(){
                 this.openDialog('Table ',mapTransfert.get("content"),false,'');
                 break;  
             }
+            case ActionHttp.INSERT_DATA_TABLE:              
+              { let connectionName=this.gaindeService.currentGainde.connectionName;
+                let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
+                this.openSnackBar('Données insérées avec succès','');
+                this.gaindeService.getAllDataTable(connectionName,keyspaceName,mapTransfert.get("content"));
+                break;
+              }
+              case ActionHttp.INSERT_DATA_TABLE_ERROR: 
+            {               
+                this.openDialog('Insert Data ',mapTransfert.get("content"),false,'');
+                break;  
+            }
+            case ActionHttp.UPDATE_DATA_TABLE:              
+              { let connectionName=this.gaindeService.currentGainde.connectionName;
+                let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
+                this.openSnackBar('Données mis à jour avec succès','');
+                this.gaindeService.getAllDataTable(connectionName,keyspaceName,mapTransfert.get("content"));
+                break;
+              }
+              case ActionHttp.UPDATE_DATA_TABLE_ERROR: 
+            {               
+                this.openDialog('Update Data ',mapTransfert.get("content"),false,'');
+                break;  
+            }
             default:
               break;
          }
       });     
   }
+  private doAfterGetAllData(mapTransfert: Map<string, any>) {
+    if (mapTransfert.get("content")['columns']) {
+      this.displayedColumnsTableData = [];
+      mapTransfert.get("content")['columns'].forEach(col => {
+        console.log('columns ' + JSON.stringify(col));
+        this.displayedColumnsTableData.push(col['name']);
+      });
+      this.displayedColumnsTableData.push('action_gainde');
+    }
+    this.dispColumnsHeadTableData = mapTransfert.get("content")['columns'];
+    console.log('displayedColumnsTableData ' + JSON.stringify(this.displayedColumnsTableData));
+    console.log('dispColumnsHeadTableData ' + JSON.stringify(this.dispColumnsHeadTableData));
+    this.tableDatasDataSource.data = mapTransfert.get("content")['data'];
+    this.paginationTableDataSize = mapTransfert.get("content")['data'].length;
+    this.tableDatasDataSource.paginator = this.paginator;
+    this.tableDatasDataSource.sort = this.sort;
+    this.tableDatasDataSource.filter = '';
+    this.filterTableData = '';
+    this.tableDatasDataSource.sortingDataAccessor = (item, property) => {
+      //console.log(item)
+      switch (property) {
+        case 'fromDate': {
+          return new Date(item['timestamp'] * 1000);
+        }
+        default: return item[property];
+      }
+    };
+  }
+
   onApplyFilter(filterValue: string) {
     this.tableDatasDataSource.filter = filterValue.trim().toLowerCase();
     if (this.tableDatasDataSource.paginator) {
@@ -270,15 +295,22 @@ initEcranWithCurrentData(){
   onClickEditRow(row,name){
     console.log('onClickEditRow  : ' + JSON.stringify(row)); 
     //row['columns']=this.dispColumnsHeadTableData;
-    let data:any={"columns":this.dispColumnsHeadTableData,
-    "tableName":name,"row":row};
-    let indexElement= this.tableDatasDataSource.data.indexOf(row);
+    let data:any={'columns':this.dispColumnsHeadTableData,
+    'tableName':name,'row':row,'added':false};
+    //let indexElement= this.tableDatasDataSource.data.indexOf(row);
     console.log('onClickEditRow  : '+  JSON.stringify(data));
     this.openDialogRow(data);
     
   }
-  onClickAddNewRow(row){
-    console.log('onClickEditRow  : ' + JSON.stringify(row));  
+  onClickAddNewRow(name){
+    console.log('onClickEditRow  : ' + name); 
+    let row:any={};
+    this.dispColumnsHeadTableData.forEach(eltD=>{
+      row[eltD.name]="";
+    });
+    let data:any={"columns":this.dispColumnsHeadTableData,
+    "tableName":name,'row':row,"added":true}; 
+    this.openDialogRow(data);
   }
   onClickRemoveKeyspaceOrTable(node){
     //console.log('onClickRowNode  : ' + JSON.stringify(node));
@@ -420,8 +452,22 @@ initEcranWithCurrentData(){
       
       if(result!=null){
        console.log("openDialogTableInfo "+JSON.stringify(result));
-       this.gaindeService.currentGainde.counter=result;
-       //this.router.navigate(['/addTable']);
+       let connectionName=this.gaindeService.currentGainde.connectionName;
+       let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
+       if(result['added']){
+          this.gaindeService.insertDataTable(result['row'],connectionName,keyspaceName,result['tableName']);
+       }else{
+         let primaryKeys:string[]=[];
+         result['columns'].forEach(col=>{
+            if(col['primaryKey']){
+              primaryKeys.push(col.name);
+            }
+         });
+         let requestData:any={};
+         requestData['data']=result['row'];
+         requestData['primaryKeys']=primaryKeys;
+        this.gaindeService.updateDataTable(requestData,connectionName,keyspaceName,result['tableName']);
+       }
       }
 
     });

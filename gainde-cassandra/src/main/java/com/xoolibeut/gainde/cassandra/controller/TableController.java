@@ -1,5 +1,7 @@
 package com.xoolibeut.gainde.cassandra.controller;
 
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,6 +70,28 @@ public class TableController {
 			JsonNode jsonNode = tableRepository.getAllDataByTableName(connectionName, keyspaceName, tableName);
 			ObjectMapper mapper=new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+		}
+	}
+	@PostMapping("/insert/{connectionName}/{kespace}/{tableName}")
+	public ResponseEntity<String> insertDataTable(@PathVariable("connectionName") String connectionName,
+			@PathVariable("kespace") String keyspaceName,@PathVariable("tableName") String tableName, @RequestBody Map<String, Object> map) {
+		try {
+			tableRepository.insertData(connectionName, keyspaceName, tableName, map);
+			return ResponseEntity.status(201).body("{\"message\":\"création ok\"}");
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+		}
+	}
+	@PutMapping("/update/{connectionName}/{kespace}/{tableName}")
+	public ResponseEntity<String> updateDataTable(@PathVariable("connectionName") String connectionName,
+			@PathVariable("kespace") String keyspaceName,@PathVariable("tableName") String tableName, @RequestBody JsonNode map) {
+		try {
+			tableRepository.updateData(connectionName, keyspaceName, tableName, map);
+			return ResponseEntity.status(200).body("{\"message\":\"création ok\"}");
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");

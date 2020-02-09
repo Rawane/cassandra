@@ -69,7 +69,11 @@ export enum ActionHttp{
     EDIT_TABLE,
     EDIT_TABLE_ERROR,
     UPDATE_TABLE,
-    UPDATE_TABLE_ERROR
+    UPDATE_TABLE_ERROR,
+    INSERT_DATA_TABLE,
+    INSERT_DATA_TABLE_ERROR,
+    UPDATE_DATA_TABLE,
+    UPDATE_DATA_TABLE_ERROR
 }
 export class TableDTO {
     columns:Array<ColumnDTO>=new Array();

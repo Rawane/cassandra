@@ -272,6 +272,36 @@ export class GaindeService {
       }
     );    
   }
+  insertDataTable(data:any,connectionName:string,keyspaceName:string,tableName:string){
+    this.httpClient
+    .post<JSON>(environment['basePathGainde']+'/table/insert/'+connectionName+'/'+keyspaceName+'/'+tableName,data,this.httpOptions)
+    .subscribe(
+      (response) => {            
+        console.log('response  : ' + JSON.stringify(response));        
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.INSERT_DATA_TABLE,tableName); 
+
+      },
+      (error) => {     
+        console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.INSERT_DATA_TABLE_ERROR,error['error']['error']);        
+      }
+    );    
+  }
+  updateDataTable(data:any,connectionName:string,keyspaceName:string,tableName:string){
+    this.httpClient
+    .put<JSON>(environment['basePathGainde']+'/table/update/'+connectionName+'/'+keyspaceName+'/'+tableName,data,this.httpOptions)
+    .subscribe(
+      (response) => {            
+        console.log('response  : ' + JSON.stringify(response));        
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.UPDATE_DATA_TABLE,tableName); 
+
+      },
+      (error) => {     
+        console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.UPDATE_DATA_TABLE_ERROR,error['error']['error']);        
+      }
+    );    
+  }
   updateTable(oldTableDTO:TableDTO,tableDTO:TableDTO,connectionName:string,keyspaceName:string){
     let coupleTableDTO={
       "oldTableDTO":oldTableDTO,

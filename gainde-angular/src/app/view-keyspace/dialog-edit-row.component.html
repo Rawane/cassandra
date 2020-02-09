@@ -4,8 +4,8 @@
  <div class="row rowEdit" *ngFor="let col of data.columns">
     <label class="col-3 labelRow" for="name">{{col['name']}}</label>
     <div class="col-7">
-        <input  class="form-control"  [(ngModel)]="data['row'][col['name']]" *ngIf="!col['primaryKey']">
-        <span *ngIf="col['primaryKey']">{{data['row'][col['name']]}}</span>
+        <input  class="form-control"  [(ngModel)]="data['row'][col['name']]" *ngIf="!col['primaryKey'] || data['added']">
+        <span *ngIf="col['primaryKey'] && !data['added']">{{data['row'][col['name']]}}</span>
     </div>
     <div class="col-1">
         <span >{{col['type']}}</span>
@@ -17,7 +17,7 @@
     <button mat-button class="btn btn-gainder-danger"  [mat-dialog-close]=""  >Annuler</button>
   </div>
   <div class="col-auto">
-    <button mat-button [mat-dialog-close]="data['row']" cdkFocusInitial class="btn btn-success">Enregistrer</button>
+    <button mat-button [mat-dialog-close]="data" cdkFocusInitial class="btn btn-success">Enregistrer</button>
   </div>
 </div>
 </div>
