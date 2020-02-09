@@ -38,6 +38,7 @@ export class ViewKeyspaceComponent implements OnInit {
   displayedColumnsTableKeys=['tableName','tableAction','actionremove'];
   displayedColumnsIndex=['name','indexName'];
   displayedColumnsTableData: string[];
+  dispColumnsHeadTableData;
   colonneDataSource=new MatTableDataSource<JSON>();
   tableDatasDataSource=new MatTableDataSource<JSON>();
   filterTableData='';
@@ -188,9 +189,21 @@ initEcranWithCurrentData(){
             }
             case ActionHttp.ALL_DATA_TABLE:              
             { 
-              this.displayedColumnsTableData=mapTransfert.get("content")['columns'];
-             // console.log('displayedColumnsTableData '+JSON.stringify(this.displayedColumnsTableData));
-              this.tableDatasDataSource.data=mapTransfert.get("content")['data'];
+              if(mapTransfert.get("content")['columns']){
+                this.displayedColumnsTableData=[];
+                mapTransfert.get("content")['columns'].forEach(col=>{
+                  console.log('columns '+JSON.stringify(col));
+                  this.displayedColumnsTableData.push(col['name']);
+                });
+                this.displayedColumnsTableData.push('action_gainde');
+              }
+             
+              this.dispColumnsHeadTableData=mapTransfert.get("content")['columns'];
+              
+             console.log('displayedColumnsTableData '+JSON.stringify(this.displayedColumnsTableData));
+             console.log('dispColumnsHeadTableData '+JSON.stringify(this.dispColumnsHeadTableData));
+            
+              this.tableDatasDataSource.data=mapTransfert.get("content")['data'];              
               this.paginationTableDataSize=mapTransfert.get("content")['data'].length;            
               this.tableDatasDataSource.paginator = this.paginator; 
               this.tableDatasDataSource.sort = this.sort;      
@@ -239,19 +252,33 @@ initEcranWithCurrentData(){
   onClickRowNode(node){
     //console.log('onClickRowNode  : ' + JSON.stringify(node));
     this.currentNodeId=node['id']; 
-    this.treeControl.expand(node);
+    this.treeControl.expand(node);   
+    this.currentTableKeys=node['id'].split("#");
+    this.gaindeService.currentGainde.connectionName =this.currentTableKeys[0];
+    this.gaindeService.currentGainde.keyspaceName =this.currentTableKeys[1];  
     if(node['type']===1){
-      this.partVisible=VIEW_ECRAN.KEYSPACE_INFO;
-      this.currentTableKeys=node['id'].split("#");
+      this.partVisible=VIEW_ECRAN.KEYSPACE_INFO;     
       this.gaindeService.getKeyspaceInfo(this.currentTableKeys[0],this.currentTableKeys[1]);      
-    }else{       
-      this.currentTableKeys=node['id'].split("#");
+    }else{   
       this.gaindeService.getInfoTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
       if(this.selectedPageIndex==1) 
       {
         this.selectedPageIndex=0;
       }
     }
+  }
+  onClickEditRow(row,name){
+    console.log('onClickEditRow  : ' + JSON.stringify(row)); 
+    //row['columns']=this.dispColumnsHeadTableData;
+    let data:any={"columns":this.dispColumnsHeadTableData,
+    "tableName":name,"row":row};
+    let indexElement= this.tableDatasDataSource.data.indexOf(row);
+    console.log('onClickEditRow  : '+  JSON.stringify(data));
+    this.openDialogRow(data);
+    
+  }
+  onClickAddNewRow(row){
+    console.log('onClickEditRow  : ' + JSON.stringify(row));  
   }
   onClickRemoveKeyspaceOrTable(node){
     //console.log('onClickRowNode  : ' + JSON.stringify(node));
@@ -382,6 +409,23 @@ initEcranWithCurrentData(){
 
     });
   }
+  private openDialogRow(row:JSON): void {
+    const dialogRefTableInfo = this.dialog.open(DialogEditRowComponent, {
+      width: 'auto',     
+      data: row,
+      panelClass: 'customDialogEdit'
+    });
+  
+    dialogRefTableInfo.afterClosed().subscribe(result => {     
+      
+      if(result!=null){
+       console.log("openDialogTableInfo "+JSON.stringify(result));
+       this.gaindeService.currentGainde.counter=result;
+       //this.router.navigate(['/addTable']);
+      }
+
+    });
+  }
   
   private doAfterGetInfoTable(mapTransfert: Map<string, any>) {
     this.tableInfo = mapTransfert.get('content');
@@ -454,6 +498,19 @@ export class DialogInfoKeyspaceComponent implements OnInit {
   styleUrls: ['./view-keyspace.component.scss']
 })
 export class DialogTableColumnInfoComponent implements OnInit {
+
+  constructor( public dialogRef: MatDialogRef<ViewKeyspaceComponent>,@Inject(MAT_DIALOG_DATA) public data: DialogData) { }
+
+  ngOnInit() {
+  }
+
+}
+@Component({
+  selector: 'app-dialog-row-column',
+  templateUrl: './dialog-edit-row.component.html' ,
+  styleUrls: ['./view-keyspace.component.scss']
+})
+export class DialogEditRowComponent implements OnInit {
 
   constructor( public dialogRef: MatDialogRef<ViewKeyspaceComponent>,@Inject(MAT_DIALOG_DATA) public data: DialogData) { }
 

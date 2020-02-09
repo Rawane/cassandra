@@ -12,7 +12,7 @@ import { MatAutocompleteModule,MatListModule,MatTabsModule,MatBadgeModule,MatSte
 import { MenuComponent } from './menu/menu.component';
 import { ViewConnectionsComponent,DialogInfoConnectionComponent } from './view-connections/view-connections.component';
 import{ GaindeService} from './services/gainde.service';
-import { ViewKeyspaceComponent,DialogInfoKeyspaceComponent ,DialogTableColumnInfoComponent} from './view-keyspace/view-keyspace.component';
+import { ViewKeyspaceComponent,DialogInfoKeyspaceComponent ,DialogTableColumnInfoComponent,DialogEditRowComponent} from './view-keyspace/view-keyspace.component';
 import { EditTableComponent ,DialogInfoTableComponent} from './edit-table/edit-table.component';
 import { AutofocusDirective } from './directive/autofocus.directive';
 import { AddTableComponent,DialogAddInfoTableComponent } from './add-table/add-table.component';
@@ -29,6 +29,7 @@ import { AddTableComponent,DialogAddInfoTableComponent } from './add-table/add-t
     DialogInfoKeyspaceComponent,
     DialogInfoTableComponent,
     DialogTableColumnInfoComponent,
+    DialogEditRowComponent,
     EditTableComponent,
     AutofocusDirective,
     AddTableComponent,
@@ -66,9 +67,12 @@ import { AddTableComponent,DialogAddInfoTableComponent } from './add-table/add-t
   DialogInfoKeyspaceComponent,
   DialogTableColumnInfoComponent,
   DialogInfoTableComponent,
-  DialogAddInfoTableComponent
+  DialogAddInfoTableComponent,
+  DialogEditRowComponent
   ],
   providers: [GaindeService],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+  
+ }

@@ -1,3 +1,6 @@
+.divConentKeyspace{
+  margin-top: 10px;
+}
 .truncate-header{   
     white-space: nowrap;
     overflow: hidden;
@@ -96,3 +99,20 @@
  .icon-gainde{
    color: #162056;
  }
+ .elementNotVisible{
+  display: none;
+}
+.rowEdit{
+  margin-bottom: 3px;
+}
+.dialogWrapper{
+  width: 900px;
+}
+@media(max-width: 600px) {
+  .dialogWrapper {
+    width:500px;
+}
+}
+.labelRow{
+  font-weight: bold;
+}

@@ -1,15 +1,13 @@
-<mat-horizontal-stepper [linear]="true" #stepper selectedIndex="2">
-    <mat-step disabled="true">
-        <ng-template matStepLabel>{{currentGainde.connectionName}}</ng-template>
-    </mat-step>
-    <mat-step  disabled="true">
-        <ng-template matStepLabel>{{currentGainde.keyspaceName}}</ng-template>
-    </mat-step>
-    <mat-step >
-      <ng-template matStepLabel>Create Table</ng-template>
-     
-    </mat-step>
-  </mat-horizontal-stepper>
+<div class="row divHautAddTable">
+    <div class="col-2">
+      <button type="button" class="btn btn-gainde"  matTooltip="Retour" (click)="onClickBack()">
+        <mat-icon>arrow_back</mat-icon>               
+      </button>
+    </div>
+    <div class="col-3"><h5 *ngIf="currentGainde">{{currentGainde.connectionName}}</h5></div>
+    <div class="col-3"><h6 *ngIf="currentGainde">{{currentGainde.keyspaceName}}</h6></div>
+    <div class="col-4"></div>
+  </div>
   <div *ngIf="formTable">
 
     <form [formGroup]="formTable" (ngSubmit)="onSubmitTable()">

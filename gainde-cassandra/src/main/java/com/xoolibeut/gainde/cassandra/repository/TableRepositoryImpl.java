@@ -16,6 +16,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.Drop;
@@ -80,6 +81,9 @@ public class TableRepositoryImpl implements TableRepository {
 		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
 		if (session == null) {
 			throw new Exception("aucune session");
+		}
+		if(!oldTableDTO.getName().equals(tableDTO.getName())) {
+			throw new Exception("Vous ne pouvez pas modifier le nom de la table");
 		}
 		List<ColonneTableDTO> colonneRemoved = new ArrayList<>();
 		List<ColonneTableDTO> colonneAdded = new ArrayList<>();
@@ -189,21 +193,45 @@ public class TableRepositoryImpl implements TableRepository {
 		if (session == null) {
 			throw new Exception("aucune session");
 		}
-		List<ColumnMetadata> columns = cluster.getMetadata().getKeyspace(keyspaceName).getTable(tableName).getColumns();
-		ResultSet resulSet = session.execute(QueryBuilder.select().from(keyspaceName, tableName));
-		// ResultSet rs = session.execute("SELECT cql_version FROM system.local;");
-		// Row rowOne = rs.one();
-		// LOGGER.info("rowOne " + rowOne);
+		TableMetadata table = cluster.getMetadata().getKeyspace(keyspaceName).getTable(tableName);
+		List<ColumnMetadata> columns = table.getColumns();
+		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
+		List<String> partionKeys = new ArrayList<String>();
+		partionMetaKeys.forEach(columnMeta->{
+			partionKeys.add(columnMeta.getName());
+		});
+		ResultSet resulSet = session.execute(QueryBuilder.select().from(keyspaceName, tableName));	
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
 		ArrayNode listColumnsName = mapper.createArrayNode();
+		
+		List<ObjectNode> columnsNodes = new ArrayList<ObjectNode>();
 		Iterator<Row> iter = resulSet.iterator();
 		columns.forEach(column -> {
-			listColumnsName.add(column.getName());
+			ObjectNode jsonColumn = mapper.createObjectNode();
+			jsonColumn.put("name",column.getName());
+			jsonColumn.put("primaryKey",partionKeys.contains(column.getName()));	
+			jsonColumn.put("type",column.getType().getName().name());	
+			columnsNodes.add(jsonColumn);
+		});
+		columnsNodes.sort((col1,col2)->{
+			if(col1.get("primaryKey").asBoolean()) {
+				if(col2.get("primaryKey").asBoolean()) {
+					return 0;
+				}
+				return -1;
+			}else {
+				if(col2.get("primaryKey").asBoolean()) {
+					return 1;
+				}
+				return 2;
+			}			
+		});
+		columnsNodes.forEach(jsonCol -> {			
+			listColumnsName.add(jsonCol);
 		});
 		rootNode.set("columns", listColumnsName);
-
 		while (iter.hasNext()) {
 			Row row = iter.next();
 			ObjectNode rowNode = mapper.createObjectNode();

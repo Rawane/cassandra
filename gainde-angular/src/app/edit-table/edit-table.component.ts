@@ -224,6 +224,9 @@ validIndex:boolean=true;
       panelClass: ['green-snackbar']
     });
 }
+onClickBack(){
+  this.router.navigate(['/viewKeyspace']);
+}
   private openDialog(pTitle:string,pText:string, cancelButton:boolean,pId:string): void {
     const dialogRef = this.dialog.open(DialogInfoTableComponent, {
       width: '500px',
