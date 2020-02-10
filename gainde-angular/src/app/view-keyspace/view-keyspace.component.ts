@@ -196,31 +196,7 @@ initEcranWithCurrentData(){
             {               
                 this.openDialog('Table ',mapTransfert.get("content"),false,'');
                 break;  
-            }
-            case ActionHttp.INSERT_DATA_TABLE:              
-              { let connectionName=this.gaindeService.currentGainde.connectionName;
-                let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
-                this.openSnackBar('Données insérées avec succès','');
-                this.gaindeService.getAllDataTable(connectionName,keyspaceName,mapTransfert.get("content"));
-                break;
-              }
-              case ActionHttp.INSERT_DATA_TABLE_ERROR: 
-            {               
-                this.openDialog('Insert Data ',mapTransfert.get("content"),false,'');
-                break;  
-            }
-            case ActionHttp.UPDATE_DATA_TABLE:              
-              { let connectionName=this.gaindeService.currentGainde.connectionName;
-                let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
-                this.openSnackBar('Données mis à jour avec succès','');
-                this.gaindeService.getAllDataTable(connectionName,keyspaceName,mapTransfert.get("content"));
-                break;
-              }
-              case ActionHttp.UPDATE_DATA_TABLE_ERROR: 
-            {               
-                this.openDialog('Update Data ',mapTransfert.get("content"),false,'');
-                break;  
-            }
+            }            
             default:
               break;
          }
@@ -285,6 +261,7 @@ initEcranWithCurrentData(){
       this.partVisible=VIEW_ECRAN.KEYSPACE_INFO;     
       this.gaindeService.getKeyspaceInfo(this.currentTableKeys[0],this.currentTableKeys[1]);      
     }else{   
+      this.gaindeService.currentGainde.tableName =this.currentTableKeys[2];  
       this.gaindeService.getInfoTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
       if(this.selectedPageIndex==1) 
       {
@@ -292,6 +269,16 @@ initEcranWithCurrentData(){
       }
     }
   }
+  onClickNavigateTab(){
+    console.log('onClickNavigateTab  : ' + this.selectedPageIndex);
+    if(this.selectedPageIndex==1){
+      if(this.currentTableKeys){
+        this.gaindeService.getAllDataTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
+      }  
+    }
+    
+  }
+
   onClickEditRow(row,name){
     console.log('onClickEditRow  : ' + JSON.stringify(row)); 
     //row['columns']=this.dispColumnsHeadTableData;
@@ -349,13 +336,13 @@ initEcranWithCurrentData(){
     this.keyspaceInfo['tables']=[];
     this.gaindeService.saveKeyspace(this.currentConnection['name'],keyspaceDTO);
   }
-  onClickShowTabColonne(){
+  /*onClickShowTabColonne(){
       console.log('onClickShowTabColonne  : ' + JSON.stringify(this.currentTableKeys));  
       console.log('onClickShowTabColonne event : ' + this.selectedPageIndex);  
       if(this.currentTableKeys){
         this.gaindeService.getAllDataTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
       }   
-  }
+  }*/
   onClickRowTable(row){
     console.log('onClickRowTable  : '+row);
     this.currentNodeId=row;
@@ -404,7 +391,7 @@ initEcranWithCurrentData(){
     this.zoomData=!this.zoomData;
     console.log('onZoomTable  : ' + this.zoomData);
   }
-  private openDialog(pTitle:string,pText:string, cancelButton:boolean,pId:string): void {
+   openDialog(pTitle:string,pText:string, cancelButton:boolean,pId:string): void {
     const dialogRef = this.dialog.open(DialogInfoKeyspaceComponent, {
       width: '500px',
       data: {text: pText,title:pTitle,btnCancel:cancelButton,id:pId}
@@ -421,9 +408,10 @@ initEcranWithCurrentData(){
            this.gaindeService.removeTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]); 
         }
       }
-
     });
+    
   }
+  
   private openDialogTableInfo(counter:number): void {
     const dialogRefTableInfo = this.dialog.open(DialogTableColumnInfoComponent, {
       width: '500px',
@@ -442,13 +430,13 @@ initEcranWithCurrentData(){
     });
   }
   private openDialogRow(row:JSON): void {
-    const dialogRefTableInfo = this.dialog.open(DialogEditRowComponent, {
+    const dialogRefRow = this.dialog.open(DialogEditRowComponent, {
       width: 'auto',     
       data: row,
       panelClass: 'customDialogEdit'
-    });
-  
-    dialogRefTableInfo.afterClosed().subscribe(result => {     
+    });  
+    dialogRefRow.componentInstance.setGaindeService(this.gaindeService);  
+    dialogRefRow.afterClosed().subscribe(result => {     
       
       if(result!=null){
        console.log("openDialogTableInfo "+JSON.stringify(result));
@@ -503,7 +491,7 @@ initEcranWithCurrentData(){
     }
   }
 
- private openSnackBar(message: string, action: string) {
+ public openSnackBar(message: string, action: string) {
     this.snackBar.open(message, action, {
       duration: 2000,
       // here specify the position
@@ -557,11 +545,109 @@ export class DialogTableColumnInfoComponent implements OnInit {
   styleUrls: ['./view-keyspace.component.scss']
 })
 export class DialogEditRowComponent implements OnInit {
-
-  constructor( public dialogRef: MatDialogRef<ViewKeyspaceComponent>,@Inject(MAT_DIALOG_DATA) public data: DialogData) { }
+private gaindeService:GaindeService;
+messageError:string='';
+error:boolean=false;
+notificationSubscription:Subscription;
+setColumns = new Set<string>();  
+  constructor( public dialogRef: MatDialogRef<ViewKeyspaceComponent>,@Inject(MAT_DIALOG_DATA) public data: DialogData, private snackBar:MatSnackBar) { }
 
   ngOnInit() {
-  }
+    this.notificationSubscription=this.gaindeService.mapTransfertViewDialogKeyspaceSubject.subscribe((mapTransfert: Map<string,any>) => {
+      let mapToString='';
+      mapTransfert.forEach((key,item)=>{
+        mapToString=mapToString+' '+item+'  value='+JSON.stringify(mapTransfert.get(item));        
+      });   
+     console.log('DialogEditRowComponent mapTransfert '+mapTransfert.get("type"));  
+      switch (mapTransfert.get("type") as ActionHttp)  {
+        case ActionHttp.INSERT_DATA_TABLE:              
+        { let connectionName=this.gaindeService.currentGainde.connectionName;
+          let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
+          this.openSnackBar('Données insérées avec succès','');
+          this.dialogRef.close();
+          this.gaindeService.getAllDataTable(connectionName,keyspaceName,mapTransfert.get("content"));
+          break;
+        }
+        case ActionHttp.INSERT_DATA_TABLE_ERROR: 
+      {       this.messageError= mapTransfert.get("content") ;   
+           this.error=true;   
+          //this.parentComponent.openDialog('Insert Data ',mapTransfert.get("content"),false,'');
+          break;  
+      }
+      case ActionHttp.UPDATE_DATA_TABLE:              
+        { let connectionName=this.gaindeService.currentGainde.connectionName;
+          let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
+          this.openSnackBar('Données mis à jour avec succès','');
+          this.dialogRef.close();
+          this.gaindeService.getAllDataTable(connectionName,keyspaceName,mapTransfert.get("content"));         
+          break;
+        }
+        case ActionHttp.UPDATE_DATA_TABLE_ERROR: 
+      {       this.messageError= mapTransfert.get("content") ;  
+              this.error=true;        
+         // this.parentComponent.openDialog('Update Data ',mapTransfert.get("content"),false,'');
+          break;  
+      }
+      default:
+        break;
+   }
 
+
+    });
+  }
+  onClickSaveData(data){
+    this.messageError= '';
+    this.error=false;  
+    if(data!=null){
+      console.log("openDialogTableInfo "+JSON.stringify(data));
+      let connectionName=this.gaindeService.currentGainde.connectionName;
+      let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
+      if(data['added']){
+        let requestData:any={};
+         requestData['data']={};
+         data['columns'].forEach(col=>{         
+            requestData['data'][col.name]={'data':data['row'][col.name],'type':col.type};
+          } );    
+         this.gaindeService.insertDataTable(requestData,connectionName,keyspaceName,data['tableName']);
+      }else{
+        let primaryKeys:string[]=[];
+        let requestData:any={};
+        requestData['data']={};
+        let mapTemp=new Map<string,string>();
+        data['columns'].forEach(col=>{
+           if(col['primaryKey']){
+             primaryKeys.push(col.name);
+             requestData['data'][col.name]={'data':data['row'][col.name],'type':col.type};
+           }else{
+            mapTemp.set(col.name,col.type);
+           }
+        });       
+        console.log("col data  "+JSON.stringify(data['columns']));
+        this.setColumns.forEach(colName=>{
+          requestData['data'][colName]={'data':data['row'][colName],'type':mapTemp.get(colName)};
+        });
+        requestData['primaryKeys']=primaryKeys;
+       this.gaindeService.updateDataTable(requestData,connectionName,keyspaceName,data['tableName']);
+      }
+     }
+  }
+  setGaindeService(gaindeService:GaindeService){
+    this.gaindeService=gaindeService;
+  }
+  closeDialog(){
+    this.dialogRef.close();
+  }
+  onValueChange(name){    
+    this.setColumns.add(name);
+    console.log("onValueChange "+JSON.stringify(this.setColumns.size));
+  }
+  public openSnackBar(message: string, action: string) {
+    this.snackBar.open(message, action, {
+      duration: 2000,
+      // here specify the position
+      verticalPosition: 'top',
+      panelClass: ['green-snackbar']
+    });
+}
 }
 

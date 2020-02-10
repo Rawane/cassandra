@@ -1,7 +1,5 @@
 package com.xoolibeut.gainde.cassandra.controller;
 
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,43 +39,49 @@ public class TableController {
 			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
 		}
 	}
+
 	@PutMapping("/{connectionName}/{kespace}")
 	public ResponseEntity<String> updateTable(@PathVariable("connectionName") String connectionName,
 			@PathVariable("kespace") String keyspaceName, @RequestBody CoupleTableDTO coupleTableDTO) {
 		try {
-			tableRepository.alterTable(coupleTableDTO.getOldTableDTO(),coupleTableDTO.getTableDTO(), connectionName, keyspaceName);
+			tableRepository.alterTable(coupleTableDTO.getOldTableDTO(), coupleTableDTO.getTableDTO(), connectionName,
+					keyspaceName);
 			return ResponseEntity.status(201).body("{\"message\":\"maj ok\"}");
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
 		}
 	}
+
 	@DeleteMapping("/{connectionName}/{kespace}/{tableName}")
 	public ResponseEntity<String> dropTable(@PathVariable("connectionName") String connectionName,
 			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName) {
 		try {
-			tableRepository.dropTable(connectionName, keyspaceName,tableName);
+			tableRepository.dropTable(connectionName, keyspaceName, tableName);
 			return ResponseEntity.status(204).build();
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
 		}
 	}
+
 	@GetMapping("/all/{connectionName}/{kespace}/{tableName}")
 	public ResponseEntity<String> getAllDataByTableName(@PathVariable("connectionName") String connectionName,
 			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName) {
 		try {
 			JsonNode jsonNode = tableRepository.getAllDataByTableName(connectionName, keyspaceName, tableName);
-			ObjectMapper mapper=new ObjectMapper();
+			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
 		}
 	}
+
 	@PostMapping("/insert/{connectionName}/{kespace}/{tableName}")
 	public ResponseEntity<String> insertDataTable(@PathVariable("connectionName") String connectionName,
-			@PathVariable("kespace") String keyspaceName,@PathVariable("tableName") String tableName, @RequestBody Map<String, Object> map) {
+			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName,
+			@RequestBody JsonNode map) {
 		try {
 			tableRepository.insertData(connectionName, keyspaceName, tableName, map);
 			return ResponseEntity.status(201).body("{\"message\":\"création ok\"}");
@@ -86,9 +90,11 @@ public class TableController {
 			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
 		}
 	}
+
 	@PutMapping("/update/{connectionName}/{kespace}/{tableName}")
 	public ResponseEntity<String> updateDataTable(@PathVariable("connectionName") String connectionName,
-			@PathVariable("kespace") String keyspaceName,@PathVariable("tableName") String tableName, @RequestBody JsonNode map) {
+			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName,
+			@RequestBody JsonNode map) {
 		try {
 			tableRepository.updateData(connectionName, keyspaceName, tableName, map);
 			return ResponseEntity.status(200).body("{\"message\":\"création ok\"}");
@@ -97,4 +103,4 @@ public class TableController {
 			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
 		}
 	}
-}		
+}

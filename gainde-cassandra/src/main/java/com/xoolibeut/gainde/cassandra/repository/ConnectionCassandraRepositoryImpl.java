@@ -2,6 +2,7 @@ package com.xoolibeut.gainde.cassandra.repository;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import com.datastax.driver.core.AuthProvider;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Cluster.Builder;
+import com.datastax.driver.core.CodecRegistry;
 import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.IndexMetadata;
@@ -20,12 +22,14 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.TableMetadata;
+import com.datastax.driver.core.TypeCodec;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ColonneTableDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ConnectionDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.GaindeMetadataDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.IndexColumn;
 import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
+import com.xoolibeut.gainde.cassandra.util.DateCodec;
 
 @Repository
 public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRepository {
@@ -45,6 +49,8 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 						&& connectionDTO.getPassword() != null && !connectionDTO.getPassword().isEmpty()) {
 					clusterBuilder.withAuthProvider(authProvider);
 				}
+				CodecRegistry codecRegistry = new CodecRegistry();
+				codecRegistry.register(new DateCodec(TypeCodec.date(), Date.class));				
 				Cluster cluster = clusterBuilder.withoutMetrics().withoutJMXReporting().withoutJMXReporting().build();
 				Session session = cluster.connect();
 				GaindeSessionConnection.getInstance().addSession(connectionDTO.getName(), cluster, session);

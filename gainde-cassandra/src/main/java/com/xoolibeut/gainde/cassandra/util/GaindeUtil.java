@@ -1,6 +1,18 @@
 package com.xoolibeut.gainde.cassandra.util;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.datastax.driver.core.DataType;
+import com.fasterxml.jackson.databind.JsonNode;
 
 public class GaindeUtil {
 	public static int ASCII = 1;
@@ -29,6 +41,79 @@ public class GaindeUtil {
 	public static int SET = 34;
 	public static int UDT = 48;
 	public static int TUPLE = 49;
+
+	public static Object getData(JsonNode jsonNode) {
+		String type = jsonNode.get("type").asText();
+		switch (type) {
+		case "TEXT":
+			return jsonNode.get("data").asText();
+		case "INT":
+			return jsonNode.get("data").asInt();
+		case "DOUBLE":
+			return jsonNode.get("data").asDouble();
+		case "DATE": {
+			try {
+				SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
+				//LocalDate.fromMillisSinceEpoch(dateFormat.parse(jsonNode.get("data").asText()).getTime());		
+				//return dateFormat.parse(jsonNode.get("data").asText());
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-mm-dd");
+				  String date = "16/08/2016";
+				  dateFormat.parse(jsonNode.get("data").asText());
+				  //convert String to LocalDate
+				  return LocalDate.parse(jsonNode.get("data").asText());
+				//return LocalDate.fromMillisSinceEpoch(dateFormat.parse(jsonNode.get("data").asText()).getTime());
+			} catch (ParseException e) {
+				e.printStackTrace();
+				break;
+			}
+		}
+		case "BIGINT":
+			return jsonNode.get("data").asLong();
+		case "SET": {
+			String setString = jsonNode.get("data").asText();
+			Set<String> set = new HashSet<>();
+			if (setString != null && setString.length() > 2) {
+				String[] arrayData = setString.substring(1, setString.length() - 1).split(",");
+				for (String key : arrayData) {
+					set.add(key);
+				}
+
+			}
+			return set;
+		}
+		case "LIST": {
+			String setString = jsonNode.get("data").asText();
+			List<String> list = new ArrayList<>();
+			if (setString != null && setString.length() > 2) {
+				String[] arrayData = setString.substring(1, setString.length() - 1).split(",");
+				for (String key : arrayData) {
+					list.add(key);
+				}
+
+			}
+			return list;
+		}
+		case "MAP": {
+			String setString = jsonNode.get("data").asText();
+			Map<String, String> map = new HashMap<>();
+			if (setString != null && setString.length() > 2) {
+				String[] arrayData = setString.substring(1, setString.length() - 1).split(",");
+				for (String element : arrayData) {
+					String[] arrayElement = element.split(":");
+					if (arrayElement.length == 2) {
+						map.put(arrayElement[0], arrayElement[1]);
+					}
+				}
+
+			}
+			return map;
+		}
+		default:
+			break;
+		}
+
+		return jsonNode.get("data").asText();
+	}
 
 	public static DataType getDataType(int type, Integer typeOplist, Integer typeopMap) {
 		DataType dataType = null;
@@ -98,7 +183,7 @@ public class GaindeUtil {
 			break;
 		case 22:
 			dataType = DataType.list(getDataType(typeOplist, null, null));
-			break;		
+			break;
 		case 23:
 			dataType = DataType.map(getDataType(typeOplist, null, null), getDataType(typeopMap, null, null));
 			break;

@@ -248,7 +248,7 @@
                             </button>                            
                         </div>
                          </div>
-                    <mat-tab-group class="tabTableGainde"   [(selectedIndex)]="selectedPageIndex">
+                    <mat-tab-group class="tabTableGainde"   [(selectedIndex)]="selectedPageIndex" (selectedTabChange)="onClickNavigateTab()">
                         <mat-tab label="Infos">
                             <div >
                                 <mat-table  #table [dataSource]="tableInfo.primaryKey"   >
@@ -282,7 +282,7 @@
                         </mat-tab>
                         <mat-tab >
                             <ng-template matTabLabel>
-                                <span   (click)="onClickShowTabColonne()">Données</span>
+                                <span  >Données</span>
                             </ng-template>
                             <div *ngIf="displayedColumnsTableData && !bigTable">                               
                                     <div class="row">                                       

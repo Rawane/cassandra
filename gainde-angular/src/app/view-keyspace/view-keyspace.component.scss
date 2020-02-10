@@ -103,7 +103,7 @@
   display: none;
 }
 .rowEdit{
-  margin-bottom: 3px;
+  margin: 3px;
 }
 .dialogWrapper{
   width: 900px;
@@ -115,4 +115,11 @@
 }
 .labelRow{
   font-weight: bold;
+}
+.messageError{
+  background-color: #df5035;
+  color: white;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
 }

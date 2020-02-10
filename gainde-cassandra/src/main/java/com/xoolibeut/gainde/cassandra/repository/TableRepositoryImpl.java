@@ -3,7 +3,6 @@ package com.xoolibeut.gainde.cassandra.repository;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -275,14 +274,25 @@ public class TableRepositoryImpl implements TableRepository {
 		}
 	}
 
-	public void insertData(String connectionName, String keyspaceName, String tableName, Map<String, Object> map)
+	public void insertData(String connectionName, String keyspaceName, String tableName, JsonNode map)
 			throws Exception {
 		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
 		if (session == null) {
 			throw new Exception("aucune session");
 		}
-		Insert insert = QueryBuilder.insertInto(keyspaceName, tableName).values(new ArrayList<String>(map.keySet()),
-				new ArrayList<Object>(map.values()));
+		List<String> keys = new ArrayList<String>();
+		List<Object> values = new ArrayList<Object>();
+		JsonNode dataNode = map.get("data");
+		Iterator<String> iterField = dataNode.fieldNames();
+		while (iterField.hasNext()) {
+			
+			String key = iterField.next();
+			if(dataNode.get(key).get("data").asText()!=null && !dataNode.get(key).get("data").asText().isEmpty() ) {
+			keys.add(key);
+			values.add(GaindeUtil.getData(dataNode.get(key)));
+			}
+		}
+		Insert insert = QueryBuilder.insertInto(keyspaceName, tableName).values(keys, values);
 		session.execute(insert);
 	}
 
@@ -295,10 +305,10 @@ public class TableRepositoryImpl implements TableRepository {
 		JsonNode dataNode = map.get("data");
 		ArrayNode arrayNode = (ArrayNode) map.get("primaryKeys");
 		List<String> primaryKeys = new ArrayList<String>();
-		List<String> primaryValues = new ArrayList<String>();
+		List<Object> primaryValues = new ArrayList<Object>();
 		arrayNode.forEach(node -> {
 			primaryKeys.add(node.asText());
-			primaryValues.add(dataNode.get(node.asText()).asText());
+			primaryValues.add(GaindeUtil.getData(dataNode.get(node.asText())));
 		});
 
 		if (primaryKeys.isEmpty()) {
@@ -306,16 +316,17 @@ public class TableRepositoryImpl implements TableRepository {
 		}
 		Clause clause = QueryBuilder.eq(primaryKeys.get(0), primaryValues.get(0));
 		if (primaryKeys.size() > 1) {
-			//QueryBuilder.eq
+			// QueryBuilder.eq
 		}
 		Iterator<String> iterField = dataNode.fieldNames();
 		while (iterField.hasNext()) {
 			String key = iterField.next();
 			if (!primaryKeys.contains(key)) {
+				JsonNode columnData = dataNode.get(key);
 				Where where = QueryBuilder.update(keyspaceName, tableName)
-						.with(QueryBuilder.set(key, dataNode.get(key).asText())).where(clause);
+						.with(QueryBuilder.set(key, GaindeUtil.getData(columnData))).where(clause);
 				if (primaryKeys.size() > 1) {
-					for(int i=1;i<primaryKeys.size();i++) {
+					for (int i = 1; i < primaryKeys.size(); i++) {
 						where.and(QueryBuilder.eq(primaryKeys.get(i), primaryValues.get(i)));
 					}
 				}
