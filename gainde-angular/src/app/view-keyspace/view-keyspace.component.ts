@@ -599,7 +599,7 @@ setColumns = new Set<string>();
     this.messageError= '';
     this.error=false;  
     if(data!=null){
-      console.log("openDialogTableInfo "+JSON.stringify(data));
+     // console.log("openDialogTableInfo "+JSON.stringify(data));
       let connectionName=this.gaindeService.currentGainde.connectionName;
       let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
       if(data['added']){
@@ -622,7 +622,6 @@ setColumns = new Set<string>();
             mapTemp.set(col.name,col.type);
            }
         });       
-        console.log("col data  "+JSON.stringify(data['columns']));
         this.setColumns.forEach(colName=>{
           requestData['data'][colName]={'data':data['row'][colName],'type':mapTemp.get(colName)};
         });
