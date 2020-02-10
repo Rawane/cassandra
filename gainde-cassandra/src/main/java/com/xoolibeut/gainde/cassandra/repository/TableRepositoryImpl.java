@@ -1,6 +1,9 @@
 package com.xoolibeut.gainde.cassandra.repository;
 
+import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -11,7 +14,6 @@ import org.springframework.stereotype.Repository;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.PagingState;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -241,7 +243,29 @@ public class TableRepositoryImpl implements TableRepository {
 			ObjectNode rowNode = mapper.createObjectNode();
 			columns.forEach(column -> {
 				if (row.getObject(column.getName()) != null) {
-					rowNode.put(column.getName(), row.getObject(column.getName()).toString());
+					LOGGER.info("classs row  " + row.getObject(column.getName()).getClass() + " col name "
+							+ column.getName());
+					switch (column.getType().getName()) {					
+					case TIMESTAMP: {
+						if (row.getObject(column.getName()) instanceof Date) {
+							Date date = (Date) row.getObject(column.getName());
+							SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+							rowNode.put(column.getName(), dateFormat.format(date));
+						}
+						break;
+					}					
+					case BLOB: {
+						if (row.getObject(column.getName()) instanceof ByteBuffer) {
+							ByteBuffer byteBuffer = (ByteBuffer) row.getObject(column.getName());
+							rowNode.put(column.getName(), new String(byteBuffer.array()));
+						}
+						break;
+					}
+					default:
+						rowNode.put(column.getName(), row.getObject(column.getName()).toString());
+						break;
+					}
+
 				} else {
 					rowNode.put(column.getName(), "");
 				}
@@ -252,26 +276,6 @@ public class TableRepositoryImpl implements TableRepository {
 		}
 		rootNode.set("data", arrayNode);
 		return rootNode;
-	}
-
-	public static void getAllDataByTableNameOld(String connectionName, String keyspaceName, String tableName)
-			throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
-		ResultSet resulSet = session.execute(QueryBuilder.select().from(keyspaceName, tableName).setFetchSize(5));
-		PagingState pagingState = resulSet.getExecutionInfo().getPagingState();
-		LOGGER.info("pagingState  " + pagingState.toString());
-		ResultSet rs = session.execute("SELECT cql_version FROM system.local;");
-		Row rowOne = rs.one();
-		LOGGER.info("rowOne  " + rowOne);
-		Iterator<Row> iter = resulSet.iterator();
-		while (resulSet.getAvailableWithoutFetching() > 0) {
-
-			Row row = iter.next();
-			LOGGER.info("row  " + row);
-		}
 	}
 
 	public void insertData(String connectionName, String keyspaceName, String tableName, JsonNode map)
@@ -285,11 +289,11 @@ public class TableRepositoryImpl implements TableRepository {
 		JsonNode dataNode = map.get("data");
 		Iterator<String> iterField = dataNode.fieldNames();
 		while (iterField.hasNext()) {
-			
+
 			String key = iterField.next();
-			if(dataNode.get(key).get("data").asText()!=null && !dataNode.get(key).get("data").asText().isEmpty() ) {
-			keys.add(key);
-			values.add(GaindeUtil.getData(dataNode.get(key)));
+			if (dataNode.get(key).get("data").asText() != null && !dataNode.get(key).get("data").asText().isEmpty()) {
+				keys.add(key);
+				values.add(GaindeUtil.getData(dataNode.get(key)));
 			}
 		}
 		Insert insert = QueryBuilder.insertInto(keyspaceName, tableName).values(keys, values);

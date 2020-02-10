@@ -1,17 +1,18 @@
 package com.xoolibeut.gainde.cassandra.util;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.LocalDate;
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class GaindeUtil {
@@ -26,7 +27,7 @@ public class GaindeUtil {
 	public static int INT = 9;
 	public static int TEXT = 10;
 	public static int TIMESTAMP = 11;
-	public static int UUID = 12;
+	//public static int UUID = 12;
 	public static int VARCHAR = 13;
 	public static int VARINT = 14;
 	public static int TIMEUUID = 15;
@@ -52,23 +53,34 @@ public class GaindeUtil {
 		case "DOUBLE":
 			return jsonNode.get("data").asDouble();
 		case "DATE": {
-			try {
-				SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-mm-dd");
-				//LocalDate.fromMillisSinceEpoch(dateFormat.parse(jsonNode.get("data").asText()).getTime());		
-				//return dateFormat.parse(jsonNode.get("data").asText());
-				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-mm-dd");
-				  String date = "16/08/2016";
-				  dateFormat.parse(jsonNode.get("data").asText());
-				  //convert String to LocalDate
-				  return LocalDate.parse(jsonNode.get("data").asText());
-				//return LocalDate.fromMillisSinceEpoch(dateFormat.parse(jsonNode.get("data").asText()).getTime());
-			} catch (ParseException e) {
-				e.printStackTrace();
-				break;
-			}
+			java.time.LocalDate jtld = java.time.LocalDate.parse(jsonNode.get("data").asText());
+			
+			return LocalDate.fromYearMonthDay(jtld.getYear(), jtld.getMonthValue(), jtld.getDayOfMonth());
 		}
+		case "TIMESTAMP":			
+			return Timestamp.valueOf(jsonNode.get("data").asText());
+		case "DECIMAL":
+			return new BigDecimal(jsonNode.get("data").asText());
+		case "BOOLEAN":
+			return jsonNode.get("data").asBoolean();
+		case "FLOAT":
+			return Float.valueOf(jsonNode.get("data").asText());
+		case "TIME":
+			return jsonNode.get("data").asLong();
+		case "COUNTER":
+			return jsonNode.get("data").asLong();
 		case "BIGINT":
 			return jsonNode.get("data").asLong();
+		case "VARINT":
+			return jsonNode.get("data").bigIntegerValue();
+		case "UUID":
+			return UUID.fromString(jsonNode.get("data").asText());
+		case "TIMEUUID":
+			return UUID.fromString(jsonNode.get("data").asText());
+		case "TINYINT":
+			return (byte)jsonNode.get("data").asInt();
+		case "SMALLINT":
+			return (short)jsonNode.get("data").asInt();
 		case "SET": {
 			String setString = jsonNode.get("data").asText();
 			Set<String> set = new HashSet<>();
@@ -92,6 +104,10 @@ public class GaindeUtil {
 
 			}
 			return list;
+		}
+		case "BLOB":		{
+			 ByteBuffer buffer =ByteBuffer.wrap(jsonNode.get("data").asText().getBytes());
+			 return buffer;
 		}
 		case "MAP": {
 			String setString = jsonNode.get("data").asText();
