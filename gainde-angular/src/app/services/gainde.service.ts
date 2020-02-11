@@ -11,7 +11,6 @@ export class GaindeService {
   mapTransfertViewKeyspaceSubject=new Subject<Map<String,any>>();  
   mapTransfertViewAddTableSubject=new Subject<Map<String,any>>();  
   mapTransfertViewEditTableSubject=new Subject<Map<String,any>>();
-  mapTransfertViewDialogKeyspaceSubject=new Subject<Map<String,any>>();
   //currentMetaConnection:any;
   //currentConnection:ConnectionDTO;
   currentGainde:GaindeCommunication=new GaindeCommunication();
@@ -31,12 +30,7 @@ export class GaindeService {
     this.mapTransfert.set("content",content);
     this.mapTransfert.set("type",action);
     this.mapTransfertViewKeyspaceSubject.next(this.mapTransfert);
-  }
-  emitmapTransfertViewDialogKeyspaceSubject(action:ActionHttp,content:any) {
-    this.mapTransfert.set("content",content);
-    this.mapTransfert.set("type",action);
-    this.mapTransfertViewDialogKeyspaceSubject.next(this.mapTransfert);
-  }
+  }  
   emitMapTransfertEditTableSubject(action:ActionHttp,content:any) {
     this.mapTransfert.set("content",content);
     this.mapTransfert.set("type",action);
@@ -284,12 +278,12 @@ export class GaindeService {
     .subscribe(
       (response) => {            
         console.log('response  : ' + JSON.stringify(response));        
-        this.emitmapTransfertViewDialogKeyspaceSubject(ActionHttp.INSERT_DATA_TABLE,tableName); 
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.INSERT_DATA_TABLE,tableName); 
 
       },
       (error) => {     
         console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
-        this.emitmapTransfertViewDialogKeyspaceSubject(ActionHttp.INSERT_DATA_TABLE_ERROR,error['error']['error']);        
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.INSERT_DATA_TABLE_ERROR,error['error']['error']);        
       }
     );    
   }
@@ -299,12 +293,12 @@ export class GaindeService {
     .subscribe(
       (response) => {            
         console.log('response  : ' + JSON.stringify(response));        
-        this.emitmapTransfertViewDialogKeyspaceSubject(ActionHttp.UPDATE_DATA_TABLE,tableName); 
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.UPDATE_DATA_TABLE,tableName); 
 
       },
       (error) => {     
         console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
-        this.emitmapTransfertViewDialogKeyspaceSubject(ActionHttp.UPDATE_DATA_TABLE_ERROR,error['error']['error']);        
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.UPDATE_DATA_TABLE_ERROR,error['error']['error']);        
       }
     );    
   }

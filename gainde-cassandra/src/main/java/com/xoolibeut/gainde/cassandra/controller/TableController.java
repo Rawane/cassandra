@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.xoolibeut.gainde.cassandra.controller.dtos.CoupleTableDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
 import com.xoolibeut.gainde.cassandra.repository.TableRepository;
@@ -33,10 +35,10 @@ public class TableController {
 			@PathVariable("kespace") String keyspaceName, @RequestBody TableDTO tableDTO) {
 		try {
 			tableRepository.createTable(tableDTO, connectionName, keyspaceName);
-			return ResponseEntity.status(201).body("{\"message\":\"création ok\"}");
+			return ResponseEntity.status(201).body(buildMessage("message","création ok"));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
 		}
 	}
 
@@ -46,10 +48,10 @@ public class TableController {
 		try {
 			tableRepository.alterTable(coupleTableDTO.getOldTableDTO(), coupleTableDTO.getTableDTO(), connectionName,
 					keyspaceName);
-			return ResponseEntity.status(201).body("{\"message\":\"maj ok\"}");
+			return ResponseEntity.status(200).body(buildMessage("message","maj ok"));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
 		}
 	}
 
@@ -61,7 +63,7 @@ public class TableController {
 			return ResponseEntity.status(204).build();
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
 		}
 	}
 
@@ -74,7 +76,7 @@ public class TableController {
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
 		}
 	}
 
@@ -84,10 +86,10 @@ public class TableController {
 			@RequestBody JsonNode map) {
 		try {
 			tableRepository.insertData(connectionName, keyspaceName, tableName, map);
-			return ResponseEntity.status(201).body("{\"message\":\"création ok\"}");
+			return ResponseEntity.status(201).body(buildMessage("message","insertion ok"));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
 		}
 	}
 
@@ -97,10 +99,21 @@ public class TableController {
 			@RequestBody JsonNode map) {
 		try {
 			tableRepository.updateData(connectionName, keyspaceName, tableName, map);
-			return ResponseEntity.status(200).body("{\"message\":\"création ok\"}");
+			return ResponseEntity.status(200).body(buildMessage("message","maj ok"));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
 		}
 	}
+	private String buildMessage(String code,String message) {
+		ObjectMapper mapper=new ObjectMapper();
+		ObjectNode node=mapper.createObjectNode();
+		try {node.put(code, message);
+			return mapper.writeValueAsString(node);
+		} catch (JsonProcessingException e) {			
+			e.printStackTrace();
+		}
+		return "";
+	}
+	
 }

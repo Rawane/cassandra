@@ -1,14 +1,19 @@
 package com.xoolibeut.gainde.cassandra.util;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import com.datastax.driver.core.DataType;
@@ -27,7 +32,7 @@ public class GaindeUtil {
 	public static int INT = 9;
 	public static int TEXT = 10;
 	public static int TIMESTAMP = 11;
-	//public static int UUID = 12;
+	// public static int UUID = 12;
 	public static int VARCHAR = 13;
 	public static int VARINT = 14;
 	public static int TIMEUUID = 15;
@@ -45,44 +50,52 @@ public class GaindeUtil {
 
 	public static Object getData(JsonNode jsonNode) {
 		String type = jsonNode.get("type").asText();
+		if(jsonNode.get("data").asText(null)==null) {
+			return null;
+		}
+		String data=jsonNode.get("data").asText(null);
+		
 		switch (type) {
 		case "TEXT":
-			return jsonNode.get("data").asText();
+			return data;
+		case "VARCHAR":
+			return data;
 		case "INT":
-			return jsonNode.get("data").asInt();
+			return Integer.parseInt(data);
 		case "DOUBLE":
-			return jsonNode.get("data").asDouble();
+			return Double.parseDouble(data);
 		case "DATE": {
-			java.time.LocalDate jtld = java.time.LocalDate.parse(jsonNode.get("data").asText());
-			
+			java.time.LocalDate jtld = java.time.LocalDate.parse(data, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 			return LocalDate.fromYearMonthDay(jtld.getYear(), jtld.getMonthValue(), jtld.getDayOfMonth());
 		}
-		case "TIMESTAMP":			
-			return Timestamp.valueOf(jsonNode.get("data").asText());
+		case "TIMESTAMP":
+			return Timestamp.valueOf(data);
 		case "DECIMAL":
-			return new BigDecimal(jsonNode.get("data").asText());
+			return new BigDecimal(data);
 		case "BOOLEAN":
 			return jsonNode.get("data").asBoolean();
 		case "FLOAT":
-			return Float.valueOf(jsonNode.get("data").asText());
+			return Float.valueOf(data);
 		case "TIME":
-			return jsonNode.get("data").asLong();
+			LocalDateTime date = LocalDateTime.ofInstant(Instant.ofEpochMilli(jsonNode.get("data").asLong()),
+					TimeZone.getDefault().toZoneId());
+			return Timestamp.valueOf(date);
 		case "COUNTER":
-			return jsonNode.get("data").asLong();
+			return Long.parseLong(data);
 		case "BIGINT":
-			return jsonNode.get("data").asLong();
+			return Long.parseLong(data);
 		case "VARINT":
-			return jsonNode.get("data").bigIntegerValue();
+			return new BigInteger(data);
 		case "UUID":
-			return UUID.fromString(jsonNode.get("data").asText());
+			return UUID.fromString(data);
 		case "TIMEUUID":
-			return UUID.fromString(jsonNode.get("data").asText());
+			return UUID.fromString(data);
 		case "TINYINT":
-			return (byte)jsonNode.get("data").asInt();
+			return (byte) Integer.parseInt(data);
 		case "SMALLINT":
-			return (short)jsonNode.get("data").asInt();
+			return (short) Integer.parseInt(data);
 		case "SET": {
-			String setString = jsonNode.get("data").asText();
+			String setString = data;
 			Set<String> set = new HashSet<>();
 			if (setString != null && setString.length() > 2) {
 				String[] arrayData = setString.substring(1, setString.length() - 1).split(",");
@@ -94,7 +107,7 @@ public class GaindeUtil {
 			return set;
 		}
 		case "LIST": {
-			String setString = jsonNode.get("data").asText();
+			String setString = data;
 			List<String> list = new ArrayList<>();
 			if (setString != null && setString.length() > 2) {
 				String[] arrayData = setString.substring(1, setString.length() - 1).split(",");
@@ -105,12 +118,12 @@ public class GaindeUtil {
 			}
 			return list;
 		}
-		case "BLOB":		{
-			 ByteBuffer buffer =ByteBuffer.wrap(jsonNode.get("data").asText().getBytes());
-			 return buffer;
+		case "BLOB": {
+			ByteBuffer buffer = ByteBuffer.wrap(data.getBytes());
+			return buffer;
 		}
 		case "MAP": {
-			String setString = jsonNode.get("data").asText();
+			String setString = data;
 			Map<String, String> map = new HashMap<>();
 			if (setString != null && setString.length() > 2) {
 				String[] arrayData = setString.substring(1, setString.length() - 1).split(",");
@@ -128,7 +141,7 @@ public class GaindeUtil {
 			break;
 		}
 
-		return jsonNode.get("data").asText();
+		return data;
 	}
 
 	public static DataType getDataType(int type, Integer typeOplist, Integer typeopMap) {

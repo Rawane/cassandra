@@ -21,6 +21,7 @@ optionsTypeAll=TypeColonnesAll;
 optionsType=TypeColonnes;
 oldTableDTO:TableDTO;
 validIndex:boolean=true;
+setColumnsRename=new Set<string>();
   constructor(private gaindeService:GaindeService,private router:Router,
     private formBuilder:FormBuilder,private snackBar:MatSnackBar,private dialog: MatDialog) { }
 
@@ -182,6 +183,14 @@ validIndex:boolean=true;
           controlForm.get('typeMap').setValidators([]);
         }
       }
+    
+  }   
+  onValueNameChange(index:number){
+   
+    let controlForm=this.ligneColumns.at(index);
+    console.log('onValueNameChange rename '+index +'   '+controlForm.value['name']+'  ');
+    this.setColumnsRename.add(controlForm.value['name']);
+    
     
   }   
   onSubmitTable(){   

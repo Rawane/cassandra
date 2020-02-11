@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.xoolibeut.gainde.cassandra.controller.dtos.KeyspaceDTO;
 import com.xoolibeut.gainde.cassandra.repository.KeyspaceRepository;
 
@@ -30,11 +32,11 @@ public class KeyspaceController {
 	public ResponseEntity<String> createKeyspace(@PathVariable("connectionName") String connectionName,
 			@RequestBody KeyspaceDTO keyspaceDTO) {
 		try {
-			keyspaceRepository.createKeyspace(connectionName, keyspaceDTO);
-			return ResponseEntity.status(201).body("{\"message\":\"création kesypace ok\"}");
+			keyspaceRepository.createKeyspace(connectionName, keyspaceDTO);			
+			return ResponseEntity.status(201).body(buildMessage("message","création kesypace ok"));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
 		}
 	}
 
@@ -42,11 +44,11 @@ public class KeyspaceController {
 	public ResponseEntity<String> alterKeyspace(@PathVariable("connectionName") String connectionName,
 			@RequestBody KeyspaceDTO keyspaceDTO) {
 		try {
-			keyspaceRepository.alterKeyspace(connectionName, keyspaceDTO);
-			return ResponseEntity.status(200).body("{\"message\":\"maj kesypace ok\"}");
+			keyspaceRepository.alterKeyspace(connectionName, keyspaceDTO);			
+			return ResponseEntity.status(200).body(buildMessage("message","maj kesypace ok"));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
 		}
 	}
 
@@ -58,7 +60,7 @@ public class KeyspaceController {
 			return ResponseEntity.status(204).build();
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
 		}
 	}
 	@GetMapping("/{connectionName}/{keyspaceName}")
@@ -70,7 +72,17 @@ public class KeyspaceController {
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(keyspaceDTO));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body("{\"error\":\"" + ioException.getMessage() + "\"}");
+			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
 		}
+	}
+	private String buildMessage(String code,String message) {
+		ObjectMapper mapper=new ObjectMapper();
+		ObjectNode node=mapper.createObjectNode();
+		try {node.put(code, message);
+			return mapper.writeValueAsString(node);
+		} catch (JsonProcessingException e) {			
+			e.printStackTrace();
+		}
+		return "";
 	}
 }

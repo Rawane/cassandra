@@ -5,8 +5,8 @@ import {HttpClientModule} from '@angular/common/http'
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatInputModule, MatPaginatorModule,MatSortModule, MatTableModule} from "@angular/material";
-import { MatTooltipModule,MatIconModule,MatExpansionModule,MatSnackBarModule} from "@angular/material";
+import { MatInputModule, MatPaginatorModule,MatSortModule, MatTableModule,MatDatepickerModule,MatDateFormats,MAT_DATE_LOCALE,MAT_DATE_FORMATS,} from "@angular/material";
+import { MatTooltipModule,MatIconModule,MatExpansionModule,MatSnackBarModule,MatNativeDateModule} from "@angular/material";
 import {MatProgressSpinnerModule,MatCardModule,MatTreeModule,MatDialogModule } from "@angular/material";
 import { MatAutocompleteModule,MatListModule,MatTabsModule,MatBadgeModule,MatStepperModule} from "@angular/material";
 import { MenuComponent } from './menu/menu.component';
@@ -17,7 +17,17 @@ import { EditTableComponent ,DialogInfoTableComponent} from './edit-table/edit-t
 import { AutofocusDirective } from './directive/autofocus.directive';
 import { AddTableComponent,DialogAddInfoTableComponent } from './add-table/add-table.component';
 
-
+export const FORMAT_GAINDE: MatDateFormats = {
+  parse: {
+  dateInput: 'DD/MM/YYYY',
+  },
+  display: {
+  dateInput: 'DD/MM/YYYY',
+  monthYearLabel: 'MMM YYYY',
+  dateA11yLabel: 'DD/MM/YYYY',
+  monthYearA11yLabel: 'MMMM YYYY',
+  },
+  };
 
 @NgModule({
   declarations: [
@@ -60,7 +70,9 @@ import { AddTableComponent,DialogAddInfoTableComponent } from './add-table/add-t
     MatTabsModule,
     MatBadgeModule,
     MatSnackBarModule,
-    MatStepperModule
+    MatStepperModule,
+    MatDatepickerModule,
+    MatNativeDateModule
   ],
   entryComponents:[
   DialogInfoConnectionComponent,
@@ -70,7 +82,10 @@ import { AddTableComponent,DialogAddInfoTableComponent } from './add-table/add-t
   DialogAddInfoTableComponent,
   DialogEditRowComponent
   ],
-  providers: [GaindeService],
+  providers: [GaindeService,
+    { provide: MAT_DATE_LOCALE, useValue: 'fr-FR' },
+    { provide: MAT_DATE_FORMATS, useValue: FORMAT_GAINDE }
+    ],
   bootstrap: [AppComponent]
 })
 export class AppModule {

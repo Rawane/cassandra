@@ -1,8 +1,7 @@
 package com.xoolibeut.gainde.cassandra.repository;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.Calendar;
+import java.util.UUID;
 
 import org.junit.Test;
 
@@ -17,48 +16,43 @@ public class TableRepositoryTest {
 	@Test
 	public void testUpdateData() {
 		try {
-		String connectionName = "LOCAL";
-		ConnectionDTO connectionDTO = new ConnectionDTO(connectionName);
-		connectionDTO.setIp("127.0.0.1");
-		connectionDTO.setPort(9042);
-		ConnectionCassandraRepositoryImpl cassandraRepository = new ConnectionCassandraRepositoryImpl();
-		cassandraRepository.connnectTocassandra(connectionDTO);
-		ObjectMapper mapper = new ObjectMapper();
-		ObjectNode map = mapper.createObjectNode();
-		ObjectNode data = mapper.createObjectNode();
-		ArrayNode primaryKeys = mapper.createArrayNode();
-		map.set("primaryKeys", primaryKeys);
-		map.set("data", data);
-		primaryKeys.add("nom");
-		ObjectNode columData1 = mapper.createObjectNode();
-		columData1.put("data", "hfsytdtyzazddyushshdhdss");
-		columData1.put("type", "BLOB");
-		data.set("col_blob", columData1);
-		
-		ObjectNode columDataPr = mapper.createObjectNode();
-		columDataPr.put("data", "zzazaza");
-		columDataPr.put("type", "TEXT");
-		data.set("nom", columDataPr);
-		//tableRepository.updateData(connectionName, "x48c95551_20c5_4c4e_kps_rawanex", "table_test", map);
-		tableRepository.updateData(connectionName, "keyspace_test_1", "championnat", map);
+			String connectionName = "LOCAL";
+			ConnectionDTO connectionDTO = new ConnectionDTO(connectionName);
+			connectionDTO.setIp("127.0.0.1");
+			connectionDTO.setPort(9042);
+			ConnectionCassandraRepositoryImpl cassandraRepository = new ConnectionCassandraRepositoryImpl();
+			cassandraRepository.connnectTocassandra(connectionDTO);
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode map = mapper.createObjectNode();
+			ObjectNode data = mapper.createObjectNode();
+			ArrayNode primaryKeys = mapper.createArrayNode();
+			map.set("primaryKeys", primaryKeys);
+			map.set("data", data);
+			primaryKeys.add("id");
+			ObjectNode columData1 = mapper.createObjectNode();
 
-		cassandraRepository.closeConnectioncassandra(connectionName);
-		}catch (Exception e) {
+			columData1.put("data", Calendar.getInstance().getTimeInMillis());
+			columData1.put("type", "TIME");
+			data.set("col_time", columData1);
+
+			ObjectNode columDataPr = mapper.createObjectNode();
+			columDataPr.put("data", "zzazaza");
+			columDataPr.put("type", "TEXT");
+			data.set("id", columDataPr);
+			tableRepository.updateData(connectionName, "x48c95551_20c5_4c4e_kps_rawanex", "personne", map);
+			// tableRepository.updateData(connectionName, "keyspace_test_1", "championnat",
+			// map);
+
+			cassandraRepository.closeConnectioncassandra(connectionName);
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 	}
+
 	@Test
-	public void testUpdateData2()  {
-		Date date = new Date(System.currentTimeMillis());
-		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss.SSS");
-		try {
-			System.out.println( dateFormat.parse(dateFormat.format(date)).getTime());
-			System.out.println( System.currentTimeMillis());
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void testUpdateData2() {
+		System.out.println(UUID.randomUUID());
 	}
-	
+
 }
