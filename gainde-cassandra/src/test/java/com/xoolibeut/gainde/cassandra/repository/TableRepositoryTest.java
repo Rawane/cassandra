@@ -1,27 +1,55 @@
 package com.xoolibeut.gainde.cassandra.repository;
 
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.UUID;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import com.datastax.driver.core.Session;
+import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.xoolibeut.gainde.cassandra.controller.dtos.ColonneTableDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ConnectionDTO;
+import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
 
 public class TableRepositoryTest {
 	private TableRepository tableRepository = new TableRepositoryImpl();
+	private ConnectionCassandraRepository cassandraRepository;
+
+	@Before
+	public void setUp() {
+		String connectionName = "LOCAL";
+		ConnectionDTO connectionDTO = new ConnectionDTO(connectionName);
+		connectionDTO.setIp("127.0.0.1");
+		connectionDTO.setPort(9042);
+		cassandraRepository = new ConnectionCassandraRepositoryImpl();
+		try {
+			cassandraRepository.connnectTocassandra(connectionDTO);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	@After
+	public void closeConnection()  {
+		try {
+			cassandraRepository.closeConnectioncassandra("LOCAL");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 	@Test
 	public void testUpdateData() {
 		try {
 			String connectionName = "LOCAL";
-			ConnectionDTO connectionDTO = new ConnectionDTO(connectionName);
-			connectionDTO.setIp("127.0.0.1");
-			connectionDTO.setPort(9042);
-			ConnectionCassandraRepositoryImpl cassandraRepository = new ConnectionCassandraRepositoryImpl();
-			cassandraRepository.connnectTocassandra(connectionDTO);
 			ObjectMapper mapper = new ObjectMapper();
 			ObjectNode map = mapper.createObjectNode();
 			ObjectNode data = mapper.createObjectNode();
@@ -39,11 +67,40 @@ public class TableRepositoryTest {
 			columDataPr.put("data", "zzazaza");
 			columDataPr.put("type", "TEXT");
 			data.set("id", columDataPr);
-			tableRepository.updateData(connectionName, "x48c95551_20c5_4c4e_kps_rawanex", "personne", map);
+			TableDTO tableDTO = new TableDTO();
+			TableDTO oldTableDTO = new TableDTO();
+			// tableRepository.updateData(connectionName, "x48c95551_20c5_4c4e_kps_rawanex",
+			// "personne", map);
 			// tableRepository.updateData(connectionName, "keyspace_test_1", "championnat",
 			// map);
+			oldTableDTO.setPrimaryKey(new ArrayList<String>());
+			oldTableDTO.getPrimaryKey().add("col_pr");
+			ColonneTableDTO dto = new ColonneTableDTO();
+			dto.setName("col1");
+			dto.setType("10");
+			oldTableDTO.getColumns().add(dto);
+			ColonneTableDTO dto1 = new ColonneTableDTO();
+			dto1.setName("col_pr");
+			dto1.setType("10");
+			dto1.setPrimaraKey(true);
+			oldTableDTO.getColumns().add(dto1);
 
-			cassandraRepository.closeConnectioncassandra(connectionName);
+			tableDTO.setPrimaryKey(new ArrayList<String>());
+			tableDTO.getPrimaryKey().add("col_pr");
+			ColonneTableDTO dto4 = new ColonneTableDTO();
+			dto4.setName("col4");
+			dto4.setType("10");
+			tableDTO.getColumns().add(dto4);
+			ColonneTableDTO dto3 = new ColonneTableDTO();
+			dto3.setName("col_pr");
+			dto3.setType("10");
+			dto3.setPrimaraKey(true);
+			tableDTO.getColumns().add(dto3);
+
+			oldTableDTO.setName("test_table");
+			tableDTO.setName("test_table");
+			tableRepository.alterTable(oldTableDTO, tableDTO, connectionName, "keyspace_test_1");
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -52,7 +109,13 @@ public class TableRepositoryTest {
 
 	@Test
 	public void testUpdateData2() {
-		System.out.println(UUID.randomUUID());
+		Session session = GaindeSessionConnection.getInstance().getSession("LOCAL");
+		if (session == null) {
+			throw new RuntimeException("aucune session");
+		}
+		Statement schema = SchemaBuilder.alterTable("keyspace_test_1", "test_table").renameColumn("col1").to("col8")
+				.enableTracing();
+		session.execute(schema);
 	}
 
 }
