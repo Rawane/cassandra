@@ -159,7 +159,7 @@ public class TableRepositoryImpl implements TableRepository {
 			}
 			if (column.getTypeMap() != null) {
 				typeMap = Integer.parseInt(column.getTypeMap());
-			}			
+			}
 			Statement schema = SchemaBuilder.alterTable(keyspaceName, oldTableDTO.getName())
 					.alterColumn(column.getName())
 					.type(GaindeUtil.getDataType(Integer.parseInt(column.getType()), typeList, typeMap))
