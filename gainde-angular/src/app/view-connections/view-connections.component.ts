@@ -1,4 +1,4 @@
-import { Component, OnInit,Inject } from '@angular/core';
+import { Component, OnInit,OnDestroy,Inject } from '@angular/core';
 import {FormGroup,FormBuilder,Validators} from '@angular/forms'; 
 import {Router} from '@angular/router';
 import {Subscription} from 'rxjs';
@@ -21,7 +21,7 @@ export interface DialogData {
   templateUrl: './view-connections.component.html',
   styleUrls: ['./view-connections.component.scss']
 })
-export class ViewConnectionsComponent implements OnInit {
+export class ViewConnectionsComponent implements OnInit,OnDestroy {
   connectionForm:FormGroup; 
   connections:any;
   //metaConnection:any;
@@ -83,6 +83,9 @@ export class ViewConnectionsComponent implements OnInit {
    
     this.gaindeService.getAllConnections();
     this.initForm();
+  }
+  ngOnDestroy() {
+    this.allNotificationSubscription.unsubscribe();
   }
   private doAfterSaveConnectionOk(mapTransfert: Map<string, any>) {
     this.openSnackBar('La connection ' + mapTransfert.get("content")['name'] + ' a été ajoutée avec succés', '');

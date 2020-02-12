@@ -1,4 +1,4 @@
-import { Component, OnInit ,Inject} from '@angular/core';
+import { Component, OnInit ,Inject,OnDestroy} from '@angular/core';
 import {FormGroup,FormBuilder,Validators,FormArray} from '@angular/forms'; 
 import {GaindeService} from '../services/gainde.service';
 import {Router} from '@angular/router';
@@ -12,7 +12,7 @@ import{DialogData} from '../view-connections/view-connections.component';
   templateUrl: './edit-table.component.html',
   styleUrls: ['./edit-table.component.scss']
 })
-export class EditTableComponent implements OnInit {
+export class EditTableComponent implements OnInit,OnDestroy {
 allNotificationSubscription:Subscription;
 formTable:FormGroup;
 ligneColumns: FormArray;
@@ -21,7 +21,7 @@ optionsTypeAll=TypeColonnesAll;
 optionsType=TypeColonnes;
 oldTableDTO:TableDTO;
 validIndex:boolean=true;
-setColumnsRename=new Set<string>();
+//mapPrimaryKey=new Map<string,string>();
   constructor(private gaindeService:GaindeService,private router:Router,
     private formBuilder:FormBuilder,private snackBar:MatSnackBar,private dialog: MatDialog) { }
 
@@ -57,8 +57,10 @@ setColumnsRename=new Set<string>();
     let tableName=this.currentGaindeEdit.tableName;
     if(tableName){
      this.gaindeService.getInfoTableEdit(this.currentGaindeEdit.connectionName,this.currentGaindeEdit.keyspaceName,tableName);
-    }
-   
+    }   
+  }
+  ngOnDestroy() {
+    this.allNotificationSubscription.unsubscribe();
   }
   private editForm(){
     let tableDTO=this.oldTableDTO;
@@ -94,7 +96,8 @@ setColumnsRename=new Set<string>();
       indexed:false ,
       indexName:'',
       typeList:'',
-      typeMap:''
+      typeMap:'',
+      oldName:''
     });
   }
   private editLigneColumn(columnDTO:ColumnDTO,indexColumn:IndexColumn): FormGroup {
@@ -106,7 +109,8 @@ setColumnsRename=new Set<string>();
       indexed:{value: columnDTO.indexed, disabled:columnDTO.primaraKey},
       indexName:'',
       typeList:columnDTO.typeList,
-      typeMap:columnDTO.typeMap
+      typeMap:columnDTO.typeMap,
+      oldName:[columnDTO.name]
      });
      if(columnDTO.indexed && indexColumn){
         formGroup.get('indexName').setValue(indexColumn.name);
@@ -137,12 +141,20 @@ setColumnsRename=new Set<string>();
       }else{
         controlForm.get('indexName').setValue('');
         controlForm.get('indexName').setValidators([]);   
-        console.log('onCheckIndexChange validator enlevé '+controlForm.value['indexName']) ;
+        console.log('onCheckIndexChange validator  '+controlForm.value['indexName']) ;
         this.validateIndex();   
       }
     });  
    
   } 
+
+ /* onValueColnameChange(index:number,oldVal:any){   
+    if(oldVal){
+      let controlForm=this.ligneColumns.at(index);
+      console.log('onValueColnameChange '+controlForm.value['name'] );
+      this.mapPrimaryKey.set(controlForm.value['name'],oldVal);
+    }
+  }*/
   onIndexNameValueChange(index:number){    
     let controlForm=this.ligneColumns.at(index); 
     console.log('onIndexNameValueChange  '+controlForm+'  '+index) ;
@@ -185,21 +197,15 @@ setColumnsRename=new Set<string>();
       }
     
   }   
-  onValueNameChange(index:number){
-   
-    let controlForm=this.ligneColumns.at(index);
-    console.log('onValueNameChange rename '+index +'   '+controlForm.value['name']+'  ');
-    this.setColumnsRename.add(controlForm.value['name']);
-    
-    
-  }   
+  
   onSubmitTable(){   
     let tableDTO:TableDTO=new TableDTO(this.formTable.value['name']);   
     for (let controlForm of this.ligneColumns.controls) {
-      //console.log('onSubmitTable   '+controlForm+'   value  '+controlForm.value['name']);   
+      console.log('onSubmitTable   '+controlForm+'   value  '+controlForm.value['name']  +' oldName '+controlForm.value['oldName']);   
       let colonneDTO:ColumnDTO=new ColumnDTO();
       colonneDTO.name=controlForm.value['name'];
       colonneDTO.type=controlForm.value['type'];
+      colonneDTO.oldName=controlForm.value['oldName'];      
       if(controlForm.value['primaryKey']){
            colonneDTO.primaraKey=true;
       }
@@ -222,7 +228,7 @@ setColumnsRename=new Set<string>();
       tableDTO.columns.push(colonneDTO);
     }
     console.log('onSubmitTable   '+JSON.stringify(tableDTO));  
-   this.gaindeService.updateTable(this.oldTableDTO,tableDTO,this.currentGaindeEdit.connectionName,
+    this.gaindeService.updateTable(this.oldTableDTO,tableDTO,this.currentGaindeEdit.connectionName,
     this.currentGaindeEdit.keyspaceName);
   }
   private openSnackBar(message: string, action: string) {
@@ -237,7 +243,7 @@ onClickBack(){
   this.router.navigate(['/viewKeyspace']);
 }
   private openDialog(pTitle:string,pText:string, cancelButton:boolean,pId:string): void {
-    const dialogRef = this.dialog.open(DialogInfoTableComponent, {
+    let dialogRef = this.dialog.open(DialogInfoTableComponent, {
       width: '500px',
       data: {text: pText,title:pTitle,btnCancel:cancelButton,id:pId}
     });
@@ -249,6 +255,7 @@ onClickBack(){
       }
 
     });
+    dialogRef=null;
   }
 }
 @Component({

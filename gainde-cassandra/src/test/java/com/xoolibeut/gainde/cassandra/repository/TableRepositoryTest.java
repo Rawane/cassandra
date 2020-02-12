@@ -6,10 +6,13 @@ import java.util.Calendar;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.datastax.driver.core.schemabuilder.SchemaStatement;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -18,6 +21,7 @@ import com.xoolibeut.gainde.cassandra.controller.dtos.ConnectionDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
 
 public class TableRepositoryTest {
+	private static final Logger LOGGER = LoggerFactory.getLogger(TableRepositoryTest.class);
 	private TableRepository tableRepository = new TableRepositoryImpl();
 	private ConnectionCassandraRepository cassandraRepository;
 
@@ -37,7 +41,7 @@ public class TableRepositoryTest {
 	}
 
 	@After
-	public void closeConnection()  {
+	public void closeConnection() {
 		try {
 			cassandraRepository.closeConnectioncassandra("LOCAL");
 		} catch (Exception e) {
@@ -108,14 +112,30 @@ public class TableRepositoryTest {
 	}
 
 	@Test
-	public void testUpdateData2() {
+	public void testRenameColumn() {
 		Session session = GaindeSessionConnection.getInstance().getSession("LOCAL");
 		if (session == null) {
 			throw new RuntimeException("aucune session");
 		}
-		Statement schema = SchemaBuilder.alterTable("keyspace_test_1", "test_table").renameColumn("col1").to("col8")
-				.enableTracing();
+		LOGGER.info("start testRenameColumn");
+		SchemaStatement schema = SchemaBuilder.alterTable("x48c95551_20c5_4c4e_kps_rawanex", "matiere")
+				.renameColumn("description").to("desc2");
+		LOGGER.info("schéma "+schema);
 		session.execute(schema);
+		LOGGER.info("end testRenameColumn");
+	}
+	@Test
+	public void testAlterType() {
+		Session session = GaindeSessionConnection.getInstance().getSession("LOCAL");
+		if (session == null) {
+			throw new RuntimeException("aucune session");
+		}
+		LOGGER.info("start testAlterType");
+		SchemaStatement schema = SchemaBuilder.alterTable("x48c95551_20c5_4c4e_kps_rawanex", "matiere")
+				.alterColumn("nom1").type(DataType.blob());
+		LOGGER.info("query "+schema);
+		session.execute(schema);
+		LOGGER.info("end testAlterType");
 	}
 
 }

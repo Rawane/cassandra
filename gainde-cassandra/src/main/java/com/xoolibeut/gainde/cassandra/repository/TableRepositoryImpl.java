@@ -95,37 +95,42 @@ public class TableRepositoryImpl implements TableRepository {
 		List<ColonneTableDTO> colonneAlter = new ArrayList<>();
 		List<IndexColumn> indexColumnRemoved = new ArrayList<>();
 		List<IndexColumn> indexColumnAdded = new ArrayList<>();
+		List<ColonneTableDTO> colonneRenamed = new ArrayList<>();
 		tableDTO.getColumns().forEach(column -> {
-			if (!column.isPrimaraKey()) {
-				if (oldTableDTO.getColumns().contains(column)) {
-					int index = oldTableDTO.getColumns().indexOf(column);
-					ColonneTableDTO oldColum = oldTableDTO.getColumns().get(index);
-					Integer typeList = null;
-					Integer typeMap = null;
-					if (column.getTypeList() != null) {
-						typeList = Integer.parseInt(column.getTypeList());
-					}
-					if (column.getTypeMap() != null) {
-						typeMap = Integer.parseInt(column.getTypeMap());
-					}
-					DataType dataType = GaindeUtil.getDataType(Integer.parseInt(column.getType()), typeList, typeMap);
-					Integer oldTypeList = null;
-					Integer oldTypeMap = null;
-					if (oldColum.getTypeList() != null) {
-						oldTypeList = Integer.parseInt(oldColum.getTypeList());
-					}
-					if (oldColum.getTypeMap() != null) {
-						oldTypeMap = Integer.parseInt(oldColum.getTypeMap());
-					}
-					DataType oldDataType = GaindeUtil.getDataType(Integer.parseInt(oldColum.getType()), oldTypeList,
-							oldTypeMap);
-					if (!(dataType.getName().name().equals(oldDataType.getName().name()))) {
-						colonneAlter.add(column);
-					}
+
+			if (oldTableDTO.getColumns().contains(column)) {
+				int index = oldTableDTO.getColumns().indexOf(column);
+				ColonneTableDTO oldColum = oldTableDTO.getColumns().get(index);
+				Integer typeList = null;
+				Integer typeMap = null;
+				if (column.getTypeList() != null) {
+					typeList = Integer.parseInt(column.getTypeList());
+				}
+				if (column.getTypeMap() != null) {
+					typeMap = Integer.parseInt(column.getTypeMap());
+				}
+				DataType dataType = GaindeUtil.getDataType(Integer.parseInt(column.getType()), typeList, typeMap);
+				Integer oldTypeList = null;
+				Integer oldTypeMap = null;
+				if (oldColum.getTypeList() != null) {
+					oldTypeList = Integer.parseInt(oldColum.getTypeList());
+				}
+				if (oldColum.getTypeMap() != null) {
+					oldTypeMap = Integer.parseInt(oldColum.getTypeMap());
+				}
+				DataType oldDataType = GaindeUtil.getDataType(Integer.parseInt(oldColum.getType()), oldTypeList,
+						oldTypeMap);
+				if (!(dataType.getName().name().equals(oldDataType.getName().name()))) {
+					colonneAlter.add(column);
+				}
+			} else {
+				if (column.isPrimaraKey()) {
+					colonneRenamed.add(column);
 				} else {
 					colonneAdded.add(column);
 				}
 			}
+
 		});
 		oldTableDTO.getColumns().forEach(column -> {
 			if (!column.isPrimaraKey()) {
@@ -178,6 +183,12 @@ public class TableRepositoryImpl implements TableRepository {
 			SchemaStatement schema = SchemaBuilder.alterTable(keyspaceName, oldTableDTO.getName())
 					.addColumn(column.getName())
 					.type(GaindeUtil.getDataType(Integer.parseInt(column.getType()), typeList, typeMap));
+			session.execute(schema);
+		});
+		colonneRenamed.forEach(column -> {
+			LOGGER.info("colonne à renommer " + column.getOldName() + " new name " + column.getName());
+			Statement schema = SchemaBuilder.alterTable(keyspaceName, oldTableDTO.getName())
+					.renameColumn(column.getOldName()).to(column.getName());
 			session.execute(schema);
 		});
 		indexColumnRemoved.forEach(indexC -> {
@@ -245,7 +256,7 @@ public class TableRepositoryImpl implements TableRepository {
 				if (row.getObject(column.getName()) != null) {
 					LOGGER.info("classs row  " + row.getObject(column.getName()).getClass() + " col name "
 							+ column.getName());
-					switch (column.getType().getName()) {					
+					switch (column.getType().getName()) {
 					case TIMESTAMP: {
 						if (row.getObject(column.getName()) instanceof Date) {
 							Date date = (Date) row.getObject(column.getName());
@@ -253,7 +264,7 @@ public class TableRepositoryImpl implements TableRepository {
 							rowNode.put(column.getName(), dateFormat.format(date));
 						}
 						break;
-					}					
+					}
 					case BLOB: {
 						if (row.getObject(column.getName()) instanceof ByteBuffer) {
 							ByteBuffer byteBuffer = (ByteBuffer) row.getObject(column.getName());

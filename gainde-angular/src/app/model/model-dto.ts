@@ -86,7 +86,8 @@ export class TableDTO {
    
 }
 export class ColumnDTO {
-    name:string ;
+     name:string ;
+     oldName:string;
      type:string ;   
 	 typeList:string ; 
 	 typeMap:string;  

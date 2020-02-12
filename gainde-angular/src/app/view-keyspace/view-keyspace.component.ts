@@ -1,4 +1,4 @@
-import { Component, OnInit,Inject,ViewChild } from '@angular/core';
+import { Component, OnInit,OnDestroy,Inject,ViewChild } from '@angular/core';
 import {FormGroup,FormBuilder,Validators} from '@angular/forms'; 
 import { DatePipe } from '@angular/common';
 import {Router} from '@angular/router';
@@ -23,7 +23,7 @@ interface Meta {
   templateUrl: './view-keyspace.component.html',
   styleUrls: ['./view-keyspace.component.scss']
 })
-export class ViewKeyspaceComponent implements OnInit {
+export class ViewKeyspaceComponent implements OnInit,OnDestroy {
   treeControl = new NestedTreeControl<Meta>(node => node.metas);
   dataSource = new MatTreeNestedDataSource<Meta>();
   partVisible:VIEW_ECRAN;
@@ -54,7 +54,6 @@ export class ViewKeyspaceComponent implements OnInit {
   columnsSize:number;
   keyspaceForm:FormGroup; 
   paginationTableDataSize;
-  counter:number=0;
   zoomData=false;
   notificationDialogSubject=new Subject<any>();
   hasChild = (_: number, node: Meta) => !!node.metas && node.metas.length > 0;
@@ -236,6 +235,9 @@ emitNotificationDialogSubject(content:any) {
          }
       });     
   }
+  ngOnDestroy() {
+    this.allNotificationSubscription.unsubscribe();
+  }
   private doAfterGetAllData(mapTransfert: Map<string, any>) {
     if (mapTransfert.get("content")['columns']) {
       this.displayedColumnsTableData = [];
@@ -294,8 +296,7 @@ emitNotificationDialogSubject(content:any) {
     if(node['type']===1){
       this.partVisible=VIEW_ECRAN.KEYSPACE_INFO;     
       this.gaindeService.getKeyspaceInfo(this.currentTableKeys[0],this.currentTableKeys[1]);      
-    }else{   
-      this.counter=0;
+    }else{      
       this.gaindeService.currentGainde.tableName =this.currentTableKeys[2];  
       this.gaindeService.getInfoTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
       if(this.selectedPageIndex==1) 
@@ -427,7 +428,7 @@ emitNotificationDialogSubject(content:any) {
     console.log('onZoomTable  : ' + this.zoomData);
   }
    openDialog(pTitle:string,pText:string, cancelButton:boolean,pId:string): void {
-    const dialogRef = this.dialog.open(DialogInfoKeyspaceComponent, {
+    let dialogRef = this.dialog.open(DialogInfoKeyspaceComponent, {
       width: '500px',
       data: {text: pText,title:pTitle,btnCancel:cancelButton,id:pId}
     });
@@ -443,6 +444,7 @@ emitNotificationDialogSubject(content:any) {
            this.gaindeService.removeTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]); 
         }
       }
+      dialogRef=null;
     });
     
   }
@@ -460,7 +462,7 @@ emitNotificationDialogSubject(content:any) {
        console.log("openDialogTableInfo "+result);
        this.gaindeService.currentGainde.counter=result;
        this.router.navigate(['/addTable']);
-      // dialogRefTableInfo=null;
+      dialogRefTableInfo=null;
       }
 
     });
@@ -480,9 +482,7 @@ emitNotificationDialogSubject(content:any) {
     });
   }
   
-  private doAfterGetInfoTable(mapTransfert: Map<string, any>) {
-    this.counter++;
-    console.log('doAfterGetInfoTable '+this.counter);
+  private doAfterGetInfoTable(mapTransfert: Map<string, any>) {    
     this.tableInfo = mapTransfert.get('content');
     this.colonneDataSource.data = this.tableInfo['columns'];
     this.columnsSize = this.tableInfo['columns'].length;

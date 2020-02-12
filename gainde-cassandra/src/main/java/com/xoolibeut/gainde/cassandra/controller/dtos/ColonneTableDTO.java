@@ -1,5 +1,9 @@
 package com.xoolibeut.gainde.cassandra.controller.dtos;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+@JsonInclude(Include.NON_NULL)
 public class ColonneTableDTO {
 	private String name;
 	private String type;
@@ -7,6 +11,7 @@ public class ColonneTableDTO {
 	private String typeMap;
 	private boolean primaraKey;
 	private boolean indexed;
+	private String oldName;
 
 	
 	
@@ -82,6 +87,14 @@ public class ColonneTableDTO {
 
 	public void setTypeMap(String typeMap) {
 		this.typeMap = typeMap;
+	}
+
+	public String getOldName() {
+		return oldName;
+	}
+
+	public void setOldName(String oldName) {
+		this.oldName = oldName;
 	}
 
 }
