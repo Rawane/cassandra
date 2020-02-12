@@ -21,6 +21,7 @@ optionsTypeAll=TypeColonnesAll;
 optionsType=TypeColonnes;
 oldTableDTO:TableDTO;
 validIndex:boolean=true;
+validDuplicateName:boolean=true;
 //mapPrimaryKey=new Map<string,string>();
   constructor(private gaindeService:GaindeService,private router:Router,
     private formBuilder:FormBuilder,private snackBar:MatSnackBar,private dialog: MatDialog) { }
@@ -165,7 +166,38 @@ validIndex:boolean=true;
     }
    
   } 
-
+  
+  onValueNameChange(index:number){   
+   let count:number=0;   
+   console.log("onValueNameChange "+index)  ; 
+   let controlForm=this.ligneColumns.at(index);   
+      for (let ctrlFormAutre of this.ligneColumns.controls) {    
+       if(controlForm.value['name']==ctrlFormAutre.value['name']){
+         count++;
+       }
+      }
+      console.log("onValueNameChange  avant test "+count)  ; 
+    if(count>1){
+      this.validDuplicateName=false;
+    }else{
+      count=0;
+    for (let controlF of this.ligneColumns.controls) 
+    {
+      for (let ctrlFormA of this.ligneColumns.controls) {    
+        if(controlF.value['name']==ctrlFormA.value['name']){
+          count++;
+        }
+       }
+      }
+      console.log("onValueNameChange apres for  "+count+'  length '+this.ligneColumns.controls.length)  ; 
+      if(count==this.ligneColumns.controls.length){
+        this.validDuplicateName=true; 
+      }else{
+        this.validDuplicateName=false;
+      }
+    }
+    
+  }
   validateIndex():boolean{         
     for (let ctrlForm of this.ligneColumns.controls) {    
       if(ctrlForm.value['indexed'] && (!ctrlForm.value['indexName'] || ctrlForm.value['indexName']=='')){   

@@ -39,7 +39,7 @@
                    <div class="col-4">
                    </div>           
                     <div class="col-3">
-                        <input class="form-control" formControlName="name"  >  
+                        <input class="form-control" formControlName="name"  (change)="onValueNameChange(i);">  
                     </div> 
                       <div class="col-2">          
                           <select class="form-control" formControlName="type" placeholder="type de colonne" (change)="onValueTypeChange(i)">
@@ -96,7 +96,7 @@
               </button> 
           </div>
           <div class="col-xs-6 col-md-4 col-lg-4">
-            <button type="submit" class="btn btn-success boutonSave" [disabled]="formTable.invalid || !validIndex" >
+            <button type="submit" class="btn btn-success boutonSave" [disabled]="formTable.invalid || !validIndex || !validDuplicateName" >
               Enregistrer 
           </button> 
           </div>
