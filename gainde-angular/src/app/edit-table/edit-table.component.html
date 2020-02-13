@@ -8,7 +8,7 @@
     <div class="col-3"><h6 *ngIf="currentGaindeEdit">{{currentGaindeEdit.keyspaceName}}</h6></div>
     <div class="col-4"></div>
   </div>
-  <div *ngIf="formTable">
+  <div *ngIf="formTable && formTable.get('ligneColumns')">
     <form [formGroup]="formTable" (ngSubmit)="onSubmitTable()">
       <div class="row form-group">
            <div class="col-4">

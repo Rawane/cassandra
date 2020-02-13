@@ -65,7 +65,7 @@ validDuplicateName:boolean=true;
   }
   private editForm(){
     let tableDTO=this.oldTableDTO;
-    //console.log("editForm "+JSON.stringify(tableDTO));
+    console.log("editForm "+JSON.stringify(tableDTO));
     this.formTable = this.formBuilder.group({    
       name: [tableDTO.name,Validators.required],
       ligneColumns:this.formBuilder.array([ ])
@@ -102,7 +102,7 @@ validDuplicateName:boolean=true;
     });
   }
   private editLigneColumn(columnDTO:ColumnDTO,indexColumn:IndexColumn): FormGroup {
-      //console.log('editLigneColumn '+columnDTO.name+' type '+columnDTO.type+'  '+indexColumn);  
+      console.log('editLigneColumn '+columnDTO.name+' type '+columnDTO.type+'  '+indexColumn);  
       let formGroup=this.formBuilder.group({
       name:[columnDTO.name,Validators.required],
       type:[columnDTO.type,Validators.required],
@@ -114,8 +114,12 @@ validDuplicateName:boolean=true;
       oldName:[columnDTO.name]
      });
      if(columnDTO.indexed && indexColumn){
+       if( formGroup.get('indexName')){
         formGroup.get('indexName').setValue(indexColumn.name);
-       // formGroup.get('indexName').setValidators([Validators.required]);
+       }else{
+        console.log('editLigneColumn  anormale '+columnDTO.name+' nom index  '+indexColumn.name+'  '+indexColumn);  
+       }
+      
      }     
 
     return formGroup;

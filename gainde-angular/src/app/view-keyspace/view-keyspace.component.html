@@ -152,9 +152,9 @@
                                                     <mat-header-cell *matHeaderCellDef >
                                                         Nom de la Table 
                                                     </mat-header-cell>
-                                                    <mat-cell *matCellDef="let name" class="columTraffic"                                       
-                                                    class="actionClick"  (click)="onClickRowTable(currentConnection.name+'#'+keyspaceInfo['name']+'#'+name);">
-                                                        {{name}}
+                                                    <mat-cell *matCellDef="let element" class="columTraffic"                                       
+                                                    class="actionClick"  (click)="onClickRowTable(currentConnection.name+'#'+keyspaceInfo['name']+'#'+element.name);">
+                                                        {{element.name}}
                                                     </mat-cell>
                                                     </ng-container> 
                                                     <ng-container matColumnDef="tableAction">
@@ -165,9 +165,9 @@
                                                                 add
                                                         </mat-icon> 
                                                     </mat-header-cell>   
-                                                    <mat-cell *matCellDef="let name" class="columTraffic" >   
+                                                    <mat-cell *matCellDef="let element" class="columTraffic" >   
                                                         <mat-icon class="actionAddTable"  matTooltip="Editer table"
-                                                                (click)="onClickEditTable(currentConnection.name,keyspaceInfo['name'],name)" >
+                                                                (click)="onClickEditTable(currentConnection.name,keyspaceInfo['name'],element.name)" >
                                                             create
                                                         </mat-icon>                                      
                                                     </mat-cell>                                     
@@ -176,9 +176,9 @@
                                                         <mat-header-cell *matHeaderCellDef >
                                                             
                                                     </mat-header-cell>   
-                                                    <mat-cell *matCellDef="let name" class="columTraffic" >   
+                                                    <mat-cell *matCellDef="let element" class="columTraffic" >   
                                                         <mat-icon class="actionAddTable"  matTooltip="Supprimer table"
-                                                                (click)="onClickRemoveTable(currentConnection.name,keyspaceInfo['name'],name)" >
+                                                                (click)="onClickRemoveTable(currentConnection.name,keyspaceInfo['name'],element.name)" >
                                                             delete
                                                         </mat-icon>                                      
                                                     </mat-cell>                                     

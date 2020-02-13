@@ -1,5 +1,6 @@
 package com.xoolibeut.gainde.cassandra.repository;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -86,7 +87,9 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 				keyspaceDTO.setStrategy(map.get("class"));
 				keyspaceDTO.setDurableWrite(keyspaceMetadata.isDurableWrites());
 				keyspaceMetadata.getTables().forEach(table->{
-					keyspaceDTO.getTables().add(table.getName());
+					Map<String,String> mapTable=new HashMap<>();
+					mapTable.put("name", table.getName());
+					keyspaceDTO.getTables().add(mapTable);
 				});
 			}
 		}

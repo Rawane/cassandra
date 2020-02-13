@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +24,7 @@ import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Select;
 import com.datastax.driver.core.querybuilder.Update.Where;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.Drop;
@@ -186,7 +189,7 @@ public class TableRepositoryImpl implements TableRepository {
 			session.execute(schema);
 		});
 		colonneRenamed.forEach(column -> {
-			LOGGER.info("colonne à renommer " + column.getOldName() + " new name " + column.getName());
+			LOGGER.debug("colonne à renommer " + column.getOldName() + " new name " + column.getName());
 			Statement schema = SchemaBuilder.alterTable(keyspaceName, oldTableDTO.getName())
 					.renameColumn(column.getOldName()).to(column.getName());
 			session.execute(schema);
@@ -211,7 +214,6 @@ public class TableRepositoryImpl implements TableRepository {
 			throw new Exception("aucune session");
 		}
 		TableMetadata table = cluster.getMetadata().getKeyspace(keyspaceName).getTable(tableName);
-		List<ColumnMetadata> columns = table.getColumns();
 		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
 		List<String> partionKeys = new ArrayList<String>();
 		partionMetaKeys.forEach(columnMeta -> {
@@ -221,67 +223,12 @@ public class TableRepositoryImpl implements TableRepository {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
-		ArrayNode listColumnsName = mapper.createArrayNode();
 
-		List<ObjectNode> columnsNodes = new ArrayList<ObjectNode>();
+		List<ColumnMetadata> columns = buildColumns(table, partionKeys, mapper, rootNode);
 		Iterator<Row> iter = resulSet.iterator();
-		columns.forEach(column -> {
-			ObjectNode jsonColumn = mapper.createObjectNode();
-			jsonColumn.put("name", column.getName());
-			jsonColumn.put("primaryKey", partionKeys.contains(column.getName()));
-			jsonColumn.put("type", column.getType().getName().name());
-			columnsNodes.add(jsonColumn);
-		});
-		columnsNodes.sort((col1, col2) -> {
-			if (col1.get("primaryKey").asBoolean()) {
-				if (col2.get("primaryKey").asBoolean()) {
-					return 0;
-				}
-				return -1;
-			} else {
-				if (col2.get("primaryKey").asBoolean()) {
-					return 1;
-				}
-				return 2;
-			}
-		});
-		columnsNodes.forEach(jsonCol -> {
-			listColumnsName.add(jsonCol);
-		});
-		rootNode.set("columns", listColumnsName);
 		while (iter.hasNext()) {
 			Row row = iter.next();
-			ObjectNode rowNode = mapper.createObjectNode();
-			columns.forEach(column -> {
-				if (row.getObject(column.getName()) != null) {
-					LOGGER.info("classs row  " + row.getObject(column.getName()).getClass() + " col name "
-							+ column.getName());
-					switch (column.getType().getName()) {
-					case TIMESTAMP: {
-						if (row.getObject(column.getName()) instanceof Date) {
-							Date date = (Date) row.getObject(column.getName());
-							SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-							rowNode.put(column.getName(), dateFormat.format(date));
-						}
-						break;
-					}
-					case BLOB: {
-						if (row.getObject(column.getName()) instanceof ByteBuffer) {
-							ByteBuffer byteBuffer = (ByteBuffer) row.getObject(column.getName());
-							rowNode.put(column.getName(), new String(byteBuffer.array()));
-						}
-						break;
-					}
-					default:
-						rowNode.put(column.getName(), row.getObject(column.getName()).toString());
-						break;
-					}
-
-				} else {
-					rowNode.put(column.getName(), "");
-				}
-				LOGGER.info("row  " + column.getName() + "   value " + row.getObject(column.getName()));
-			});
+			ObjectNode rowNode = buildRowNode(mapper, columns, row);
 			arrayNode.add(rowNode);
 
 		}
@@ -289,6 +236,86 @@ public class TableRepositoryImpl implements TableRepository {
 		return rootNode;
 	}
 
+	public JsonNode getAllDataPaginateByPage1(String connectionName, String keyspaceName, String tableName,
+			int page) throws Exception {
+		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
+		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
+		if (session == null) {
+			throw new Exception("aucune session");
+		}
+		TableMetadata table = cluster.getMetadata().getKeyspace(keyspaceName).getTable(tableName);
+		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
+		List<String> partionKeys = new ArrayList<String>();
+		partionMetaKeys.forEach(columnMeta -> {
+			partionKeys.add(columnMeta.getName());
+		});
+		Select statement = QueryBuilder.select().from(keyspaceName, tableName);
+		statement.setFetchSize(page);
+		ResultSet resulSet = session.execute(statement);
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode rootNode = mapper.createObjectNode();
+		ArrayNode arrayNode = mapper.createArrayNode();
+
+		List<ColumnMetadata> columns = buildColumns(table, partionKeys, mapper, rootNode);
+		Iterator<Row> iter = resulSet.iterator();
+		while (resulSet.getAvailableWithoutFetching() > 0) {
+			Row row = iter.next();
+			ObjectNode rowNode = buildRowNode(mapper, columns, row);
+			LOGGER.info("rowNode "+mapper.writeValueAsString(rowNode));
+			arrayNode.add(rowNode);
+
+		}
+		rootNode.set("data", arrayNode);
+		return rootNode;
+	}
+
+	public JsonNode getAllDataPaginateByPageX(String connectionName, String keyspaceName, String tableName,
+			int page,Map<String, Object> mapPrimaryKey) throws Exception {
+		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
+		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
+		if (session == null) {
+			throw new Exception("aucune session");
+		}
+		TableMetadata table = cluster.getMetadata().getKeyspace(keyspaceName).getTable(tableName);
+		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
+		List<String> partionKeys = new ArrayList<String>();
+		partionMetaKeys.forEach(columnMeta -> {
+			partionKeys.add(columnMeta.getName());
+		});
+		AtomicInteger atomicInt=new AtomicInteger(0);
+		List<Clause> clauses=new ArrayList<>();
+		mapPrimaryKey.forEach((key,value)->{
+			if(atomicInt.get()==0) {
+				clauses.add(QueryBuilder.gt("token("+key+")", "token('"+value+"')"));
+			}else {
+				clauses.add(QueryBuilder.gt("token("+key+")", "token('"+value+"')"));
+			}
+			atomicInt.incrementAndGet();
+		});
+		Select.Where where = QueryBuilder.select().from(keyspaceName, tableName).where(clauses.get(0));
+		if (clauses.size() > 1) {
+			for (int i = 1; i < clauses.size(); i++) {
+				where.and(clauses.get(i));
+			}
+		}
+		where.setFetchSize(page);
+		ResultSet resulSet = session.execute(where);
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode rootNode = mapper.createObjectNode();
+		ArrayNode arrayNode = mapper.createArrayNode();
+
+		List<ColumnMetadata> columns = buildColumns(table, partionKeys, mapper, rootNode);
+		Iterator<Row> iter = resulSet.iterator();
+		while (resulSet.getAvailableWithoutFetching() > 0) {
+			Row row = iter.next();
+			ObjectNode rowNode = buildRowNode(mapper, columns, row);
+			LOGGER.info("rowNode "+mapper.writeValueAsString(rowNode));
+			arrayNode.add(rowNode);			
+
+		}
+		rootNode.set("data", arrayNode);
+		return rootNode;
+	}
 	public void insertData(String connectionName, String keyspaceName, String tableName, JsonNode map)
 			throws Exception {
 		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
@@ -329,10 +356,7 @@ public class TableRepositoryImpl implements TableRepository {
 		if (primaryKeys.isEmpty()) {
 			throw new Exception("Aucun clé primaire pour where clause");
 		}
-		Clause clause = QueryBuilder.eq(primaryKeys.get(0), primaryValues.get(0));
-		if (primaryKeys.size() > 1) {
-			// QueryBuilder.eq
-		}
+		Clause clause = QueryBuilder.eq(primaryKeys.get(0), primaryValues.get(0));		
 		Iterator<String> iterField = dataNode.fieldNames();
 		while (iterField.hasNext()) {
 			String key = iterField.next();
@@ -350,4 +374,73 @@ public class TableRepositoryImpl implements TableRepository {
 		}
 
 	}
+	
+	private ObjectNode buildRowNode(ObjectMapper mapper, List<ColumnMetadata> columns, Row row) {
+		ObjectNode rowNode = mapper.createObjectNode();
+		columns.forEach(column -> {
+			if (row.getObject(column.getName()) != null) {
+				LOGGER.debug(
+						"classs row  " + row.getObject(column.getName()).getClass() + " col name " + column.getName());
+				switch (column.getType().getName()) {
+				case TIMESTAMP: {
+					if (row.getObject(column.getName()) instanceof Date) {
+						Date date = (Date) row.getObject(column.getName());
+						SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+						rowNode.put(column.getName(), dateFormat.format(date));
+					}
+					break;
+				}
+				case BLOB: {
+					if (row.getObject(column.getName()) instanceof ByteBuffer) {
+						ByteBuffer byteBuffer = (ByteBuffer) row.getObject(column.getName());
+						rowNode.put(column.getName(), new String(byteBuffer.array()));
+					}
+					break;
+				}
+				default:
+					rowNode.put(column.getName(), row.getObject(column.getName()).toString());
+					break;
+				}
+
+			} else {
+				rowNode.put(column.getName(), "");
+			}
+			LOGGER.debug("row  " + column.getName() + "   value " + row.getObject(column.getName()));
+		});
+		return rowNode;
+	}
+
+	private List<ColumnMetadata> buildColumns(TableMetadata table, List<String> partionKeys, ObjectMapper mapper,
+			ObjectNode rootNode) {
+		ArrayNode listColumnsName = mapper.createArrayNode();
+		List<ObjectNode> columnsNodes = new ArrayList<ObjectNode>();
+		List<ColumnMetadata> columns = table.getColumns();
+		columns.forEach(column -> {
+			ObjectNode jsonColumn = mapper.createObjectNode();
+			jsonColumn.put("name", column.getName());
+			jsonColumn.put("primaryKey", partionKeys.contains(column.getName()));
+			jsonColumn.put("type", column.getType().getName().name());
+			columnsNodes.add(jsonColumn);
+		});
+		columnsNodes.sort((col1, col2) -> {
+			if (col1.get("primaryKey").asBoolean()) {
+				if (col2.get("primaryKey").asBoolean()) {
+					return 0;
+				}
+				return -1;
+			} else {
+				if (col2.get("primaryKey").asBoolean()) {
+					return 1;
+				}
+				return 2;
+			}
+		});
+		columnsNodes.forEach(jsonCol -> {
+			listColumnsName.add(jsonCol);
+		});
+
+		rootNode.set("columns", listColumnsName);
+		return columns;
+	}
+
 }

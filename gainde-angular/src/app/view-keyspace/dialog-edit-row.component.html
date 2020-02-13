@@ -21,7 +21,7 @@
         <input   class="form-control"  [(ngModel)]="data['row'][col['name']]"
          *ngIf="(!col['primaryKey'] || data['added']) && col['type']!='DATE'" (change)="onValueChange(col['name'],data['row'][col['name']])"> 
 
-        <input matInput [matDatepicker]="picker"    [(ngModel)]="data['row'][col['name']]" 
+        <input matInput [matDatepicker]="picker"  class="gaindeFormControl"  [(ngModel)]="data['row'][col['name']]" 
         *ngIf="(!col['primaryKey'] || data['added']) && col['type']=='DATE'" (dateChange)="onValueChangeDate(col['name'],data['row'][col['name']])">
         <mat-datepicker-toggle [ngClass]="{'elementNotVisible':((!col['primaryKey'] || data['added']) && col['type']!='DATE') || (col['primaryKey'] && !data['added'])}" matSuffix [for]="picker"  ></mat-datepicker-toggle>
         <mat-datepicker #picker [ngClass]="{'elementNotVisible':((!col['primaryKey'] || data['added']) && col['type']!='DATE') || (col['primaryKey'] && !data['added'])}"  ></mat-datepicker>

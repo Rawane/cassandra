@@ -2,6 +2,9 @@ package com.xoolibeut.gainde.cassandra.repository;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Before;
@@ -13,6 +16,7 @@ import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 import com.datastax.driver.core.schemabuilder.SchemaStatement;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -120,10 +124,11 @@ public class TableRepositoryTest {
 		LOGGER.info("start testRenameColumn");
 		SchemaStatement schema = SchemaBuilder.alterTable("x48c95551_20c5_4c4e_kps_rawanex", "matiere")
 				.renameColumn("description").to("desc2");
-		LOGGER.info("schéma "+schema);
+		LOGGER.info("schéma " + schema);
 		session.execute(schema);
 		LOGGER.info("end testRenameColumn");
 	}
+
 	@Test
 	public void testAlterType() {
 		Session session = GaindeSessionConnection.getInstance().getSession("LOCAL");
@@ -133,9 +138,65 @@ public class TableRepositoryTest {
 		LOGGER.info("start testAlterType");
 		SchemaStatement schema = SchemaBuilder.alterTable("x48c95551_20c5_4c4e_kps_rawanex", "matiere")
 				.alterColumn("nom1").type(DataType.blob());
-		LOGGER.info("query "+schema);
+		LOGGER.info("query " + schema);
 		session.execute(schema);
 		LOGGER.info("end testAlterType");
 	}
 
+	@Test
+	public void testInsertData() {
+		LOGGER.info("start testInsertData");
+
+		try {
+			for(int i=20000;i<100000;i++) {
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode map = mapper.createObjectNode();
+			ObjectNode data = mapper.createObjectNode();
+			ObjectNode columData = mapper.createObjectNode();
+			map.set("data", data);
+			String uuid = UUID.randomUUID().toString();
+			columData.put("data", "GAYE " +i+ uuid.substring(0, 4));
+			columData.put("type", "TEXT");
+			data.set("nom", columData);
+
+			columData = mapper.createObjectNode();
+			columData.put("data",
+					Math.random() > 0.5 ? "Maguiba" + uuid.substring(4, 8) : "Iba" + uuid.substring(4, 8));
+			columData.put("type", "TEXT");
+			data.set("prenom", columData);
+			columData = mapper.createObjectNode();
+			columData.put("data", "Francis" + uuid.substring(4, 8));
+			columData.put("type", "12/08/1988");
+			data.set("date_naissance", columData);
+			columData = mapper.createObjectNode();
+			columData.put("data", Math.random() > 0.5 ? "M" : "F");
+			columData.put("type", "12/08/1988");
+			data.set("sexe", columData);
+			tableRepository.insertData("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex", "aa_personne", map);
+			}
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		}
+
+	}
+	@Test
+	public void testgetAllPaginate1() {
+		LOGGER.info("start testgetAllPaginate1");
+
+		try {			
+			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage1("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex", "aa_personne",10);
+			ArrayNode arrayData = (ArrayNode) jsonNode.get("data");
+			JsonNode rowNode = arrayData.get(arrayData.size()-1);
+			String primaRyKey = rowNode.get("nom").asText();
+			Map<String, Object> map=new HashMap<>();
+			map.put("nom", primaRyKey);
+			jsonNode = tableRepository.getAllDataPaginateByPageX("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex", "aa_personne",10,map);
+			
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		}
+
+	}
 }

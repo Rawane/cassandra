@@ -14,7 +14,7 @@ public class KeyspaceDTO {
 	private String replication; 
 	private Map<String, String> dataCenter=new HashMap<>(); 
 	private boolean durableWrite = true;
-	private List<String> tables=new ArrayList<String>();
+	private List<Map<String,String>> tables=new ArrayList<>();
 
 	public Map<String, String> getDataCenter() {
 		return dataCenter;
@@ -56,11 +56,13 @@ public class KeyspaceDTO {
 		this.durableWrite = durableWrite;
 	}
 
-	public List<String> getTables() {
+	public List<Map<String, String>> getTables() {
 		return tables;
 	}
 
-	public void setTables(List<String> tables) {
+	public void setTables(List<Map<String, String>> tables) {
 		this.tables = tables;
 	}
+
+	
 }

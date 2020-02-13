@@ -52,7 +52,7 @@ validPrimaryKey:boolean=false;
   private initForm(){
     this.formTable = this.formBuilder.group({    
       name: ['',Validators.required],
-      ligneColumns:this.formBuilder.array([ this.createLigneColumn()])
+      ligneColumns:this.formBuilder.array([this.createLigneColumn()])
      
     });   
     
@@ -83,7 +83,9 @@ validPrimaryKey:boolean=false;
     this.ligneColumns.removeAt(index);
     this.validatePrimaryKey();
   }
-
+  onClickBack(){
+    this.router.navigate(['/viewKeyspace']);
+  }
   onCheckIndexChange(index:number){
     let controlForm=this.ligneColumns.at(index);
     //console.log('onCheckIndexChange '+index+' controlForm  '+controlForm);    

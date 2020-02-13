@@ -275,10 +275,7 @@ emitNotificationDialogSubject(content:any) {
   }
   onApplyFilterTableKeyspace(filterVal: string) {
     console.log('onApplyFilterTableKeyspace '+filterVal);
-    this.tableKeyspaceInfoDataSource.filter = filterVal.trim().toLowerCase(); 
-    if (this.tableKeyspaceInfoDataSource.paginator) {
-      this.tableKeyspaceInfoDataSource.paginator.firstPage();
-  }  
+    this.tableKeyspaceInfoDataSource.filter = filterVal.trim().toLowerCase();     
   }
   onClickCloseConnection(){
     if(this.currentConnection){
@@ -301,7 +298,12 @@ emitNotificationDialogSubject(content:any) {
       this.gaindeService.getInfoTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
       if(this.selectedPageIndex==1) 
       {
-        this.selectedPageIndex=0;
+        //this.selectedPageIndex=0;
+        if(this.currentTableKeys){
+          this.gaindeService.getAllDataTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
+        }  
+      }else{
+
       }
     }
   }
@@ -371,14 +373,7 @@ emitNotificationDialogSubject(content:any) {
     this.keyspaceInfo=JSON.parse(JSON.stringify(keyspaceDTO));
     this.keyspaceInfo['tables']=[];
     this.gaindeService.saveKeyspace(this.currentConnection['name'],keyspaceDTO);
-  }
-  /*onClickShowTabColonne(){
-      console.log('onClickShowTabColonne  : ' + JSON.stringify(this.currentTableKeys));  
-      console.log('onClickShowTabColonne event : ' + this.selectedPageIndex);  
-      if(this.currentTableKeys){
-        this.gaindeService.getAllDataTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
-      }   
-  }*/
+  }  
   onClickRowTable(row){
     console.log('onClickRowTable  : '+row);
     this.currentNodeId=row;
