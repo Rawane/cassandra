@@ -189,7 +189,7 @@ public class TableRepositoryImpl implements TableRepository {
 			session.execute(schema);
 		});
 		colonneRenamed.forEach(column -> {
-			LOGGER.debug("colonne à renommer " + column.getOldName() + " new name " + column.getName());
+			//LOGGER.debug("colonne à renommer " + column.getOldName() + " new name " + column.getName());
 			Statement schema = SchemaBuilder.alterTable(keyspaceName, oldTableDTO.getName())
 					.renameColumn(column.getOldName()).to(column.getName());
 			session.execute(schema);
@@ -261,7 +261,7 @@ public class TableRepositoryImpl implements TableRepository {
 		while (resulSet.getAvailableWithoutFetching() > 0) {
 			Row row = iter.next();
 			ObjectNode rowNode = buildRowNode(mapper, columns, row);
-			LOGGER.info("rowNode "+mapper.writeValueAsString(rowNode));
+			//LOGGER.debug("rowNode "+mapper.writeValueAsString(rowNode));
 			arrayNode.add(rowNode);
 
 		}
@@ -284,22 +284,28 @@ public class TableRepositoryImpl implements TableRepository {
 		});
 		AtomicInteger atomicInt=new AtomicInteger(0);
 		List<Clause> clauses=new ArrayList<>();
+		List<String> clauseWhere=new ArrayList<>();
 		mapPrimaryKey.forEach((key,value)->{
 			if(atomicInt.get()==0) {
-				clauses.add(QueryBuilder.gt("token("+key+")", "token('"+value+"')"));
+				clauses.add(QueryBuilder.gt("token("+key+")", "token("+value+")"));
+				clauseWhere.add(" WHERE token("+key+") > token('"+value+"')");
 			}else {
 				clauses.add(QueryBuilder.gt("token("+key+")", "token('"+value+"')"));
+				clauseWhere.add(" and token("+key+") > token('"+value+"')");
 			}
 			atomicInt.incrementAndGet();
 		});
 		Select.Where where = QueryBuilder.select().from(keyspaceName, tableName).where(clauses.get(0));
+		String query="SELECT * FROM "+keyspaceName+"."+tableName+clauseWhere.get(0);
 		if (clauses.size() > 1) {
 			for (int i = 1; i < clauses.size(); i++) {
 				where.and(clauses.get(i));
+				query=query+clauseWhere.get(i);
 			}
 		}
-		where.setFetchSize(page);
-		ResultSet resulSet = session.execute(where);
+		where.setFetchSize(page);		
+		LOGGER.info("query  "+query);
+		ResultSet resulSet = session.execute(query);
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
@@ -309,7 +315,7 @@ public class TableRepositoryImpl implements TableRepository {
 		while (resulSet.getAvailableWithoutFetching() > 0) {
 			Row row = iter.next();
 			ObjectNode rowNode = buildRowNode(mapper, columns, row);
-			LOGGER.info("rowNode "+mapper.writeValueAsString(rowNode));
+			//LOGGER.info("rowNode "+mapper.writeValueAsString(rowNode));
 			arrayNode.add(rowNode);			
 
 		}
@@ -379,8 +385,7 @@ public class TableRepositoryImpl implements TableRepository {
 		ObjectNode rowNode = mapper.createObjectNode();
 		columns.forEach(column -> {
 			if (row.getObject(column.getName()) != null) {
-				LOGGER.debug(
-						"classs row  " + row.getObject(column.getName()).getClass() + " col name " + column.getName());
+				//LOGGER.debug(						"classs row  " + row.getObject(column.getName()).getClass() + " col name " + column.getName());
 				switch (column.getType().getName()) {
 				case TIMESTAMP: {
 					if (row.getObject(column.getName()) instanceof Date) {
@@ -405,7 +410,7 @@ public class TableRepositoryImpl implements TableRepository {
 			} else {
 				rowNode.put(column.getName(), "");
 			}
-			LOGGER.debug("row  " + column.getName() + "   value " + row.getObject(column.getName()));
+			//LOGGER.debug("row  " + column.getName() + "   value " + row.getObject(column.getName()));
 		});
 		return rowNode;
 	}

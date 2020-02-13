@@ -9,8 +9,10 @@ import java.util.UUID;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.Session;
@@ -23,7 +25,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ColonneTableDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ConnectionDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
-
+@RunWith(SpringRunner.class)
 public class TableRepositoryTest {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TableRepositoryTest.class);
 	private TableRepository tableRepository = new TableRepositoryImpl();
@@ -148,31 +150,31 @@ public class TableRepositoryTest {
 		LOGGER.info("start testInsertData");
 
 		try {
-			for(int i=20000;i<100000;i++) {
-			ObjectMapper mapper = new ObjectMapper();
-			ObjectNode map = mapper.createObjectNode();
-			ObjectNode data = mapper.createObjectNode();
-			ObjectNode columData = mapper.createObjectNode();
-			map.set("data", data);
-			String uuid = UUID.randomUUID().toString();
-			columData.put("data", "GAYE " +i+ uuid.substring(0, 4));
-			columData.put("type", "TEXT");
-			data.set("nom", columData);
+			for (int i = 1; i < 2000; i++) {
+				ObjectMapper mapper = new ObjectMapper();
+				ObjectNode map = mapper.createObjectNode();
+				ObjectNode data = mapper.createObjectNode();
+				ObjectNode columData = mapper.createObjectNode();
+				map.set("data", data);
+				String uuid = UUID.randomUUID().toString();
+				columData.put("data", "GAYE " + i + uuid.substring(0, 4));
+				columData.put("type", "TEXT");
+				data.set("nom", columData);
 
-			columData = mapper.createObjectNode();
-			columData.put("data",
-					Math.random() > 0.5 ? "Maguiba" + uuid.substring(4, 8) : "Iba" + uuid.substring(4, 8));
-			columData.put("type", "TEXT");
-			data.set("prenom", columData);
-			columData = mapper.createObjectNode();
-			columData.put("data", "Francis" + uuid.substring(4, 8));
-			columData.put("type", "12/08/1988");
-			data.set("date_naissance", columData);
-			columData = mapper.createObjectNode();
-			columData.put("data", Math.random() > 0.5 ? "M" : "F");
-			columData.put("type", "12/08/1988");
-			data.set("sexe", columData);
-			tableRepository.insertData("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex", "aa_personne", map);
+				columData = mapper.createObjectNode();
+				columData.put("data",
+						Math.random() > 0.5 ? "Maguiba" + uuid.substring(4, 8) : "Iba" + uuid.substring(4, 8));
+				columData.put("type", "TEXT");
+				data.set("prenom", columData);
+				columData = mapper.createObjectNode();
+				columData.put("data", "Francis" + uuid.substring(4, 8));
+				columData.put("type", "12/08/1988");
+				data.set("date_naissance", columData);
+				columData = mapper.createObjectNode();
+				columData.put("data", Math.random() > 0.5 ? "M" : "F");
+				columData.put("type", "12/08/1988");
+				data.set("sexe", columData);
+				tableRepository.insertData("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex", "aa_personne", map);
 			}
 		} catch (Exception e) {
 
@@ -180,19 +182,29 @@ public class TableRepositoryTest {
 		}
 
 	}
-	@Test
-	public void testgetAllPaginate1() {
-		LOGGER.info("start testgetAllPaginate1");
 
-		try {			
-			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage1("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex", "aa_personne",10);
+	@Test
+	public void testgetAllPaginate() {
+		LOGGER.info("start testgetAllPaginate");
+
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage1("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
+					"aa_personne", 10);
+			LOGGER.info(mapper.writeValueAsString(jsonNode));
 			ArrayNode arrayData = (ArrayNode) jsonNode.get("data");
-			JsonNode rowNode = arrayData.get(arrayData.size()-1);
+			JsonNode rowNode = arrayData.get(arrayData.size() - 1);
 			String primaRyKey = rowNode.get("nom").asText();
-			Map<String, Object> map=new HashMap<>();
+			Map<String, Object> map = new HashMap<>();
 			map.put("nom", primaRyKey);
-			jsonNode = tableRepository.getAllDataPaginateByPageX("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex", "aa_personne",10,map);
-			
+
+			jsonNode = tableRepository.getAllDataPaginateByPageX("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
+					"aa_personne", 10, map);
+			LOGGER.info("testgetAllPaginate "+primaRyKey);
+			LOGGER.info(
+					"---------------------------------------------------------------------------------------------");
+			LOGGER.info(mapper.writeValueAsString(jsonNode));
+
 		} catch (Exception e) {
 
 			e.printStackTrace();

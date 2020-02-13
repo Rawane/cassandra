@@ -1,5 +1,7 @@
 package com.xoolibeut.gainde.cassandra.controller;
 
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,10 +37,10 @@ public class TableController {
 			@PathVariable("kespace") String keyspaceName, @RequestBody TableDTO tableDTO) {
 		try {
 			tableRepository.createTable(tableDTO, connectionName, keyspaceName);
-			return ResponseEntity.status(201).body(buildMessage("message","création ok"));
+			return ResponseEntity.status(201).body(buildMessage("message", "création ok"));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
@@ -48,10 +50,10 @@ public class TableController {
 		try {
 			tableRepository.alterTable(coupleTableDTO.getOldTableDTO(), coupleTableDTO.getTableDTO(), connectionName,
 					keyspaceName);
-			return ResponseEntity.status(200).body(buildMessage("message","maj ok"));
+			return ResponseEntity.status(200).body(buildMessage("message", "maj ok"));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
@@ -63,7 +65,7 @@ public class TableController {
 			return ResponseEntity.status(204).build();
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
@@ -76,7 +78,37 @@ public class TableController {
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
+		}
+	}
+
+	@GetMapping("/all/{connectionName}/{kespace}/{tableName}/{page}")
+	public ResponseEntity<String> getAllDataByPaginate1(@PathVariable("connectionName") String connectionName,
+			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName,
+			@PathVariable("tableName") int page) {
+		try {
+			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage1(connectionName, keyspaceName, tableName,
+					page);
+			ObjectMapper mapper = new ObjectMapper();
+			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
+		}
+	}
+
+	@PostMapping("/all/{connectionName}/{kespace}/{tableName}/{page}")
+	public ResponseEntity<String> getAllDataByPaginateX(@PathVariable("connectionName") String connectionName,
+			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName,
+			@PathVariable("tableName") int page, @RequestBody Map<String, Object> mapPrimaryKey) {
+		try {
+			JsonNode jsonNode = tableRepository.getAllDataPaginateByPageX(connectionName, keyspaceName, tableName, page,
+					mapPrimaryKey);
+			ObjectMapper mapper = new ObjectMapper();
+			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
@@ -86,10 +118,10 @@ public class TableController {
 			@RequestBody JsonNode map) {
 		try {
 			tableRepository.insertData(connectionName, keyspaceName, tableName, map);
-			return ResponseEntity.status(201).body(buildMessage("message","insertion ok"));
+			return ResponseEntity.status(201).body(buildMessage("message", "insertion ok"));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
@@ -99,21 +131,23 @@ public class TableController {
 			@RequestBody JsonNode map) {
 		try {
 			tableRepository.updateData(connectionName, keyspaceName, tableName, map);
-			return ResponseEntity.status(200).body(buildMessage("message","maj ok"));
+			return ResponseEntity.status(200).body(buildMessage("message", "maj ok"));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
-	private String buildMessage(String code,String message) {
-		ObjectMapper mapper=new ObjectMapper();
-		ObjectNode node=mapper.createObjectNode();
-		try {node.put(code, message);
+
+	private String buildMessage(String code, String message) {
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode node = mapper.createObjectNode();
+		try {
+			node.put(code, message);
 			return mapper.writeValueAsString(node);
-		} catch (JsonProcessingException e) {			
+		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
 		return "";
 	}
-	
+
 }
