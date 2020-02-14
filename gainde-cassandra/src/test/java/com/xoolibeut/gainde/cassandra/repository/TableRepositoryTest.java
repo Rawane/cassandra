@@ -1,5 +1,7 @@
 package com.xoolibeut.gainde.cassandra.repository;
 
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -25,6 +27,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ColonneTableDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ConnectionDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
+
 @RunWith(SpringRunner.class)
 public class TableRepositoryTest {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TableRepositoryTest.class);
@@ -92,7 +95,7 @@ public class TableRepositoryTest {
 			ColonneTableDTO dto1 = new ColonneTableDTO();
 			dto1.setName("col_pr");
 			dto1.setType("10");
-			dto1.setPrimaraKey(true);
+			dto1.setPartitionKey(true);
 			oldTableDTO.getColumns().add(dto1);
 
 			tableDTO.setPrimaryKey(new ArrayList<String>());
@@ -104,7 +107,7 @@ public class TableRepositoryTest {
 			ColonneTableDTO dto3 = new ColonneTableDTO();
 			dto3.setName("col_pr");
 			dto3.setType("10");
-			dto3.setPrimaraKey(true);
+			dto3.setPartitionKey(true);
 			tableDTO.getColumns().add(dto3);
 
 			oldTableDTO.setName("test_table");
@@ -200,7 +203,7 @@ public class TableRepositoryTest {
 
 			jsonNode = tableRepository.getAllDataPaginateByPageX("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
 					"aa_personne", 10, map);
-			LOGGER.info("testgetAllPaginate "+primaRyKey);
+			LOGGER.info("testgetAllPaginate " + primaRyKey);
 			LOGGER.info(
 					"---------------------------------------------------------------------------------------------");
 			LOGGER.info(mapper.writeValueAsString(jsonNode));
@@ -210,5 +213,86 @@ public class TableRepositoryTest {
 			e.printStackTrace();
 		}
 
+	}
+
+	@Test
+	public void testCreateTable() {
+		try {
+			TableDTO tableDTO = new TableDTO();
+			tableDTO.setName("ww_table_" + (int) (Math.random() * 5000));
+			ColonneTableDTO column = new ColonneTableDTO();
+			column.setName("col_pr_" + (int) (Math.random() * 200));
+			column.setPartitionKey(true);
+			column.setType("10");
+			tableDTO.getColumns().add(column);
+
+			column = new ColonneTableDTO();
+			column.setName("col_second_pr" + (int) (Math.random() * 500));
+			column.setClusteredColumn(true);
+			column.setType("10");
+			tableDTO.getColumns().add(column);
+
+			column = new ColonneTableDTO();
+			column.setName("col_simple" + (int) (Math.random() * 500));
+			column.setPartitionKey(false);
+			column.setType("10");
+			tableDTO.getColumns().add(column);
+			tableRepository.createTable(tableDTO, "LOCAL", "x48c95551_20c5_4c4e_kps_rawanex");
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("Exception non attendu");
+		}
+	}
+	@Test
+	public void testCreateTableClustering() {
+		try {
+			TableDTO tableDTO = new TableDTO();
+			tableDTO.setName("cc_table_" + (int) (Math.random() * 5000));
+			ColonneTableDTO column = new ColonneTableDTO();
+			column.setName("col_pr_" + (int) (Math.random() * 200));
+			column.setPartitionKey(true);
+			column.setType("10");
+			tableDTO.getColumns().add(column);
+			
+			column = new ColonneTableDTO();
+			column.setName("col_second_pr" + (int) (Math.random() * 500));
+			column.setPartitionKey(true);
+			column.setType("10");
+			tableDTO.getColumns().add(column);
+			
+			column = new ColonneTableDTO();
+			column.setName("col_third_pr" + (int) (Math.random() * 500));
+			column.setPartitionKey(true);
+			column.setType("10");
+			tableDTO.getColumns().add(column);
+			
+			column = new ColonneTableDTO();
+			column.setName("col_simple" + (int) (Math.random() * 500));
+			column.setPartitionKey(false);
+			column.setType("10");
+			tableDTO.getColumns().add(column);
+			tableRepository.createTableTest(tableDTO, "LOCAL", "x48c95551_20c5_4c4e_kps_rawanex");
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("Exception non attendu");
+		}
+	}
+	@Test
+	public void testDropTable() {
+		try {
+			tableRepository.dropTable("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex", "aa_table_");
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("Exception non attendu");
+		}
+	}
+	@Test
+	public void testGetTableInfo() {
+		try {
+			cassandraRepository.getTableInfo("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex", "ww_table_2178");
+		} catch (Exception e) {
+			e.printStackTrace();
+			fail("Exception non attendu");
+		}
 	}
 }

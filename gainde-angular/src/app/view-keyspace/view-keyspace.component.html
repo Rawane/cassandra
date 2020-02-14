@@ -305,7 +305,7 @@
                                         </mat-header-cell>
                                         <mat-cell *matCellDef="let element" class="columTraffic"                                       
                                                   class="actionClick" >
-                                           <span [ngClass]="{'elementNotVisible':!colElement['primaryKey'] && element[colElement['edit']]}"> {{element[colElement['name']]}} </span>
+                                           <span [ngClass]="{'elementNotVisible':!colElement['partitionKey'] && element[colElement['edit']]}"> {{element[colElement['name']]}} </span>
                                             <input  
                                             
                                                 [(ngModel)]="element[colElement['name']]" *ngIf="element[colElement['edit']]">
@@ -338,7 +338,7 @@
                             <ng-template matTabLabel>
                                 <span [matBadge]="columnsSize" class="spanBadge">Colonnes</span>
                             </ng-template>
-                            <mat-table  #table [dataSource]="colonneDataSource"   >
+                            <mat-table  #table [dataSource]="colonneDataSource">
                                 <ng-container matColumnDef="name">
                                   <mat-header-cell *matHeaderCellDef >Nom Colonne </mat-header-cell>
                                   <mat-cell *matCellDef="let colonne" class="columTraffic" >
@@ -351,13 +351,13 @@
                                       {{colonne.type}}
                                    </mat-cell>
                                   </ng-container>    
-                                  <ng-container matColumnDef="primaraKey">
-                                    <mat-header-cell *matHeaderCellDef >Clé Primaire </mat-header-cell>
+                                  <ng-container matColumnDef="partitionKey">
+                                    <mat-header-cell *matHeaderCellDef >Partition Key </mat-header-cell>
                                     <mat-cell *matCellDef="let colonne" class="columTraffic" >
-                                        <mat-icon class="mat-icon-rtl-mirror iconKeyPrimary" *ngIf="colonne.primaraKey">
+                                        <mat-icon class="mat-icon-rtl-mirror iconKeyPrimary" *ngIf="colonne.partitionKey">
                                             vpn_key
                                             </mat-icon>                                      
-                                      <span *ngIf="!colonne.primaraKey">Non</span>
+                                      <span *ngIf="!colonne.partitionKey">Non</span>
                                    </mat-cell>
                                   </ng-container>  
                                   <ng-container matColumnDef="indexed">

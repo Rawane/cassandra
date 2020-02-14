@@ -91,7 +91,8 @@ export class ColumnDTO {
      type:string ;   
 	 typeList:string ; 
 	 typeMap:string;  
-	 primaraKey:boolean=false;  
+     partitionKey:boolean=false;  
+     clusteredColumn:boolean=false;  
 	 indexed:boolean=false;
     constructor(        
        ){

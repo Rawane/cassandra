@@ -69,7 +69,8 @@ validPrimaryKey:boolean=false;
     return this.formBuilder.group({
       name: ['',Validators.required],
       type: ['10',Validators.required],
-      primaryKey:false,
+      partitionKey:false,
+      clusteredColumn:false,
       indexed:false ,
       indexName:'',
       typeList:'',
@@ -93,9 +94,12 @@ validPrimaryKey:boolean=false;
       //console.log('onCheckIndexChange '+index+' control  '+controlForm.value['indexName']);
       if(val){
         controlForm.get('indexName').setValidators([Validators.required]);
-        if( controlForm.value['primaryKey']){
-          controlForm.get('primaryKey').setValue(false);
+        if( controlForm.value['partitionKey']){
+          controlForm.get('partitionKey').setValue(false);
           this.validatePrimaryKey();   
+        }
+        if(controlForm.value['clusteredColumn']){
+          controlForm.get('clusteredColumn').setValue(false);      
         }
        
         if(!controlForm.value['indexName'] || controlForm.value['indexName']=='')
@@ -112,18 +116,28 @@ validPrimaryKey:boolean=false;
    
   } 
 
-  onCheckPrimaryChange(index:number){
+  onCheckPartitionKeyChange(index:number){
     let controlForm=this.ligneColumns.at(index);   
-    let val=controlForm.value['primaryKey'];      
+    let val=controlForm.value['partitionKey'];      
         if(val){
-           controlForm.get('indexed').setValue('');          
+           controlForm.get('indexed').setValue(false); 
+           controlForm.get('clusteredColumn').setValue(false);           
         }
     this.validatePrimaryKey();
   }
-  
+  onCheckClusteredColumnChange(index:number){
+    let controlForm=this.ligneColumns.at(index);   
+    let val=controlForm.value['clusteredColumn'];      
+        if(val){
+           controlForm.get('indexed').setValue(false);    
+           controlForm.get('partitionKey').setValue(false);   
+           this.validatePrimaryKey();      
+        }
+    
+  }
   validatePrimaryKey():boolean{         
     for (let ctrlForm of this.ligneColumns.controls) {    
-      if(ctrlForm.value['primaryKey']){   
+      if(ctrlForm.value['partitionKey']){   
         this.validPrimaryKey=true;     
            return true;              
       } 
@@ -159,9 +173,12 @@ validPrimaryKey:boolean=false;
       let colonneDTO:ColumnDTO=new ColumnDTO();
       colonneDTO.name=controlForm.value['name'];
       colonneDTO.type=controlForm.value['type'];
-      if(controlForm.value['primaryKey']){
-           colonneDTO.primaraKey=true;
+      if(controlForm.value['partitionKey']){
+           colonneDTO.partitionKey=true;
       }
+      if(controlForm.value['clusteredColumn']){
+        colonneDTO.clusteredColumn=true;
+   }
       if(controlForm.value['indexed']){
         colonneDTO.indexed=true;
       }      

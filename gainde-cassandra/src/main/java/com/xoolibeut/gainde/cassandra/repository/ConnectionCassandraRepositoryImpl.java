@@ -14,7 +14,6 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Cluster.Builder;
 import com.datastax.driver.core.CodecRegistry;
 import com.datastax.driver.core.ColumnMetadata;
-import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.IndexMetadata;
 import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.PlainTextAuthProvider;
@@ -36,7 +35,7 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionCassandraRepositoryImpl.class);
 
 	public void connnectTocassandra(ConnectionDTO connectionDTO) throws Exception {
-
+		LOGGER.info("Start connnectTocassandra");
 		if (connectionDTO != null && connectionDTO.getIp() != null && !connectionDTO.getIp().isEmpty()
 				&& connectionDTO.getPort() != null) {
 			if (GaindeSessionConnection.getInstance().getSession(connectionDTO.getName()) == null) {
@@ -50,7 +49,7 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 					clusterBuilder.withAuthProvider(authProvider);
 				}
 				CodecRegistry codecRegistry = new CodecRegistry();
-				codecRegistry.register(new DateCodec(TypeCodec.date(), Date.class));				
+				codecRegistry.register(new DateCodec(TypeCodec.date(), Date.class));
 				Cluster cluster = clusterBuilder.withoutMetrics().withoutJMXReporting().withoutJMXReporting().build();
 				Session session = cluster.connect();
 				GaindeSessionConnection.getInstance().addSession(connectionDTO.getName(), cluster, session);
@@ -85,44 +84,17 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 	}
 
 	public List<ColonneTableDTO> getAllColumns(String connectionName, String keyspaceName, String tableName) {
-		List<ColonneTableDTO> listColumDTO = new ArrayList<>();
-		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
-		if (cluster != null) {
-			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(keyspaceName);
-			if (keyspaceMetadata != null) {
-				TableMetadata tableMetadata = keyspaceMetadata.getTable(tableName);
-				if (tableMetadata != null) {
-					List<ColumnMetadata> columnMetadatas = tableMetadata.getColumns();
-					Collection<IndexMetadata> indexMetadatas = tableMetadata.getIndexes();
-					List<String> listIndex = new ArrayList<>();
-					indexMetadatas.forEach(index -> {
-						listIndex.add(index.getTarget());
-					});
-					List<String> listPrimaryKey = new ArrayList<>();
-					List<ColumnMetadata> metadatas = tableMetadata.getPrimaryKey();
-					metadatas.forEach(primaryKey -> {
-						listPrimaryKey.add(primaryKey.getName());
-					});
 
-					columnMetadatas.forEach(columMeta -> {
-
-						ColonneTableDTO colonneDTO = new ColonneTableDTO();
-						colonneDTO.setName(columMeta.getName());
-						colonneDTO.setType(columMeta.getType().getName().name());
-						colonneDTO.setIndexed(listIndex.contains(columMeta.getName()));
-						colonneDTO.setPrimaraKey(listPrimaryKey.contains(columMeta.getName()));
-						listColumDTO.add(colonneDTO);
-
-					});
-				}
-
-			}
-
-		}
-		return listColumDTO;
+		return buildAllColumns(connectionName, keyspaceName, tableName, false);
 	}
 
 	public List<ColonneTableDTO> getAllColumnsTypeNative(String connectionName, String keyspaceName, String tableName) {
+
+		return buildAllColumns(connectionName, keyspaceName, tableName, true);
+	}
+
+	private List<ColonneTableDTO> buildAllColumns(String connectionName, String keyspaceName, String tableName,
+			boolean colNative) {
 		List<ColonneTableDTO> listColumDTO = new ArrayList<>();
 		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
 		if (cluster != null) {
@@ -136,29 +108,37 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 					indexMetadatas.forEach(index -> {
 						listIndex.add(index.getTarget());
 					});
-					List<String> listPrimaryKey = new ArrayList<>();
+					List<String> listPartionkey = new ArrayList<>();
+					List<String> listClusteredColumn = new ArrayList<>();
 					List<ColumnMetadata> metadatas = tableMetadata.getPrimaryKey();
 					metadatas.forEach(primaryKey -> {
-						listPrimaryKey.add(primaryKey.getName());
+						listPartionkey.add(primaryKey.getName());
 					});
-
+					List<ColumnMetadata> metadataClusteredCols = tableMetadata.getClusteringColumns();
+					metadataClusteredCols.forEach(colClustered -> {
+						listClusteredColumn.add(colClustered.getName());
+					});
 					columnMetadatas.forEach(columMeta -> {
-						DataType dataType = columMeta.getType();
-						LOGGER.info("dataType " + dataType);
-						LOGGER.info("dataType " + columMeta.getType().getName().name() + "  "
-								+ columMeta.getType().getName().ordinal());
 						ColonneTableDTO colonneDTO = new ColonneTableDTO();
 						colonneDTO.setName(columMeta.getName());
-						colonneDTO.setType("" + columMeta.getType().getName().ordinal());
-						if (columMeta.getType().getTypeArguments().size() == 1) {
-							colonneDTO.setTypeList("" + columMeta.getType().getTypeArguments().get(0).getName().ordinal());
-						}
-						if (columMeta.getType().getTypeArguments().size() == 2) {
-							colonneDTO.setTypeList("" + columMeta.getType().getTypeArguments().get(0).getName().ordinal());
-							colonneDTO.setTypeMap("" + columMeta.getType().getTypeArguments().get(1).getName().ordinal());
+						if (colNative) {
+							colonneDTO.setType("" + columMeta.getType().getName().ordinal());
+							if (columMeta.getType().getTypeArguments().size() == 1) {
+								colonneDTO.setTypeList(
+										"" + columMeta.getType().getTypeArguments().get(0).getName().ordinal());
+							}
+							if (columMeta.getType().getTypeArguments().size() == 2) {
+								colonneDTO.setTypeList(
+										"" + columMeta.getType().getTypeArguments().get(0).getName().ordinal());
+								colonneDTO.setTypeMap(
+										"" + columMeta.getType().getTypeArguments().get(1).getName().ordinal());
+							}
+						} else {
+							colonneDTO.setType(columMeta.getType().getName().name());
 						}
 						colonneDTO.setIndexed(listIndex.contains(columMeta.getName()));
-						colonneDTO.setPrimaraKey(listPrimaryKey.contains(columMeta.getName()));
+						colonneDTO.setPartitionKey(listPartionkey.contains(columMeta.getName()));
+						colonneDTO.setClusteredColumn(listClusteredColumn.contains(columMeta.getName()));
 						listColumDTO.add(colonneDTO);
 
 					});

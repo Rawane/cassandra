@@ -22,9 +22,10 @@ optionsType=TypeColonnes;
 oldTableDTO:TableDTO;
 validIndex:boolean=true;
 validDuplicateName:boolean=true;
-//mapPrimaryKey=new Map<string,string>();
   constructor(private gaindeService:GaindeService,private router:Router,
-    private formBuilder:FormBuilder,private snackBar:MatSnackBar,private dialog: MatDialog) { }
+    private formBuilder:FormBuilder,private snackBar:MatSnackBar,private dialog: MatDialog) {
+
+     }
 
   ngOnInit() {
     this.allNotificationSubscription=this.gaindeService.mapTransfertViewEditTableSubject.subscribe((mapTransfert: Map<string,any>) => {
@@ -68,10 +69,10 @@ validDuplicateName:boolean=true;
     console.log("editForm "+JSON.stringify(tableDTO));
     this.formTable = this.formBuilder.group({    
       name: [tableDTO.name,Validators.required],
-      ligneColumns:this.formBuilder.array([ ])
+      ligneColumns:this.formBuilder.array([])
      
     }); 
-   this.ligneColumns = this.formTable.get('ligneColumns') as FormArray;   
+    this.ligneColumns = this.formTable.get('ligneColumns') as FormArray;   
     tableDTO.columns.forEach((columnDTO)=>{
       let indexColumn=null;
       if(tableDTO.indexColumns && tableDTO.indexColumns.length>0)
@@ -93,7 +94,8 @@ validDuplicateName:boolean=true;
     return this.formBuilder.group({
       name: ['',Validators.required],
       type: ['10',Validators.required],
-      primaryKey:false,
+      partitionKey:false,
+      clusteredColumn:false,
       indexed:false ,
       indexName:'',
       typeList:'',
@@ -106,8 +108,9 @@ validDuplicateName:boolean=true;
       let formGroup=this.formBuilder.group({
       name:[columnDTO.name,Validators.required],
       type:[columnDTO.type,Validators.required],
-      primaryKey:columnDTO.primaraKey,
-      indexed:{value: columnDTO.indexed, disabled:columnDTO.primaraKey},
+      partitionKey:columnDTO.partitionKey,
+      clusteredColumn:columnDTO.clusteredColumn,
+      indexed:{value: columnDTO.indexed, disabled:columnDTO.partitionKey},
       indexName:'',
       typeList:columnDTO.typeList,
       typeMap:columnDTO.typeMap,
@@ -153,13 +156,7 @@ validDuplicateName:boolean=true;
    
   } 
 
- /* onValueColnameChange(index:number,oldVal:any){   
-    if(oldVal){
-      let controlForm=this.ligneColumns.at(index);
-      console.log('onValueColnameChange '+controlForm.value['name'] );
-      this.mapPrimaryKey.set(controlForm.value['name'],oldVal);
-    }
-  }*/
+ 
   onIndexNameValueChange(index:number){    
     let controlForm=this.ligneColumns.at(index); 
     console.log('onIndexNameValueChange  '+controlForm+'  '+index) ;
@@ -242,9 +239,12 @@ validDuplicateName:boolean=true;
       colonneDTO.name=controlForm.value['name'];
       colonneDTO.type=controlForm.value['type'];
       colonneDTO.oldName=controlForm.value['oldName'];      
-      if(controlForm.value['primaryKey']){
-           colonneDTO.primaraKey=true;
+      if(controlForm.value['partitionKey']){
+           colonneDTO.partitionKey=true;
       }
+      if(controlForm.value['clusteredColumn']){
+        colonneDTO.clusteredColumn=true;
+   }
       if(controlForm.value['indexed']){
         colonneDTO.indexed=true;
       }      

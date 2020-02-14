@@ -34,7 +34,7 @@ export class ViewKeyspaceComponent implements OnInit,OnDestroy {
   tableInfo:JSON;
   keyspaceInfo:JSON;
   tableKeyspaceInfoDataSource=new MatTableDataSource<JSON>();
-  displayedColumns=['name','type','primaraKey','indexed'];
+  displayedColumns=['name','type','partitionKey','indexed'];
   displayedColumnsPrimary=['key'];
   displayedColumnsTableKeys=['tableName','tableAction','actionremove'];
   displayedColumnsIndex=['name','indexName'];
@@ -608,13 +608,13 @@ setColumns = new Set<string>();
           } );    
          this.gaindeService.insertDataTable(requestData,connectionName,keyspaceName,data['tableName']);
       }else{
-        let primaryKeys:string[]=[];
+        let partitionKeys:string[]=[];
         let requestData:any={};
         requestData['data']={};
         let mapTemp=new Map<string,string>();
         data['columns'].forEach(col=>{
-           if(col['primaryKey']){
-             primaryKeys.push(col.name);
+           if(col['partitionKey']){
+             partitionKeys.push(col.name);
              requestData['data'][col.name]={'data':data['row'][col.name],'type':col.type};
            }else{
             mapTemp.set(col.name,col.type);
@@ -628,7 +628,7 @@ setColumns = new Set<string>();
             requestData['data'][colName]={'data':data['row'][colName],'type':mapTemp.get(colName)};
           }
         });
-        requestData['primaryKeys']=primaryKeys;
+        requestData['partitionKeys']=partitionKeys;
        this.gaindeService.updateDataTable(requestData,connectionName,keyspaceName,data['tableName']);
       }
      }

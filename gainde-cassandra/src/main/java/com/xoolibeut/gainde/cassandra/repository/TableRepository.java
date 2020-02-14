@@ -22,5 +22,7 @@ public interface TableRepository {
 			int page) throws Exception;
 	 JsonNode getAllDataPaginateByPageX(String connectionName, String keyspaceName, String tableName,
 				int page,Map<String, Object> mapPrimaryKey)  throws Exception;
+	 
+	 void createTableTest(TableDTO tableDTO, String connectionName, String keyspaceName) throws Exception; 
 
 }

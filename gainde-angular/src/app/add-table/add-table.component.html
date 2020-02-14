@@ -26,18 +26,19 @@
         </div>
       </div>   
       <div class="row">
-        <div class="col-4">
+        <div class="col-3">
         </div>
         <label class="col-3" >Nom de la colonne</label>
         <label class="col-2" >type de la colonne</label>
-        <label class="col-1" >Clé Primaire?</label>
+        <label class="col-1" >Partition Key?</label>
+        <label class="col-1" >Clustered Column?</label>
         <label class="col-1" >Indexer?</label>
       </div>   
       <div formArrayName="ligneColumns"
             *ngFor="let column of formTable.get('ligneColumns').controls; let i = index;">
             <div  [formGroupName]="i">  
               <div class="row editLineColumn">
-                   <div class="col-4">
+                   <div class="col-3">
                    </div>           
                     <div class="col-3">
                         <input class="form-control" formControlName="name">  
@@ -48,8 +49,11 @@
                           </select>   
                       </div>   
                       <div class="col-1">
-                        <input type="checkbox" class="gaindeFormControl" formControlName="primaryKey" (change)="onCheckPrimaryChange(i)">  
+                        <input type="checkbox" class="gaindeFormControl" formControlName="partitionKey" (change)="onCheckPartitionKeyChange(i)">  
                     </div> 
+                    <div class="col-1">
+                      <input type="checkbox" class="gaindeFormControl" formControlName="clusteredColumn" (change)="onCheckClusteredColumnChange(i)">  
+                  </div>
                     <div class="col-1">
                       <input type="checkbox" class="gaindeFormControl" formControlName="indexed"  (click)="onCheckIndexChange(i)">                      
                   </div>   

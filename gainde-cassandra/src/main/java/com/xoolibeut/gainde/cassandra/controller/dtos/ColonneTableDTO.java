@@ -9,12 +9,11 @@ public class ColonneTableDTO {
 	private String type;
 	private String typeList;
 	private String typeMap;
-	private boolean primaraKey;
+	private boolean partitionKey;
+	private boolean clusteredColumn;
 	private boolean indexed;
 	private String oldName;
 
-	
-	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -56,18 +55,9 @@ public class ColonneTableDTO {
 		this.type = type;
 	}
 
-	public boolean isPrimaraKey() {
-		return primaraKey;
-	}
-
-	public void setPrimaraKey(boolean primaraKey) {
-		this.primaraKey = primaraKey;
-	}
-
 	public boolean isIndexed() {
 		return indexed;
 	}
-	
 
 	public void setIndexed(boolean indexed) {
 		this.indexed = indexed;
@@ -95,6 +85,22 @@ public class ColonneTableDTO {
 
 	public void setOldName(String oldName) {
 		this.oldName = oldName;
+	}
+
+	public boolean isPartitionKey() {
+		return partitionKey;
+	}
+
+	public void setPartitionKey(boolean partitionKey) {
+		this.partitionKey = partitionKey;
+	}
+
+	public boolean isClusteredColumn() {
+		return clusteredColumn;
+	}
+
+	public void setClusteredColumn(boolean clusteredColumn) {
+		this.clusteredColumn = clusteredColumn;
 	}
 
 }
