@@ -124,7 +124,30 @@ public class TableController {
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
-
+	@PostMapping("/delete/{connectionName}/{kespace}/{tableName}")
+	public ResponseEntity<String> removeRowDataTable(@PathVariable("connectionName") String connectionName,
+			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName,
+			@RequestBody Map<String,Object> map) {
+		try {
+			tableRepository.removeRowData(connectionName, keyspaceName, tableName, map);
+			return ResponseEntity.status(204).build();
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
+		}
+	}
+	@DeleteMapping("/delete/all/{connectionName}/{kespace}/{tableName}")
+	public ResponseEntity<String> removeAllDataTable(@PathVariable("connectionName") String connectionName,
+			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName
+			) {
+		try {
+			tableRepository.removeAllData(connectionName, keyspaceName, tableName);
+			return ResponseEntity.status(204).build();
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
+		}
+	}
 	@PutMapping("/update/{connectionName}/{kespace}/{tableName}")
 	public ResponseEntity<String> updateDataTable(@PathVariable("connectionName") String connectionName,
 			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName,

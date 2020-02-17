@@ -8,7 +8,7 @@
     <button mat-button  class="btn btn-gainder-danger"  [mat-dialog-close]=""  *ngIf="data.btnCancel">Annuler</button>
   </div>
   <div class="col-auto">
-    <button mat-button [mat-dialog-close]="data.id" cdkFocusInitial [ngClass]="{'btn btn-primary':true,'dialogActionCentral':!data.btnCancel,'dialogActionOk':data.btnCancel}">
+    <button mat-button [mat-dialog-close]="data" cdkFocusInitial [ngClass]="{'btn btn-primary':true,'dialogActionCentral':!data.btnCancel,'dialogActionOk':data.btnCancel}">
       Ok</button>
   </div>
 </div>

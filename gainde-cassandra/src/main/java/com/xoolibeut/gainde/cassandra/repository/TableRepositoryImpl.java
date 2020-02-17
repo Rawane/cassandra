@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ColumnMetadata;
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
@@ -22,6 +23,7 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.querybuilder.Clause;
+import com.datastax.driver.core.querybuilder.Delete;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
@@ -62,8 +64,8 @@ public class TableRepositoryImpl implements TableRepository {
 			if (column.isPartitionKey()) {
 				if (column.isClusteredColumn()) {
 					createTable.addClusteringColumn(column.getName(), datype);
-				}else {
-					createTable.addPartitionKey(column.getName(), datype);	
+				} else {
+					createTable.addPartitionKey(column.getName(), datype);
 				}
 			} else {
 				if (column.isClusteredColumn()) {
@@ -279,7 +281,7 @@ public class TableRepositoryImpl implements TableRepository {
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
 
-		List<ColumnMetadata> columns = buildColumns(table, partionKeys,clusteredColumKeys, mapper, rootNode);
+		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys, mapper, rootNode);
 		Iterator<Row> iter = resulSet.iterator();
 		while (iter.hasNext()) {
 			Row row = iter.next();
@@ -316,7 +318,7 @@ public class TableRepositoryImpl implements TableRepository {
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
 
-		List<ColumnMetadata> columns = buildColumns(table, partionKeys,clusteredColumKeys, mapper, rootNode);
+		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys, mapper, rootNode);
 		Iterator<Row> iter = resulSet.iterator();
 		while (resulSet.getAvailableWithoutFetching() > 0) {
 			Row row = iter.next();
@@ -375,7 +377,7 @@ public class TableRepositoryImpl implements TableRepository {
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
 
-		List<ColumnMetadata> columns = buildColumns(table, partionKeys,clusteredColumKeys, mapper, rootNode);
+		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys, mapper, rootNode);
 		Iterator<Row> iter = resulSet.iterator();
 		while (resulSet.getAvailableWithoutFetching() > 0) {
 			Row row = iter.next();
@@ -407,6 +409,7 @@ public class TableRepositoryImpl implements TableRepository {
 			}
 		}
 		Insert insert = QueryBuilder.insertInto(keyspaceName, tableName).values(keys, values);
+		insert.setConsistencyLevel(ConsistencyLevel.ALL);
 		session.execute(insert);
 	}
 
@@ -470,13 +473,7 @@ public class TableRepositoryImpl implements TableRepository {
 					break;
 				}
 				default:
-					String value= row.getObject(column.getName()).toString();
-					if(value.length()>1) {
-						if(value.startsWith("\"")) {
-							value=value.substring(1, value.length()-1);	
-						}
-					}
-					rowNode.put(column.getName(), value);					
+					rowNode.put(column.getName(), row.getObject(column.getName()).toString());
 					break;
 				}
 
@@ -489,8 +486,8 @@ public class TableRepositoryImpl implements TableRepository {
 		return rowNode;
 	}
 
-	private List<ColumnMetadata> buildColumns(TableMetadata table, List<String> partionKeys,List<String>  clusteredColumKeys, ObjectMapper mapper,
-			ObjectNode rootNode) {
+	private List<ColumnMetadata> buildColumns(TableMetadata table, List<String> partionKeys,
+			List<String> clusteredColumKeys, ObjectMapper mapper, ObjectNode rootNode) {
 		ArrayNode listColumnsName = mapper.createArrayNode();
 		List<ObjectNode> columnsNodes = new ArrayList<ObjectNode>();
 		List<ColumnMetadata> columns = table.getColumns();
@@ -521,6 +518,38 @@ public class TableRepositoryImpl implements TableRepository {
 
 		rootNode.set("columns", listColumnsName);
 		return columns;
+	}
+
+	public void removeRowData(String connectionName, String keyspaceName, String tableName, Map<String, Object> map)
+			throws Exception {
+		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
+		if (session == null) {
+			throw new Exception("aucune session");
+		}
+		List<Clause> clauses = new ArrayList<>();
+		map.keySet().forEach(key -> {
+			clauses.add(QueryBuilder.eq(key, map.get(key)));
+		});
+
+		Delete.Where deleteWhere = QueryBuilder.delete().from(keyspaceName, tableName).where(clauses.get(0));
+		if (clauses.size() > 1) {
+			for (int i = 1; i < clauses.size(); i++) {
+				deleteWhere.and(clauses.get(i));
+			}
+		}
+		LOGGER.info("removeRowData CQL "+deleteWhere);
+		session.execute(deleteWhere);
+	}
+	public void removeAllData(String connectionName, String keyspaceName, String tableName)
+			throws Exception {
+		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
+		if (session == null) {
+			throw new Exception("aucune session");
+		}
+		Delete deleteWhere = QueryBuilder.delete().from(keyspaceName, tableName);
+		
+		LOGGER.info("removeRowData CQL "+deleteWhere);
+		session.execute(deleteWhere);
 	}
 
 }

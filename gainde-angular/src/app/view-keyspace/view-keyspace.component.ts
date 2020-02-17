@@ -11,8 +11,9 @@ import {MatSort} from '@angular/material/sort';
 import {MatDialog, MatDialogRef,MAT_DIALOG_DATA} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {GaindeService} from '../services/gainde.service';
-import {ConnectionDTO,KeyspaceDTO,ActionHttp,VIEW_ECRAN} from '../model/model-dto';
+import {ConnectionDTO,KeyspaceDTO,ActionHttp,VIEW_ECRAN,ActionDialog} from '../model/model-dto';
 import{DialogData} from '../view-connections/view-connections.component';
+import { ConditionalExpr } from '@angular/compiler';
 
 interface Meta {
   name:string; 
@@ -116,7 +117,7 @@ emitNotificationDialogSubject(content:any) {
             }
             case ActionHttp.CLOSE_CONNECTION_ERROR:
             {
-                this.openDialog('Connection',"Erreur lors de la fermiture de la connection",false,'');
+                this.openDialog('Connection',"Erreur lors de la fermiture de la connection",false,'',ActionDialog.INFO);
                 break;
             }
             case ActionHttp.REMOVE_KEYSPACE:
@@ -128,7 +129,7 @@ emitNotificationDialogSubject(content:any) {
             }               
             case ActionHttp.REMOVE_KEYSPACE_ERROR:  
             {              
-                this.openDialog('Suppression Keyspace',mapTransfert.get("content"),false,'');
+                this.openDialog('Suppression Keyspace',mapTransfert.get("content"),false,'',ActionDialog.INFO);
                 break;
             }
             case ActionHttp.REMOVE_TABLE:
@@ -155,7 +156,7 @@ emitNotificationDialogSubject(content:any) {
             }
             case ActionHttp.REMOVE_TABLE_ERROR:
             {
-                this.openDialog('Suppression Table',mapTransfert.get("content"),false,'');
+                this.openDialog('Suppression Table',mapTransfert.get("content"),false,'',ActionDialog.INFO);
                 break;
             }
             case ActionHttp.INFO_TABLE:
@@ -165,7 +166,7 @@ emitNotificationDialogSubject(content:any) {
             }
             case ActionHttp.INFO_TABLE_ERROR:
             {
-                  this.openDialog('Erreur de Connection',mapTransfert.get("content"),false,'');
+                  this.openDialog('Erreur de Connection',mapTransfert.get("content"),false,'',ActionDialog.INFO);
                   break;
             }
             case ActionHttp.SAVE_KEYSPACE:
@@ -175,7 +176,7 @@ emitNotificationDialogSubject(content:any) {
               }        
             case ActionHttp.SAVE_KEYSPACE_ERROR:
             {                
-                this.openDialog('Keyspace',mapTransfert.get("content"),false,'');
+                this.openDialog('Keyspace',mapTransfert.get("content"),false,'',ActionDialog.INFO);
                 break;   
             }
             case ActionHttp.INFO_KEYSPACE: 
@@ -190,7 +191,7 @@ emitNotificationDialogSubject(content:any) {
             }
             case ActionHttp.INFO_KEYSPACE_ERROR: 
             {               
-                this.openDialog('INFO Keyspace',mapTransfert.get("content"),false,'');
+                this.openDialog('INFO Keyspace',mapTransfert.get("content"),false,'',ActionDialog.INFO);
                 break;  
             }
             case ActionHttp.ALL_DATA_TABLE:              
@@ -200,37 +201,47 @@ emitNotificationDialogSubject(content:any) {
             }
             case ActionHttp.ALL_DATA_TABLE_ERROR: 
             {               
-                this.openDialog('Table ',mapTransfert.get("content"),false,'');
+                this.openDialog('Table ',mapTransfert.get("content"),false,'',ActionDialog.INFO);
                 break;  
             } 
-      case ActionHttp.INSERT_DATA_TABLE:              
-        { let connectionName=this.gaindeService.currentGainde.connectionName;
-          let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
-          this.openSnackBar('Données insérées avec succès','');
-          this.emitNotificationDialogSubject({'errorDialog':false,'data':mapTransfert.get("content")});
-          this.gaindeService.getAllDataTable(connectionName,keyspaceName,mapTransfert.get("content"));
-          break;
-        }
-      case ActionHttp.INSERT_DATA_TABLE_ERROR: 
-      {     
-          this.emitNotificationDialogSubject({'errorDialog':true,'data':mapTransfert.get("content")});
-          break;  
-      }
-      case ActionHttp.UPDATE_DATA_TABLE:              
-        { let connectionName=this.gaindeService.currentGainde.connectionName;
-          let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
-          this.openSnackBar('Données mis à jour avec succès','');
-          //this.dialog.closeAll();
-          this.emitNotificationDialogSubject({'errorDialog':false,'data':mapTransfert.get("content")});
-         
-          this.gaindeService.getAllDataTable(connectionName,keyspaceName,mapTransfert.get("content"));         
-          break;
-        }
-        case ActionHttp.UPDATE_DATA_TABLE_ERROR: 
-      {       
-         this.emitNotificationDialogSubject({'errorDialog':true,'data':mapTransfert.get("content")});
-          break;  
-      }           
+            case ActionHttp.INSERT_DATA_TABLE:              
+              { let connectionName=this.gaindeService.currentGainde.connectionName;
+                let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
+                this.openSnackBar('Données insérées avec succès','');
+                this.emitNotificationDialogSubject({'errorDialog':false,'data':mapTransfert.get("content")});
+                this.gaindeService.getAllDataTable(connectionName,keyspaceName,mapTransfert.get("content"));
+                break;
+              }
+            case ActionHttp.INSERT_DATA_TABLE_ERROR: 
+            {     
+                this.emitNotificationDialogSubject({'errorDialog':true,'data':mapTransfert.get("content")});
+                break;  
+            }
+            case ActionHttp.UPDATE_DATA_TABLE:              
+              { let connectionName=this.gaindeService.currentGainde.connectionName;
+                let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
+                this.openSnackBar('Données mis à jour avec succès','');
+                //this.dialog.closeAll();
+                this.emitNotificationDialogSubject({'errorDialog':false,'data':mapTransfert.get("content")});
+              
+                this.gaindeService.getAllDataTable(connectionName,keyspaceName,mapTransfert.get("content"));         
+                break;
+              }
+              case ActionHttp.UPDATE_DATA_TABLE_ERROR: 
+              {       
+                 this.emitNotificationDialogSubject({'errorDialog':true,'data':mapTransfert.get("content")});
+                break;  
+              }  
+              case ActionHttp.REMOVE_ONE_ROW: 
+              {       
+                this.openSnackBar('La ligne a été supprimée','');
+                break;  
+              }  
+              case ActionHttp.REMOVE_ALL_ROWS: 
+              {       
+                this.openSnackBar('Toutes les lignes ont été supprimées','');
+                break;  
+              }          
             default:
               break;
          }
@@ -325,12 +336,8 @@ emitNotificationDialogSubject(content:any) {
   }
 
   onClickEditRow(row,name){
-    //console.log('onClickEditRow  : ' + JSON.stringify(row)); 
-    //row['columns']=this.dispColumnsHeadTableData;
     let data:any={'columns':this.dispColumnsHeadTableData,
     'tableName':name,'row':row,'added':false};
-    //let indexElement= this.tableDatasDataSource.data.indexOf(row);
-   // console.log('onClickEditRow  : '+  JSON.stringify(data));
     this.openDialogRow(data);
     
   }
@@ -344,11 +351,24 @@ emitNotificationDialogSubject(content:any) {
     "tableName":name,'row':row,"added":true}; 
     this.openDialogRow(data);
   }
-  onClickRemoveAllRow(){
-
+  onClickRemoveAllRow(tableName:string){
+    let map=new Map<string,string>();
+    map.set('gainDeTableName',tableName);
+    this.openDialog('Confirmation de suppression',"Voulez-vous supprimer toutes lignes de la table  "+tableName+" du Keyspace "+this.currentTableKeys[1]+" ?",true,map,ActionDialog.ACTION_DELETE_ALL_RAWS); 
+ }
+  onClickRemoveRow(row:any,tableName:string){
+    let map=new Map<string,string>();
+    map.set('gainDeTableName',tableName);
+    let parTiTionKey='';
+    if(this.tableInfo['columns']){
+      this.tableInfo['columns'].forEach(element => {
+        if(element['partitionKey']){
+          parTiTionKey=parTiTionKey+' '+element['name']+':'+row[element['name']];
+          map.set(element['name'],row[element['name']]);
+        }
+      });
   }
-  onClickRemoveRow(row:any){
-    this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la ligne avec Key "+row+" de la table ?",true,''); 
+    this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la ligne avec la clé de partition "+parTiTionKey+" de la table "+tableName+"?",true,map,ActionDialog.ACTION_DELETE_ONE_ROW); 
   }
   onClickRemoveKeyspaceOrTable(node){
     //console.log('onClickRowNode  : ' + JSON.stringify(node));
@@ -359,11 +379,11 @@ emitNotificationDialogSubject(content:any) {
     if(node['type']===1){
       this.partVisible=VIEW_ECRAN.KEYSPACE_HOME;
       this.currentKeyspaceName=this.currentTableKeys[1];
-      this.openDialog('Confirmation de suppression',"Voulez-vous supprimer le keyspace "+this.currentTableKeys[1]+"?",true,this.currentNodeId);
+      this.openDialog('Confirmation de suppression',"Voulez-vous supprimer le keyspace "+this.currentTableKeys[1]+"?",true,this.currentNodeId,ActionDialog.ACTION_DELETE_KEYSAPCE);
     }else{  
       this.currentKeyspaceName=this.currentTableKeys[1];    
       //this.gaindeService.currentGainde.tableName =this.currentTableKeys[2];  
-      this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la table "+this.currentTableKeys[2]+" du keyspace"+this.currentTableKeys[1]+"?",true,this.currentNodeId);
+      this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la table "+this.currentTableKeys[2]+" du keyspace"+this.currentTableKeys[1]+"?",true,this.currentNodeId,ActionDialog.ACTION_DELETE_TABLE);
     }
   }
   onClickRemoveTable(connectionName:string,keyspaceName:string,tableName:string){
@@ -372,7 +392,7 @@ emitNotificationDialogSubject(content:any) {
     this.currentKeyspaceName=keyspaceName;   
     this.gaindeService.currentGainde.connectionName =connectionName;
     this.gaindeService.currentGainde.keyspaceName =keyspaceName; 
-    this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la table "+tableName+" du keyspace "+keyspaceName+"?",true,key);
+    this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la table "+tableName+" du keyspace "+keyspaceName+"?",true,key,ActionDialog.ACTION_DELETE_TABLE);
   }
   onClickAddKeyspace(){    
     this.initForm();
@@ -435,24 +455,62 @@ emitNotificationDialogSubject(content:any) {
     this.zoomData=!this.zoomData;
     console.log('onZoomTable  : ' + this.zoomData);
   }
-   openDialog(pTitle:string,pText:string, cancelButton:boolean,pId:string): void {
+   openDialog(pTitle:string,pText:string, cancelButton:boolean,map:any,action:ActionDialog): void {
     let dialogRef = this.dialog.open(DialogInfoKeyspaceComponent, {
       width: '500px',
-      data: {text: pText,title:pTitle,btnCancel:cancelButton,id:pId}
+      data: {text: pText,title:pTitle,btnCancel:cancelButton,data:map,action:action}
     });
   
-    dialogRef.afterClosed().subscribe(result => {     
-      if(result!=null && result.length>1){
-        console.log('keyspaceInfoSubscription  : ' + result);
-        this.currentTableKeys=result.split("#");
-        this.currentNodeId=result;
-        if(this.currentTableKeys.length==2){
-            this.gaindeService.removeKeySpace(this.currentTableKeys[0],this.currentTableKeys[1]); 
-        }else{
-           this.gaindeService.removeTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]); 
+    dialogRef.afterClosed().subscribe(result => { 
+      console.log('1 afterClosed '+JSON.stringify(result));
+      if(result!=null){
+        console.log('1 afterClosed '+JSON.stringify(result));
+        switch (result['action'] as ActionDialog)  {
+          case ActionDialog.ACTION_DELETE_KEYSAPCE:
+          {
+            this.currentTableKeys=result['data'].split("#");
+            this.currentNodeId=result;
+            if(this.currentTableKeys.length==2){
+              this.gaindeService.removeKeySpace(this.currentTableKeys[0],this.currentTableKeys[1]); 
+            }
+            break;
+          }
+          case ActionDialog.ACTION_DELETE_TABLE:
+          {
+            this.currentTableKeys=result['data'].split("#");
+            this.currentNodeId=result;
+            if(this.currentTableKeys.length==3){
+              this.gaindeService.removeTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]); 
+            }
+            break;
+          }
+          case ActionDialog.ACTION_DELETE_ONE_ROW:
+          { 
+            let map=result['data'] as Map<string,string>;
+            let tableName=map.get('gainDeTableName');
+            map.delete('gainDeTableName');
+            let data={};
+            map.forEach((value,key)=>{
+              console.log("key "+key+"  value "+value);
+              data[key]=value;
+            });
+            console.log("map data  "+JSON.stringify(data));
+            this.gaindeService.removeRowDataTable(data,this.currentTableKeys[0],this.currentTableKeys[1],tableName);
+            break;
+          }
+          case ActionDialog.ACTION_DELETE_ALL_RAWS:
+          { let map=result['data'] as Map<string,string>;
+             let tableName=map.get('gainDeTableName');
+            this.gaindeService.removeAllRowDataTable(this.currentTableKeys[0],this.currentTableKeys[1],tableName);
+            break;
+          }
+          default:
+            break;
         }
+      
       }
       dialogRef=null;
+
     });
     
   }
@@ -464,7 +522,7 @@ emitNotificationDialogSubject(content:any) {
       data: {counter: counter}
     });
   
-    dialogRefTableInfo.afterClosed().subscribe(result => {     
+    dialogRefTableInfo.afterClosed().subscribe(result => { 
       
       if(result!=null){
        console.log("openDialogTableInfo "+result);

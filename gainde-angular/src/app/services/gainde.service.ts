@@ -287,6 +287,7 @@ export class GaindeService {
       }
     );    
   }
+  
   updateDataTable(data:any,connectionName:string,keyspaceName:string,tableName:string){
     this.httpClient
     .put<JSON>(environment['basePathGainde']+'/table/update/'+connectionName+'/'+keyspaceName+'/'+tableName,data,this.httpOptions)
@@ -299,6 +300,37 @@ export class GaindeService {
       (error) => {     
         console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
         this.emitMapTransfertKeyspaceSubject(ActionHttp.UPDATE_DATA_TABLE_ERROR,error['error']['error']);        
+      }
+    );    
+  }
+  removeRowDataTable(data:any,connectionName:string,keyspaceName:string,tableName:string){
+    console.log('removeRowDataTable '+JSON.stringify(data));
+    this.httpClient
+    .post<JSON>(environment['basePathGainde']+'/table/delete/'+connectionName+'/'+keyspaceName+'/'+tableName,data,this.httpOptions)
+    .subscribe(
+      (response) => {            
+        console.log('response  : ' + JSON.stringify(response));        
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.REMOVE_ONE_ROW,tableName); 
+
+      },
+      (error) => {     
+        console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.REMOVE_ONE_ROW_ERROR,error['error']['error']);        
+      }
+    );    
+  }
+  removeAllRowDataTable(connectionName:string,keyspaceName:string,tableName:string){
+    this.httpClient
+    .delete<JSON>(environment['basePathGainde']+'/table/delete/all/'+connectionName+'/'+keyspaceName+'/'+tableName,this.httpOptions)
+    .subscribe(
+      (response) => {            
+        console.log('response  : ' + JSON.stringify(response));        
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.REMOVE_ALL_ROWS,tableName); 
+
+      },
+      (error) => {     
+        console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.REMOVE_ALL_ROWS_ERROR,error['error']['error']);        
       }
     );    
   }
@@ -321,8 +353,7 @@ export class GaindeService {
     );    
   }
   
-  testCSPGateway(){
-   
+  testCSPGateway(){   
     this.httpOptions.headers=this.httpOptions.headers.set('Accept','*/*');
     //this.httpOptions.headers=this.httpOptions.headers.set('Authorization','azazazazazazaza');
    // this.httpOptions.headers=this.httpOptions.headers.set('test-header','test');

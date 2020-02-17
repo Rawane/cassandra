@@ -73,7 +73,11 @@ export enum ActionHttp{
     INSERT_DATA_TABLE,
     INSERT_DATA_TABLE_ERROR,
     UPDATE_DATA_TABLE,
-    UPDATE_DATA_TABLE_ERROR
+    UPDATE_DATA_TABLE_ERROR,
+    REMOVE_ONE_ROW,
+    REMOVE_ONE_ROW_ERROR,
+    REMOVE_ALL_ROWS,
+    REMOVE_ALL_ROWS_ERROR
 }
 export class TableDTO {
     columns:Array<ColumnDTO>=new Array();
@@ -136,3 +140,10 @@ export const TypeColonnesCollect = [
 
 ];
 export const TypeColonnesAll=TypeColonnes.concat(TypeColonnesCollect);
+export enum ActionDialog { 
+    INFO,
+    ACTION_DELETE_KEYSAPCE,
+    ACTION_DELETE_TABLE,
+    ACTION_DELETE_ONE_ROW,
+    ACTION_DELETE_ALL_RAWS
+}
