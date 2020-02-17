@@ -291,24 +291,24 @@
                                                 <input matInput (keyup)="onApplyFilter($event.target.value)" placeholder="Filter"
                                                 [(ngModel)]="filterTableData">
                                             </mat-form-field>                                            
-                                                <mat-icon  (click)="onZoomTable()" style="margin-left: 20px;" class="actionClick" matTooltip="Agrandir">
+                                                <mat-icon  (click)="onZoomTable()" style="margin-left: 20px;" class="actionClick " matTooltip="Agrandir">
                                                     {{zoomData?'zoom_out':'zoom_in'}}
                                                 </mat-icon> 
-                                         
+                                             <mat-icon  (click)="onShowSelectColumn()" style="margin-left: 20px;" class="actionClick" matTooltip="Affichage Simplifié">
+                                                   grid_on
+                                            </mat-icon> 
                                         </div>                                      
                                        
                                      </div>
                                 <mat-table  #table [dataSource]="tableDatasDataSource" matSort >
                                     <ng-container  *ngFor="let colElement of dispColumnsHeadTableData" [matColumnDef]="colElement['name']">
-                                        <mat-header-cell *matHeaderCellDef mat-sort-header>
+                                        <mat-header-cell *matHeaderCellDef mat-sort-header [ngClass]="{'columnDisplay':onVerifyDisplay(colElement['name'])}" >
                                             {{colElement['name']}}                                            
                                         </mat-header-cell>
-                                        <mat-cell *matCellDef="let element" class="columTraffic"                                       
-                                                  class="actionClick" >
-                                           <span [ngClass]="{'elementNotVisible':!colElement['partitionKey'] && element[colElement['edit']]}"> {{element[colElement['name']]}} </span>
-                                            <input  
-                                            
-                                                [(ngModel)]="element[colElement['name']]" *ngIf="element[colElement['edit']]">
+                                        <mat-cell *matCellDef="let element"                                    
+                                                  [ngClass]="{'actionClick':true,'columnDisplay':onVerifyDisplay(colElement['name'])}" >
+                                           <span > {{element[colElement['name']]}} </span>
+                                           
                                         </mat-cell>
                                     </ng-container>  
                                     <ng-container   matColumnDef="action_gainde">
@@ -326,7 +326,25 @@
                                               create
                                           </mat-icon> 
                                         </mat-cell>
-                                    </ng-container>                                                         
+                                    </ng-container>
+                                    <ng-container   matColumnDef="action_remove_gainde">
+                                        <mat-header-cell *matHeaderCellDef >
+                                            <mat-icon class="actionAddTable" 
+                                                                    (click)="onClickRemoveAllRow(tableInfo.name)"
+                                                                    matTooltip="Supprimer toutes les lignes">
+                                                                delete
+                                                        </mat-icon> 
+                                        </mat-header-cell>
+                                        <mat-cell *matCellDef="let element" class="columTraffic"                                       
+                                                  class="actionClick" >
+                                        <mat-icon class="actionAddTable"  matTooltip="Supprimer la Ligne"
+                                                  (click)="onClickRemoveRow(element,tableInfo.name)" >
+                                              clear
+                                          </mat-icon> 
+                                         
+                                        </mat-cell>
+                                    </ng-container>
+                                                                                          
                                     <mat-header-row  *matHeaderRowDef="displayedColumnsTableData"></mat-header-row>
                                     <mat-row  *matRowDef="let row; columns: displayedColumnsTableData;"></mat-row>         
                                 </mat-table>                                                            

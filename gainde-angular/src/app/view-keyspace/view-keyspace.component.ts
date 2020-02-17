@@ -55,6 +55,7 @@ export class ViewKeyspaceComponent implements OnInit,OnDestroy {
   keyspaceForm:FormGroup; 
   paginationTableDataSize;
   zoomData=false;
+  setColumnInvisible=new Set<string>();
   notificationDialogSubject=new Subject<any>();
   hasChild = (_: number, node: Meta) => !!node.metas && node.metas.length > 0;
   constructor(private gaindeService:GaindeService,private router:Router,private formBuilder:FormBuilder,
@@ -246,10 +247,10 @@ emitNotificationDialogSubject(content:any) {
         this.displayedColumnsTableData.push(col['name']);
       });
       this.displayedColumnsTableData.push('action_gainde');
+      this.displayedColumnsTableData.push('action_remove_gainde');
     }
     this.dispColumnsHeadTableData = mapTransfert.get("content")['columns'];
-   // console.log('displayedColumnsTableData ' + JSON.stringify(this.displayedColumnsTableData));
-   // console.log('dispColumnsHeadTableData ' + JSON.stringify(this.dispColumnsHeadTableData));
+   
     this.tableDatasDataSource.data = mapTransfert.get("content")['data'];
     this.paginationTableDataSize = mapTransfert.get("content")['data'].length;
     this.tableDatasDataSource.paginator = this.paginator;
@@ -266,7 +267,13 @@ emitNotificationDialogSubject(content:any) {
       }
     };
   }
-
+  onVerifyDisplay(columnName:string):boolean{   
+    //console.log(columnName)
+    return  this.setColumnInvisible.has(columnName);;
+  }
+  onShowSelectColumn(){
+    this.openDialogSelectColumn();
+  }
   onApplyFilter(filterValue: string) {
     this.tableDatasDataSource.filter = filterValue.trim().toLowerCase();
     if (this.tableDatasDataSource.paginator) {
@@ -274,7 +281,7 @@ emitNotificationDialogSubject(content:any) {
     }
   }
   onApplyFilterTableKeyspace(filterVal: string) {
-    console.log('onApplyFilterTableKeyspace '+filterVal);
+    //console.log('onApplyFilterTableKeyspace '+filterVal);
     this.tableKeyspaceInfoDataSource.filter = filterVal.trim().toLowerCase();     
   }
   onClickCloseConnection(){
@@ -336,6 +343,12 @@ emitNotificationDialogSubject(content:any) {
     let data:any={"columns":this.dispColumnsHeadTableData,
     "tableName":name,'row':row,"added":true}; 
     this.openDialogRow(data);
+  }
+  onClickRemoveAllRow(){
+
+  }
+  onClickRemoveRow(row:any){
+    this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la ligne avec Key "+row+" de la table ?",true,''); 
   }
   onClickRemoveKeyspaceOrTable(node){
     //console.log('onClickRowNode  : ' + JSON.stringify(node));
@@ -476,7 +489,31 @@ emitNotificationDialogSubject(content:any) {
 
     });
   }
+  private openDialogSelectColumn(): void {
+    //let columnSource=[...this.colonneDataSource.data];
+    let columnSource=[];
+    this.colonneDataSource.data.forEach((column)=>{
+      columnSource.push({'name':column['name'],'check':true});
+    });
+    
+    let dialogRef = this.dialog.open(DialogSelectColumnComponent, {
+      width: '500px',
+      data: {source:columnSource}
+    });
   
+    dialogRef.afterClosed().subscribe(result => {     
+      if(result!=null && result.length>1){
+        this.setColumnInvisible.clear();
+        result.forEach((column)=>{
+          if(!column['check']){
+            this.setColumnInvisible.add(column['name']);
+          }
+        });
+      }
+      dialogRef=null;
+    });
+    
+  }
   private doAfterGetInfoTable(mapTransfert: Map<string, any>) {    
     this.tableInfo = mapTransfert.get('content');
     this.colonneDataSource.data = this.tableInfo['columns'];
@@ -657,5 +694,23 @@ setColumns = new Set<string>();
       panelClass: ['green-snackbar']
     });
 }
+
+}
+@Component({
+  selector: 'app-dialog-select-column',
+  templateUrl: './dialog-select-column.component.html' ,
+  styleUrls: ['./view-keyspace.component.scss']
+})
+export class DialogSelectColumnComponent implements OnInit {
+checked:boolean=true;
+  constructor( public dialogRef: MatDialogRef<ViewKeyspaceComponent>,@Inject(MAT_DIALOG_DATA) public data: DialogData) { }
+
+  ngOnInit() {
+  }
+  onToggleCheck(){
+    this.data['source'].forEach((column)=>{
+      column['check']=!this.checked;
+    });
+  }
 }
 

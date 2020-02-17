@@ -3,6 +3,7 @@ package com.xoolibeut.gainde.cassandra.repository;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +35,7 @@ public class TableRepositoryTest {
 	private TableRepository tableRepository = new TableRepositoryImpl();
 	private ConnectionCassandraRepository cassandraRepository;
 
-	@Before
+	//@Before
 	public void setUp() {
 		String connectionName = "LOCAL";
 		ConnectionDTO connectionDTO = new ConnectionDTO(connectionName);
@@ -49,7 +50,7 @@ public class TableRepositoryTest {
 		}
 	}
 
-	@After
+	//@After
 	public void closeConnection() {
 		try {
 			cassandraRepository.closeConnectioncassandra("LOCAL");
@@ -243,6 +244,7 @@ public class TableRepositoryTest {
 			fail("Exception non attendu");
 		}
 	}
+
 	@Test
 	public void testCreateTableClustering() {
 		try {
@@ -253,19 +255,19 @@ public class TableRepositoryTest {
 			column.setPartitionKey(true);
 			column.setType("10");
 			tableDTO.getColumns().add(column);
-			
+
 			column = new ColonneTableDTO();
 			column.setName("col_second_pr" + (int) (Math.random() * 500));
 			column.setPartitionKey(true);
 			column.setType("10");
 			tableDTO.getColumns().add(column);
-			
+
 			column = new ColonneTableDTO();
 			column.setName("col_third_pr" + (int) (Math.random() * 500));
 			column.setPartitionKey(true);
 			column.setType("10");
 			tableDTO.getColumns().add(column);
-			
+
 			column = new ColonneTableDTO();
 			column.setName("col_simple" + (int) (Math.random() * 500));
 			column.setPartitionKey(false);
@@ -277,6 +279,7 @@ public class TableRepositoryTest {
 			fail("Exception non attendu");
 		}
 	}
+
 	@Test
 	public void testDropTable() {
 		try {
@@ -286,6 +289,7 @@ public class TableRepositoryTest {
 			fail("Exception non attendu");
 		}
 	}
+
 	@Test
 	public void testGetTableInfo() {
 		try {
@@ -294,5 +298,19 @@ public class TableRepositoryTest {
 			e.printStackTrace();
 			fail("Exception non attendu");
 		}
+	}
+
+	@Test
+	public void testMethode() {
+		String value = "\"Maj\"";
+		System.out.println(value.substring(1, value.length() - 1));
+		String ext = "ZXlKZlpHVm1ZWFZzZENJNmV5SmhkWFJvWlc1MGFXTmhkR2x2YmxCeWIyWnBiR1VpT2lKZlpHVm1Z\\nWFZzZENJc0luSnZkWFJsVkhsdwpaU0k2SW5CeWIzaDVJaXdpY21WeGRXVnpkRkJ2YkdsamVTSTZJ\\nanhyWlhrZ2RIbHdaVDBuUTJseVkzVnBkRU52Ym5SaGFXNWxjaWMrClBHbGtJR1pwWld4a1BTZHVZ\\nVzFsSnlCMllXeDFaVDBuVTJWamRYSnBkSGtnVEdsaWNtRnllU2N2UGp4clpYa2dkSGx3WlQwblEy\\nbHkKWTNWcGRFTnZiblJoYVc1bGNpYytQR2xrSUdacFpXeGtQU2R1WVcxbEp5QjJZV3gxWlQwblZY\\nTmxJRU5oYzJVZ015QXRJRTlCZFhSbwpNaWN2UGp4clpYa2dkSGx3WlQwblEybHlZM1ZwZEVOdmJu\\nUmhhVzVsY2ljK1BHbGtJR1pwWld4a1BTZHVZVzFsSnlCMllXeDFaVDBuCk15QXRJRVpzYjNjbkx6\\nNDhhMlY1SUhSNWNHVTlKME5wY21OMWFYUkRiMjUwWVdsdVpYSW5QanhwWkNCbWFXVnNaRDBuYm1G\\ndFpTY2cKZG1Gc2RXVTlKeklnTFNCU1pYRjFaWE4wSUZCdmJHbGplU2N2UGp4clpYa2dkSGx3WlQw\\nblJtbHNkR1Z5UTJseVkzVnBkQ2MrUEdsawpJR1pwWld4a1BTZHVZVzFsSnlCMllXeDFaVDBuVW1W\\neGRXVnpkRkJ2YkdsamVTY3ZQand2YTJWNVBqd3ZhMlY1UGp3dmEyVjVQand2CmEyVjVQand2YTJW\\nNVBpSXNJbkpsYzNCdmJuTmxVRzlzYVdONUlqcHVkV3hzTENKeWIzVjBaVkJ2YkdsamVTSTZiblZz\\nYkN3aVptRjEKYkhSSVlXNWtiR1Z5VUc5c2FXTjVJanB1ZFd4c0xDSmhjR2xKWkNJNmJuVnNiQ3dp\\nWVhCcFRXVjBhRzlrU1dRaU9tNTFiR3dzSW5CaApjbUZ0WlhSbGNuTWlPbHRkZlgwPQ==";
+		ext=ext.replaceAll("\\\\n", "");
+				System.out.println("------------------------------------------------");
+		System.out.println("ext "+ext);
+		byte[] firstDecode=Base64.getDecoder().decode(ext);
+		System.out.println(new String(firstDecode));
+		System.out.println(new String(Base64.getDecoder().decode((new String(firstDecode)).replaceAll("\n", ""))));
+		System.out.println("----------------------FIN--------------------------");
 	}
 }

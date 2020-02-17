@@ -162,7 +162,13 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 					Collection<IndexMetadata> indexMetadatas = tableMetadata.getIndexes();
 					List<IndexColumn> listIndexColumns = new ArrayList<>();
 					indexMetadatas.forEach(index -> {
-						IndexColumn indexColumn = new IndexColumn(index.getName(), index.getTarget());
+						String target= index.getTarget();
+						if(target.length()>1) {
+							if(target.startsWith("\"")) {
+								target=target.substring(1, target.length()-1);	
+							}
+						}
+						IndexColumn indexColumn = new IndexColumn(index.getName(), target);
 						listIndexColumns.add(indexColumn);
 					});
 					tableInfoDTO.setIndexColumns(listIndexColumns);

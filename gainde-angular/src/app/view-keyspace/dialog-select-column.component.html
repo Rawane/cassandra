@@ -1,0 +1,23 @@
+<div class="divTitleDialog">   
+</div>
+<div mat-dialog-content> 
+    <div class="row">
+        <div class="col headColumn"><span class="spanLabel">Selection Colonnes</span></div>
+        <div class="col"><input type="checkbox" class="checkAll"   [(ngModel)]="checked" (click)="onToggleCheck()" > </div>
+    </div> 
+  <div class="row rowColumn" *ngFor="let column of data.source">
+    <div class="col">{{column.name}}</div>
+    <div class="col">
+     <input type="checkbox" class="gaindeFormControl"  [(ngModel)]="column.check" > 
+    </div>
+</div>
+</div>
+<div mat-dialog-actions class="row" >
+  <div class="col-auto mr-auto">
+    <button mat-button  class="btn btn-gainder-danger"  [mat-dialog-close]=""  >Annuler</button>
+  </div>
+  <div class="col-auto">
+    <button mat-button [mat-dialog-close]="data.source" cdkFocusInitial [ngClass]="{'btn btn-gainde':true}">
+      Ok</button>
+  </div>
+</div>

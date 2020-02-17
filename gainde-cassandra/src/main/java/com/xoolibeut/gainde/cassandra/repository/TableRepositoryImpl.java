@@ -470,7 +470,13 @@ public class TableRepositoryImpl implements TableRepository {
 					break;
 				}
 				default:
-					rowNode.put(column.getName(), row.getObject(column.getName()).toString());
+					String value= row.getObject(column.getName()).toString();
+					if(value.length()>1) {
+						if(value.startsWith("\"")) {
+							value=value.substring(1, value.length()-1);	
+						}
+					}
+					rowNode.put(column.getName(), value);					
 					break;
 				}
 
