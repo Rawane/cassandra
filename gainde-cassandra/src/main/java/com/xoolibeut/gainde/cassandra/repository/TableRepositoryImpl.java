@@ -69,7 +69,7 @@ public class TableRepositoryImpl implements TableRepository {
 			String item = listQuery.get(i);			
 			tables.forEach((table)->{
 				if(table.getName().equals(item)){
-					//listQuery.set(index, element)
+					////listQuery.set(index, element)
 				}
 			});
 		}
