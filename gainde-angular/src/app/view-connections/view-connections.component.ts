@@ -6,7 +6,7 @@ import {GaindeService} from '../services/gainde.service';
 import {ConnectionDTO,ActionHttp,GaindeCommunication} from '../model/model-dto';
 import {MatDialog, MatDialogRef,MAT_DIALOG_DATA} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
-
+import {CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
 
 export interface DialogData {
   text: string;
@@ -83,6 +83,16 @@ export class ViewConnectionsComponent implements OnInit,OnDestroy {
    
     this.gaindeService.getAllConnections();
     this.initForm();
+  }
+
+ 
+
+  drop(event: CdkDragDrop<string[]>) {
+    moveItemInArray(this.connections, event.previousIndex, event.currentIndex);
+    this.connections.forEach((connection,index)=>{
+      connection.ordered=index;
+    });
+    this.gaindeService.orderedConnections(this.connections);
   }
   ngOnDestroy() {
     this.allNotificationSubscription.unsubscribe();

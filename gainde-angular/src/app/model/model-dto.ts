@@ -77,7 +77,9 @@ export enum ActionHttp{
     REMOVE_ONE_ROW,
     REMOVE_ONE_ROW_ERROR,
     REMOVE_ALL_ROWS,
-    REMOVE_ALL_ROWS_ERROR
+    REMOVE_ALL_ROWS_ERROR,
+    ORDERED_CONNECTION,
+    ORDERED_CONNECTION_ERROR
 }
 export class TableDTO {
     columns:Array<ColumnDTO>=new Array();

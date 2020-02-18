@@ -5,12 +5,16 @@
         <div class="col headColumn"><span class="spanLabel">Selection Colonnes</span></div>
         <div class="col"><input type="checkbox" class="checkAll"   [(ngModel)]="checked" (click)="onToggleCheck()" > </div>
     </div> 
-  <div class="row rowColumn" *ngFor="let column of data.source">
-    <div class="col">{{column.name}}</div>
-    <div class="col">
-     <input type="checkbox" class="gaindeFormControl"  [(ngModel)]="column.check" > 
+    <div cdkDropList class="column-list" (cdkDropListDropped)="drop($event)">
+    <div class="row rowColumn row-box" cdkDrag  *ngFor="let column of data.source">
+        <div class="col">
+            {{column.name}}
+        </div>
+        <div class="col">
+        <input type="checkbox" class="gaindeFormControl"  [(ngModel)]="column.check" > 
+        </div>
     </div>
-</div>
+    </div>
 </div>
 <div mat-dialog-actions class="row" >
   <div class="col-auto mr-auto">

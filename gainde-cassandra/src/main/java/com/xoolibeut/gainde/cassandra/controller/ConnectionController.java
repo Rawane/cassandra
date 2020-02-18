@@ -43,13 +43,13 @@ public class ConnectionController {
 	public ResponseEntity<String> createConnection(@RequestBody ConnectionDTO connectionDTO) {
 		try {
 			boolean result = connectionRepository.createConnection(connectionDTO);
-			if (result) {				
-				return ResponseEntity.status(201).body(buildMessage("message","create"));
-			}		
-			return ResponseEntity.status(201).body(buildMessage("message","creation ko"));
+			if (result) {
+				return ResponseEntity.status(201).body(buildMessage("message", "create"));
+			}
+			return ResponseEntity.status(201).body(buildMessage("message", "creation ko"));
 		} catch (IOException ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
@@ -58,13 +58,25 @@ public class ConnectionController {
 		try {
 			boolean result = connectionRepository.updateConnection(connectionDTO);
 			if (result) {
-				cassandraRepository.closeConnectioncassandra(connectionDTO.getName());				
-				return ResponseEntity.status(200).body(buildMessage("message","maj"));
+				cassandraRepository.closeConnectioncassandra(connectionDTO.getName());
+				return ResponseEntity.status(200).body(buildMessage("message", "maj"));
 			}
-			return ResponseEntity.status(401).body(buildMessage("message","maj ko"));
+			return ResponseEntity.status(401).body(buildMessage("message", "maj ko"));
 		} catch (Exception exception) {
 			LOGGER.error("erreur", exception);
-			return ResponseEntity.status(400).body(buildMessage("error",exception.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", exception.getMessage()));
+		}
+	}
+
+	@PutMapping("/ordered")
+	public ResponseEntity<String> updateOrderConnection(@RequestBody List<ConnectionDTO> listConn) {
+		try {
+			connectionRepository.updateOrderConnection(listConn);
+			return ResponseEntity.status(200).body(buildMessage("message", "maj"));
+
+		} catch (Exception exception) {
+			LOGGER.error("erreur", exception);
+			return ResponseEntity.status(400).body(buildMessage("error", exception.getMessage()));
 		}
 	}
 
@@ -72,14 +84,14 @@ public class ConnectionController {
 	public ResponseEntity<String> deleteConnection(@PathVariable("name") String name) {
 		try {
 			boolean result = connectionRepository.removeConnection(new ConnectionDTO(name));
-			if (result) {				
-				return ResponseEntity.status(201).body(buildMessage("message","supprimé"));
+			if (result) {
+				return ResponseEntity.status(201).body(buildMessage("message", "supprimé"));
 			}
-			return ResponseEntity.status(401).body(buildMessage("message","suppression ko"));
+			return ResponseEntity.status(401).body(buildMessage("message", "suppression ko"));
 
 		} catch (IOException ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
@@ -90,13 +102,13 @@ public class ConnectionController {
 			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(list));
 		} catch (IOException ioException) {
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
 	@PostMapping("/connecto")
 	public ResponseEntity<String> connectTocassandra(@RequestBody ConnectionDTO connectionDTO) {
-		try {			
+		try {
 			if (connectionDTO == null || connectionDTO.getName() == null || connectionDTO.getName().contains("#")) {
 				throw new Exception("Information connection incorrecte ");
 			}
@@ -106,7 +118,7 @@ public class ConnectionController {
 			cassandraRepository.connnectTocassandra(connectionDTO);
 			return ResponseEntity.status(200).build();
 		} catch (Exception ioException) {
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
@@ -117,7 +129,7 @@ public class ConnectionController {
 			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(listGainde));
 		} catch (Exception ioException) {
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
@@ -130,7 +142,7 @@ public class ConnectionController {
 			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(colonneTableDTOs));
 		} catch (Exception ioException) {
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
@@ -147,23 +159,24 @@ public class ConnectionController {
 			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(tableInfo));
 		} catch (Exception ioException) {
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
+
 	@GetMapping("/metadata/table/type/{name}/{keysp}/{table}")
 	public ResponseEntity<String> getTableInfoTypeNative(@PathVariable("name") String connectionName,
 			@PathVariable("keysp") String keyspaceName, @PathVariable("table") String tableName) {
 		try {
 			TableDTO tableInfo = cassandraRepository.getTableInfo(connectionName, keyspaceName, tableName);
 			long rows = cassandraRepository.countAllRows(connectionName, keyspaceName, tableName);
-			List<ColonneTableDTO> colonneTableDTOs = cassandraRepository.getAllColumnsTypeNative(connectionName, keyspaceName,
-					tableName);
+			List<ColonneTableDTO> colonneTableDTOs = cassandraRepository.getAllColumnsTypeNative(connectionName,
+					keyspaceName, tableName);
 			tableInfo.setColumns(colonneTableDTOs);
 			tableInfo.setRows(rows);
 			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(tableInfo));
 		} catch (Exception ioException) {
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
@@ -177,7 +190,7 @@ public class ConnectionController {
 			mapRowCount.put("rows", rows);
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(mapRowCount));
 		} catch (Exception ioException) {
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
@@ -188,15 +201,17 @@ public class ConnectionController {
 
 			return ResponseEntity.status(200).build();
 		} catch (Exception ioException) {
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
-	private String buildMessage(String code,String message) {
-		ObjectMapper mapper=new ObjectMapper();
-		ObjectNode node=mapper.createObjectNode();
-		try {node.put(code, message);
+
+	private String buildMessage(String code, String message) {
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode node = mapper.createObjectNode();
+		try {
+			node.put(code, message);
 			return mapper.writeValueAsString(node);
-		} catch (JsonProcessingException e) {			
+		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
 		return "";

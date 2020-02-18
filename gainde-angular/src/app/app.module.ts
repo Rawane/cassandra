@@ -5,12 +5,15 @@ import {HttpClientModule} from '@angular/common/http'
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
 import { MatInputModule, MatPaginatorModule,MatSortModule, MatTableModule,MatDatepickerModule,MatDateFormats,MAT_DATE_LOCALE,MAT_DATE_FORMATS,} from "@angular/material";
 import { MatTooltipModule,MatIconModule,MatExpansionModule,MatSnackBarModule,MatNativeDateModule} from "@angular/material";
 import {MatProgressSpinnerModule,MatCardModule,MatTreeModule,MatDialogModule } from "@angular/material";
+import {DragDropModule} from '@angular/cdk/drag-drop';
 import { MatAutocompleteModule,MatListModule,MatTabsModule,MatBadgeModule,MatStepperModule} from "@angular/material";
 import { MenuComponent } from './menu/menu.component';
 import { ViewConnectionsComponent,DialogInfoConnectionComponent } from './view-connections/view-connections.component';
+
 import{ GaindeService} from './services/gainde.service';
 import { ViewKeyspaceComponent,DialogInfoKeyspaceComponent ,DialogTableColumnInfoComponent,DialogEditRowComponent,DialogSelectColumnComponent} from './view-keyspace/view-keyspace.component';
 import { EditTableComponent ,DialogInfoTableComponent} from './edit-table/edit-table.component';
@@ -73,7 +76,8 @@ export const FORMAT_GAINDE: MatDateFormats = {
     MatSnackBarModule,
     MatStepperModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    DragDropModule
   ],
   entryComponents:[
   DialogInfoConnectionComponent,
@@ -93,3 +97,5 @@ export const FORMAT_GAINDE: MatDateFormats = {
 export class AppModule {
   
  }
+ platformBrowserDynamic().bootstrapModule(AppModule)
+ .catch(err => console.error(err));

@@ -9,14 +9,14 @@
                 </button>
             </div>
         </div>
-        <mat-list>            
-                <mat-list-item *ngFor="let conn of connections">     
+        <mat-list  cdkDropList (cdkDropListDropped)="drop($event)" class="column-list">            
+                <mat-list-item *ngFor="let conn of connections"  cdkDrag class="row-box">     
                     <mat-icon mat-list-icon class="iconConnection icon-gainde" (click)="onClickShowInfoConnection(conn)" matTooltip="Afficher">folder</mat-icon>
-                    <h4 mat-line (dblclick)="onDblClickConnectToCassandra(conn)" class="iconConnection">{{conn.name}}</h4>
+                    <span mat-line (dblclick)="onDblClickConnectToCassandra(conn)" class="iconConnection">{{conn.name}}</span>
                     <p mat-line *ngIf="conn.ip" > {{conn.ip}}:{{conn.port}}</p>           
                     <mat-icon class="iconConnection icon-gainde" (click)="onClickRemoveConnection(conn.name)" matTooltip="Supprimer">delete</mat-icon>                      
                 </mat-list-item>           
-        </mat-list>
+        </mat-list>       
           <div>
                 <div class="row">
                     <div class="col-md-5 col-lg-4"> 
@@ -44,7 +44,7 @@
             <form [formGroup]="connectionForm" (ngSubmit)="onSubmitFormConnection(actionButton)">
                 <div class="form-group">
                     <label for="name">Nom de la Connection</label>
-                    <input id="name" class="form-control" formControlName="name" >                  
+                    <input id="name" class="form-control" formControlName="name" appAutofocus>                  
                 </div>
                 <div class="form-group">
                     <label for="ip">Hostname</label>
@@ -80,7 +80,8 @@
                         </button>  
                     </div>
                  </div>
-            </form>
+            </form>            
+              
         </div>
     </div>
 </div>

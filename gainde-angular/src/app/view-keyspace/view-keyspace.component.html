@@ -190,6 +190,26 @@
                                         </div>
                                 </div>
                             </mat-tab>
+                            <mat-tab label="Custom Query" > 
+                                <div>
+                                    <div *ngIf="keyspaceInfo">
+                                        <div class="row rowContentArea">                                            
+                                                <mat-label>Saisissez votre query</mat-label>
+                                                <textarea matInput placeholder="Select * from tableName" class="form-control textArea"
+                                                rows="8" appAutofocus  [(ngModel)]="queryContent"></textarea>
+                                           
+                                        </div>
+                                        <div class="row">
+                                            <div class="col"></div>
+                                            <div class="col" style="text-align: center"> 
+                                                 <button type="button" class="btn btn-success" (click)="onExecuteQuery()">
+                                                Exécuter 
+                                            </button></div>
+                                            <div class="col"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </mat-tab>
                         </mat-tab-group> 
                     </div>
                     <div *ngIf="partVisible==4">
@@ -297,12 +317,23 @@
                                              <mat-icon  (click)="onShowSelectColumn()" style="margin-left: 20px;" class="actionClick" matTooltip="Affichage Simplifié">
                                                    grid_on
                                             </mat-icon> 
+                                            <mat-icon  (click)="onRefreshData(tableInfo.name)" style="margin-left: 20px;" class="actionClick" matTooltip="Refresh">
+                                                refresh
+                                         </mat-icon> 
                                         </div>                                      
                                        
                                      </div>
-                                <mat-table  #table [dataSource]="tableDatasDataSource" matSort >
-                                    <ng-container  *ngFor="let colElement of dispColumnsHeadTableData" [matColumnDef]="colElement['name']">
-                                        <mat-header-cell *matHeaderCellDef mat-sort-header [ngClass]="{'columnDisplay':onVerifyDisplay(colElement['name'])}" >
+                                <mat-table  #table [dataSource]="tableDatasDataSource" matSort cdkDropListGroup>
+                                    <ng-container  *ngFor="let colElement of dispColumnsHeadTableData ; let i = index" [matColumnDef]="colElement['name']">
+                                        <mat-header-cell *matHeaderCellDef mat-sort-header [ngClass]="{'columnDisplay':onVerifyDisplay(colElement['name'])}" 
+                                        cdkDropList
+                                        cdkDropListLockAxis="x"
+                                        cdkDropListOrientation="horizontal"
+                                        (cdkDropListDropped)="dropListDropped($event, i)"
+                                        cdkDrag
+                                        (cdkDragStarted)="dragStarted($event, i)"
+                                        [cdkDragData]="{name: colElement.name, columIndex: i}"
+                                        >
                                             {{colElement['name']}}                                            
                                         </mat-header-cell>
                                         <mat-cell *matCellDef="let element"                                    
@@ -312,15 +343,15 @@
                                         </mat-cell>
                                     </ng-container>  
                                     <ng-container   matColumnDef="action_gainde">
-                                        <mat-header-cell *matHeaderCellDef >
+                                        <mat-header-cell *matHeaderCellDef class="actionHeadGainde" >
                                             <mat-icon class="actionAddTable" 
                                                                     (click)="onClickAddNewRow(tableInfo.name)"
                                                                     matTooltip="Ajouter une Ligne">
                                                                 add
                                                         </mat-icon> 
                                         </mat-header-cell>
-                                        <mat-cell *matCellDef="let element" class="columTraffic"                                       
-                                                  class="actionClick" >
+                                        <mat-cell *matCellDef="let element" class="actionHeadGainde"                                       
+                                                  >
                                         <mat-icon class="actionAddTable"  matTooltip="Editer la Ligne"
                                                   (click)="onClickEditRow(element,tableInfo.name)" >
                                               create
@@ -328,15 +359,15 @@
                                         </mat-cell>
                                     </ng-container>
                                     <ng-container   matColumnDef="action_remove_gainde">
-                                        <mat-header-cell *matHeaderCellDef >
+                                        <mat-header-cell *matHeaderCellDef class="actionHeadGainde">
                                             <mat-icon class="actionAddTable" 
                                                                     (click)="onClickRemoveAllRow(tableInfo.name)"
                                                                     matTooltip="Supprimer toutes les lignes">
                                                                 delete
                                                         </mat-icon> 
                                         </mat-header-cell>
-                                        <mat-cell *matCellDef="let element" class="columTraffic"                                       
-                                                  class="actionClick" >
+                                        <mat-cell *matCellDef="let element" class="actionHeadGainde"                                       
+                                                   >
                                         <mat-icon class="actionAddTable"  matTooltip="Supprimer la Ligne"
                                                   (click)="onClickRemoveRow(element,tableInfo.name)" >
                                               clear

@@ -27,8 +27,11 @@ public interface TableRepository {
 
 	void createTableTest(TableDTO tableDTO, String connectionName, String keyspaceName) throws Exception;
 
-	void removeRowData(String connectionName, String keyspaceName, String tableName, Map<String, Object> map) throws Exception;
+	void removeRowData(String connectionName, String keyspaceName, String tableName, Map<String, Object> map)
+			throws Exception;
 
 	void removeAllData(String connectionName, String keyspaceName, String tableName) throws Exception;
+
+	JsonNode executeQuery(String connectionName, String keyspaceName, String query) throws Exception;
 
 }

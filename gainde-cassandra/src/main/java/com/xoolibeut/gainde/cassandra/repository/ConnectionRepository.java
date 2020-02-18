@@ -14,5 +14,7 @@ public interface ConnectionRepository {
 
 	List<ConnectionDTO> readlAllConnections() throws IOException;
 
-	ConnectionDTO getConnection(String name) throws IOException ;
+	ConnectionDTO getConnection(String name) throws IOException;
+
+	void updateOrderConnection(List<ConnectionDTO> listConnections) throws IOException;
 }

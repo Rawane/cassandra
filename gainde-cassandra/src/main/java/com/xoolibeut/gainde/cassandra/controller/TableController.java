@@ -31,6 +31,19 @@ public class TableController {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TableController.class);
 	@Autowired
 	private TableRepository tableRepository;
+	
+	@PostMapping("/query/{connectionName}/{kespace}")
+	public ResponseEntity<String> executeQuery(@PathVariable("connectionName") String connectionName,
+			@PathVariable("kespace") String keyspaceName, @RequestBody String query) {
+		try {
+			JsonNode jsonNode = tableRepository.executeQuery(connectionName, keyspaceName, query);
+			ObjectMapper mapper = new ObjectMapper();
+			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
+		}
+	}
 
 	@PostMapping("/{connectionName}/{kespace}")
 	public ResponseEntity<String> createTable(@PathVariable("connectionName") String connectionName,

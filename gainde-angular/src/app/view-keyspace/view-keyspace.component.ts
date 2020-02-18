@@ -13,7 +13,7 @@ import {MatSnackBar} from '@angular/material/snack-bar';
 import {GaindeService} from '../services/gainde.service';
 import {ConnectionDTO,KeyspaceDTO,ActionHttp,VIEW_ECRAN,ActionDialog} from '../model/model-dto';
 import{DialogData} from '../view-connections/view-connections.component';
-import { ConditionalExpr } from '@angular/compiler';
+import {CdkDragStart, CdkDropList,CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
 
 interface Meta {
   name:string; 
@@ -30,6 +30,7 @@ export class ViewKeyspaceComponent implements OnInit,OnDestroy {
   partVisible:VIEW_ECRAN;
   homeKeyspaceVisible:boolean=false;
   allNotificationSubscription:Subscription;
+  notifKeyspaceByDialog:Subscription;
   @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
   @ViewChild(MatSort, {static: false}) sort: MatSort;
   tableInfo:JSON;
@@ -58,11 +59,58 @@ export class ViewKeyspaceComponent implements OnInit,OnDestroy {
   zoomData=false;
   setColumnInvisible=new Set<string>();
   notificationDialogSubject=new Subject<any>();
+  previousIndex: number;
+  queryContent:string='';
   hasChild = (_: number, node: Meta) => !!node.metas && node.metas.length > 0;
   constructor(private gaindeService:GaindeService,private router:Router,private formBuilder:FormBuilder,
    private snackBar:MatSnackBar,private dialog: MatDialog) {
       
     }
+    setDisplayedColumns() {      
+      this.displayedColumnsTableData=[];
+      this.dispColumnsHeadTableData.forEach(( colunm, index) => {
+        colunm.index = index;
+        this.displayedColumnsTableData[index] = colunm.name;
+      });
+      this.displayedColumnsTableData.push('action_gainde');
+      this.displayedColumnsTableData.push('action_remove_gainde');
+    }
+    setDisplayedColumnsByNotif(columns:any) {      
+     
+      let arrayTemp=[...this.dispColumnsHeadTableData];
+      this.displayedColumnsTableData=[];
+      this.dispColumnsHeadTableData=[];
+      columns.forEach(( colunm, index) => {        
+        this.displayedColumnsTableData[index] = colunm.name;
+        let indexCol:number;
+        for(let i=0;i<arrayTemp.length;i++){
+         if(arrayTemp[i].name==colunm.name){
+          indexCol=i;
+          break;
+         }
+        }
+        this.dispColumnsHeadTableData[index]=arrayTemp[indexCol];
+      });
+      this.displayedColumnsTableData.push('action_gainde');
+      this.displayedColumnsTableData.push('action_remove_gainde');
+    }
+  
+    dragStarted(event: CdkDragStart, index: number ) {
+      this.previousIndex = index;
+      //console.log('dragStarted prev '+this.previousIndex);
+    }
+  
+    dropListDropped(event: CdkDropList, index: number) {
+      if (event) {
+        console.log('dropListDropped prev '+this.previousIndex+'   new '+index);
+        moveItemInArray(this.dispColumnsHeadTableData, this.previousIndex, index);
+        //console.log('dropListDropped '+JSON.stringify(this.dispColumnsHeadTableData));
+        this.setDisplayedColumns();
+      }
+    }
+onExecuteQuery(){
+  console.log("onExecuteQuery "+this.queryContent);
+}
 initEcranWithCurrentData(){
   if(this.gaindeService.currentGainde.content){
     this.dataSource.data=this.gaindeService.currentGainde.content;
@@ -101,8 +149,10 @@ emitNotificationDialogSubject(content:any) {
 }
   ngOnInit() {
     this.currentConnection=this.gaindeService.currentGainde.connection;
-   this.initEcranWithCurrentData();
-
+    this.initEcranWithCurrentData();
+    this.notifKeyspaceByDialog=this.gaindeService.notifParentDialogKeyspace.subscribe((dataSource:any)=>{
+    this.setDisplayedColumnsByNotif(dataSource);
+});
     this.allNotificationSubscription=this.gaindeService.mapTransfertViewKeyspaceSubject.subscribe((mapTransfert: Map<string,any>) => {
       let mapToString='';
       mapTransfert.forEach((key,item)=>{
@@ -235,11 +285,17 @@ emitNotificationDialogSubject(content:any) {
               case ActionHttp.REMOVE_ONE_ROW: 
               {       
                 this.openSnackBar('La ligne a été supprimée','');
+                let connectionName=this.gaindeService.currentGainde.connectionName;
+                let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
+                this.gaindeService.getAllDataTable(connectionName,keyspaceName,mapTransfert.get("content"));
                 break;  
               }  
               case ActionHttp.REMOVE_ALL_ROWS: 
               {       
                 this.openSnackBar('Toutes les lignes ont été supprimées','');
+                let connectionName=this.gaindeService.currentGainde.connectionName;
+                let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
+                this.gaindeService.getAllDataTable(connectionName,keyspaceName,mapTransfert.get("content"));
                 break;  
               }          
             default:
@@ -314,6 +370,7 @@ emitNotificationDialogSubject(content:any) {
     }else{      
       this.gaindeService.currentGainde.tableName =this.currentTableKeys[2];  
       this.gaindeService.getInfoTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
+      this.tableDatasDataSource.data=[];
       if(this.selectedPageIndex==1) 
       {
         //this.selectedPageIndex=0;
@@ -328,7 +385,7 @@ emitNotificationDialogSubject(content:any) {
   onClickNavigateTab(){
     console.log('onClickNavigateTab  : ' + this.selectedPageIndex);
     if(this.selectedPageIndex==1){
-      if(this.currentTableKeys){
+      if(this.currentTableKeys && this.tableDatasDataSource.data.length==0){
         this.gaindeService.getAllDataTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
       }  
     }
@@ -412,7 +469,8 @@ emitNotificationDialogSubject(content:any) {
     this.currentNodeId=row;
     this.currentTableKeys=row.split("#");
     this.currentKeyspaceName=this.currentTableKeys[1];
-    this.gaindeService.getInfoTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
+    this.gaindeService.getInfoTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]); 
+    this.tableDatasDataSource.data=[];
     if(this.selectedPageIndex==1) 
     {
       this.selectedPageIndex=0;
@@ -442,6 +500,11 @@ emitNotificationDialogSubject(content:any) {
   onClickShowKeyspace(){
    
   }
+  onRefreshData(tableName:string){
+    let connectionName=this.gaindeService.currentGainde.connectionName;
+    let keyspaceName=this.gaindeService.currentGainde.keyspaceName;              
+    this.gaindeService.getAllDataTable(connectionName,keyspaceName,tableName);
+  }
   onStrategyChange(){
     this.keyspaceForm.get('strategy').valueChanges.subscribe(val => {
       if(val==='SimpleStrategy'){
@@ -450,7 +513,7 @@ emitNotificationDialogSubject(content:any) {
         this.keyspaceForm.get('replication').setValidators([]);
       }
     });
-  }
+  } 
   onZoomTable(){ 
     this.zoomData=!this.zoomData;
     console.log('onZoomTable  : ' + this.zoomData);
@@ -550,8 +613,8 @@ emitNotificationDialogSubject(content:any) {
   private openDialogSelectColumn(): void {
     //let columnSource=[...this.colonneDataSource.data];
     let columnSource=[];
-    this.colonneDataSource.data.forEach((column)=>{
-      columnSource.push({'name':column['name'],'check':true});
+    this.dispColumnsHeadTableData.forEach((column)=>{
+      columnSource.push({'name':column['name'],'check':!this.setColumnInvisible.has(column['name'])});
     });
     
     let dialogRef = this.dialog.open(DialogSelectColumnComponent, {
@@ -761,7 +824,7 @@ setColumns = new Set<string>();
 })
 export class DialogSelectColumnComponent implements OnInit {
 checked:boolean=true;
-  constructor( public dialogRef: MatDialogRef<ViewKeyspaceComponent>,@Inject(MAT_DIALOG_DATA) public data: DialogData) { }
+  constructor( public dialogRef: MatDialogRef<ViewKeyspaceComponent>,@Inject(MAT_DIALOG_DATA) public data: DialogData,private gaindeService:GaindeService) { }
 
   ngOnInit() {
   }
@@ -770,5 +833,11 @@ checked:boolean=true;
       column['check']=!this.checked;
     });
   }
+  drop(event: CdkDragDrop<string[]>) {
+    moveItemInArray( this.data['source'], event.previousIndex, event.currentIndex);
+   // console.log("after moved "+JSON.stringify(this.data['source']));    
+    this.gaindeService.emitNotifParentDialogKeyspace(this.data['source']);   
+  }
+  
 }
 

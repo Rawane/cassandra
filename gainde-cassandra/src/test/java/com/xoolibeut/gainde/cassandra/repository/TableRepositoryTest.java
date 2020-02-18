@@ -3,14 +3,12 @@ package com.xoolibeut.gainde.cassandra.repository;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -35,7 +33,7 @@ public class TableRepositoryTest {
 	private TableRepository tableRepository = new TableRepositoryImpl();
 	private ConnectionCassandraRepository cassandraRepository;
 
-	//@Before
+	// @Before
 	public void setUp() {
 		String connectionName = "LOCAL";
 		ConnectionDTO connectionDTO = new ConnectionDTO(connectionName);
@@ -50,7 +48,7 @@ public class TableRepositoryTest {
 		}
 	}
 
-	//@After
+	// @After
 	public void closeConnection() {
 		try {
 			cassandraRepository.closeConnectioncassandra("LOCAL");
@@ -302,15 +300,24 @@ public class TableRepositoryTest {
 
 	@Test
 	public void testMethode() {
-		String value = "\"Maj\"";
-		System.out.println(value.substring(1, value.length() - 1));
-		String ext = "ZXlKZlpHVm1ZWFZzZENJNmV5SmhkWFJvWlc1MGFXTmhkR2x2YmxCeWIyWnBiR1VpT2lKZlpHVm1Z\\nWFZzZENJc0luSnZkWFJsVkhsdwpaU0k2SW5CeWIzaDVJaXdpY21WeGRXVnpkRkJ2YkdsamVTSTZJ\\nanhyWlhrZ2RIbHdaVDBuUTJseVkzVnBkRU52Ym5SaGFXNWxjaWMrClBHbGtJR1pwWld4a1BTZHVZ\\nVzFsSnlCMllXeDFaVDBuVTJWamRYSnBkSGtnVEdsaWNtRnllU2N2UGp4clpYa2dkSGx3WlQwblEy\\nbHkKWTNWcGRFTnZiblJoYVc1bGNpYytQR2xrSUdacFpXeGtQU2R1WVcxbEp5QjJZV3gxWlQwblZY\\nTmxJRU5oYzJVZ015QXRJRTlCZFhSbwpNaWN2UGp4clpYa2dkSGx3WlQwblEybHlZM1ZwZEVOdmJu\\nUmhhVzVsY2ljK1BHbGtJR1pwWld4a1BTZHVZVzFsSnlCMllXeDFaVDBuCk15QXRJRVpzYjNjbkx6\\nNDhhMlY1SUhSNWNHVTlKME5wY21OMWFYUkRiMjUwWVdsdVpYSW5QanhwWkNCbWFXVnNaRDBuYm1G\\ndFpTY2cKZG1Gc2RXVTlKeklnTFNCU1pYRjFaWE4wSUZCdmJHbGplU2N2UGp4clpYa2dkSGx3WlQw\\nblJtbHNkR1Z5UTJseVkzVnBkQ2MrUEdsawpJR1pwWld4a1BTZHVZVzFsSnlCMllXeDFaVDBuVW1W\\neGRXVnpkRkJ2YkdsamVTY3ZQand2YTJWNVBqd3ZhMlY1UGp3dmEyVjVQand2CmEyVjVQand2YTJW\\nNVBpSXNJbkpsYzNCdmJuTmxVRzlzYVdONUlqcHVkV3hzTENKeWIzVjBaVkJ2YkdsamVTSTZiblZz\\nYkN3aVptRjEKYkhSSVlXNWtiR1Z5VUc5c2FXTjVJanB1ZFd4c0xDSmhjR2xKWkNJNmJuVnNiQ3dp\\nWVhCcFRXVjBhRzlrU1dRaU9tNTFiR3dzSW5CaApjbUZ0WlhSbGNuTWlPbHRkZlgwPQ==";
-		ext=ext.replaceAll("\\\\n", "");
-				System.out.println("------------------------------------------------");
-		System.out.println("ext "+ext);
-		byte[] firstDecode=Base64.getDecoder().decode(ext);
-		System.out.println(new String(firstDecode));
-		System.out.println(new String(Base64.getDecoder().decode((new String(firstDecode)).replaceAll("\n", ""))));
-		System.out.println("----------------------FIN--------------------------");
+		String query = "Select * from       personne  ";
+		String[] arrayQuery = query.split(" ");
+		System.out.println(arrayQuery.length);
+		List<String> listQuery = new ArrayList<String>();
+		for (int i = 0; i < arrayQuery.length; i++) {
+			String item = arrayQuery[i].trim();
+			System.out.println("@@@" + item + "@@@");
+			if (!item.isEmpty()) {
+				listQuery.add(item);
+			}
+		}
+		System.out.println(listQuery.size());
+		System.out.println("-------------------------");
+		for (int i = 0; i < listQuery.size(); i++) {
+			listQuery.set(i, listQuery.get(i).trim());
+			System.out.println("@@@" + listQuery.get(i) + "@@@" + listQuery.get(i).length());
+		}
+		System.out.println(String.join(" ", listQuery));
+
 	}
 }

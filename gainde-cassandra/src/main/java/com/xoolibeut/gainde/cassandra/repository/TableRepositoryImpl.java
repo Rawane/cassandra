@@ -27,6 +27,7 @@ import com.datastax.driver.core.querybuilder.Delete;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.core.querybuilder.Select;
+import com.datastax.driver.core.querybuilder.Truncate;
 import com.datastax.driver.core.querybuilder.Update.Where;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.Drop;
@@ -44,6 +45,36 @@ import com.xoolibeut.gainde.cassandra.util.GaindeUtil;
 @Repository
 public class TableRepositoryImpl implements TableRepository {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TableRepositoryImpl.class);
+
+	public JsonNode executeQuery(String connectionName, String keyspaceName, String query) throws Exception {
+		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
+		if (session == null) {
+			throw new Exception("aucune session");
+		}
+		if (query == null || query.isEmpty()) {
+			throw new Exception("Veuillez renseigner le query");
+		}
+		String[] arrayQuery = query.split(" ");
+		List<String> listQuery = new ArrayList<String>();
+		for (int i = 0; i < arrayQuery.length; i++) {
+			String item = arrayQuery[i].trim();
+			if (!item.isEmpty()) {
+				listQuery.add(item);
+			}
+		}
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode rootNode = mapper.createObjectNode();
+		ArrayNode arrayNode = mapper.createArrayNode();
+		ResultSet resultSet=session.execute(String.join(" ", listQuery));		
+		if(resultSet!=null) {
+			resultSet.all().forEach((row)->
+			LOGGER.info(row.getColumnDefinitions().toString())
+			);
+		}
+		
+		
+		return rootNode;
+	}
 
 	public void createTable(TableDTO tableDTO, String connectionName, String keyspaceName) throws Exception {
 		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
@@ -266,6 +297,8 @@ public class TableRepositoryImpl implements TableRepository {
 			throw new Exception("aucune session");
 		}
 		TableMetadata table = cluster.getMetadata().getKeyspace(keyspaceName).getTable(tableName);
+		LOGGER.info("exportAsString " + table.getName() + "   " + table.exportAsString());
+		LOGGER.info("asCQLQuery " + table.getName() + "   " + table.asCQLQuery());
 		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
 		List<String> partionKeys = new ArrayList<String>();
 		partionMetaKeys.forEach(columnMeta -> {
@@ -420,7 +453,7 @@ public class TableRepositoryImpl implements TableRepository {
 			throw new Exception("aucune session");
 		}
 		JsonNode dataNode = map.get("data");
-		ArrayNode arrayNode = (ArrayNode) map.get("primaryKeys");
+		ArrayNode arrayNode = (ArrayNode) map.get("partitionKeys");
 		List<String> primaryKeys = new ArrayList<String>();
 		List<Object> primaryValues = new ArrayList<Object>();
 		arrayNode.forEach(node -> {
@@ -444,6 +477,7 @@ public class TableRepositoryImpl implements TableRepository {
 						where.and(QueryBuilder.eq(primaryKeys.get(i), primaryValues.get(i)));
 					}
 				}
+
 				session.execute(where);
 			}
 		}
@@ -473,7 +507,11 @@ public class TableRepositoryImpl implements TableRepository {
 					break;
 				}
 				default:
-					rowNode.put(column.getName(), row.getObject(column.getName()).toString());
+					String rowValue = row.getObject(column.getName()).toString();
+					if (rowValue.length() > 1 && rowValue.startsWith("\"")) {
+						rowValue = rowValue.substring(1, rowValue.length() - 1);
+					}
+					rowNode.put(column.getName(), rowValue);
 					break;
 				}
 
@@ -537,19 +575,19 @@ public class TableRepositoryImpl implements TableRepository {
 				deleteWhere.and(clauses.get(i));
 			}
 		}
-		LOGGER.info("removeRowData CQL "+deleteWhere);
+		LOGGER.info("removeRowData CQL " + deleteWhere);
 		session.execute(deleteWhere);
 	}
-	public void removeAllData(String connectionName, String keyspaceName, String tableName)
-			throws Exception {
+
+	public void removeAllData(String connectionName, String keyspaceName, String tableName) throws Exception {
 		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
 		if (session == null) {
 			throw new Exception("aucune session");
 		}
-		Delete deleteWhere = QueryBuilder.delete().from(keyspaceName, tableName);
-		
-		LOGGER.info("removeRowData CQL "+deleteWhere);
-		session.execute(deleteWhere);
+		Truncate truncate = QueryBuilder.truncate(keyspaceName, tableName);
+
+		LOGGER.info("removeAllData CQL " + truncate);
+		session.execute(truncate);
 	}
 
 }

@@ -11,6 +11,7 @@ export class GaindeService {
   mapTransfertViewKeyspaceSubject=new Subject<Map<String,any>>();  
   mapTransfertViewAddTableSubject=new Subject<Map<String,any>>();  
   mapTransfertViewEditTableSubject=new Subject<Map<String,any>>();
+  notifParentDialogKeyspace=new Subject<any>();
   //currentMetaConnection:any;
   //currentConnection:ConnectionDTO;
   currentGainde:GaindeCommunication=new GaindeCommunication();
@@ -20,7 +21,9 @@ export class GaindeService {
     })
   };
   constructor(private httpClient:HttpClient) { }
-  
+  emitNotifParentDialogKeyspace(content:any) {    
+    this.notifParentDialogKeyspace.next(content);
+  }
   emitMapTransfertConnectionsSubject(action:ActionHttp,content:any) {
     this.mapTransfert.set("content",content);
     this.mapTransfert.set("type",action);
@@ -352,7 +355,20 @@ export class GaindeService {
       }
     );    
   }
-  
+  orderedConnections(listConnections:Array<ConnectionDTO>){   
+    this.httpClient
+    .put<JSON>(environment['basePathGainde']+'/connection/ordered/',listConnections,this.httpOptions)
+    .subscribe(
+      (response) => {            
+        console.log('response  : ' + JSON.stringify(response));      
+        this.emitMapTransfertEditTableSubject(ActionHttp.ORDERED_CONNECTION,response);   
+      },
+      (error) => {     
+        console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
+        this.emitMapTransfertEditTableSubject(ActionHttp.ORDERED_CONNECTION_ERROR,error['error']['error']);        
+      }
+    );    
+  }
   testCSPGateway(){   
     this.httpOptions.headers=this.httpOptions.headers.set('Accept','*/*');
     //this.httpOptions.headers=this.httpOptions.headers.set('Authorization','azazazazazazaza');

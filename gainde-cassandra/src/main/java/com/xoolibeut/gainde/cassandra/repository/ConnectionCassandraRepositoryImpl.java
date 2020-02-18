@@ -72,6 +72,8 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 					Collection<TableMetadata> tables = metadata.getTables();
 					if (tables != null) {
 						tables.forEach(table -> {
+							LOGGER.info("exportAsString "+table.getName()+"   "+table.exportAsString());
+							LOGGER.info("asCQLQuery "+table.getName()+"   "+table.asCQLQuery());
 							gaindeFirstChild.addMeta(new GaindeMetadataDTO(table.getName(),
 									gaindeFirstChild.getId() + "#" + table.getName(), 2));
 						});

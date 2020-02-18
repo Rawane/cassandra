@@ -26,7 +26,8 @@ public class ConnectionRepositoryImpl implements ConnectionRepository {
 	@Override
 	public boolean createConnection(ConnectionDTO connectionDTO) throws IOException {
 		LOGGER.info("createConnection Connection à créé dans le fichier " + folderConnection);
-		if (connectionDTO != null && connectionDTO.getName() != null && !connectionDTO.getName().isEmpty() && !connectionDTO.getName().contains("#")) {
+		if (connectionDTO != null && connectionDTO.getName() != null && !connectionDTO.getName().isEmpty()
+				&& !connectionDTO.getName().contains("#")) {
 			LOGGER.info("createConnection Connection à créé dans le fichier " + connectionDTO.toString());
 			String contentGainde = GaindeFileUtil.readeGainde(folderConnection);
 			ObjectMapper mapper = new ObjectMapper();
@@ -42,10 +43,11 @@ public class ConnectionRepositoryImpl implements ConnectionRepository {
 			}
 			for (int i = 0; i < arrayNode.size(); i++) {
 				ConnectionDTO connTemp = mapper.convertValue(arrayNode.get(i), ConnectionDTO.class);
-				if (connTemp.getName().equals(connectionDTO.getName())) {				
+				if (connTemp.getName().equals(connectionDTO.getName())) {
 					return false;
 				}
 			}
+			connectionDTO.setOrdered(arrayNode.size());
 			arrayNode.add(mapper.valueToTree(connectionDTO));
 			rootNode.set("connections", arrayNode);
 			GaindeFileUtil.writeGaindeAndClose(folderConnection, mapper.writeValueAsString(rootNode));
@@ -69,9 +71,11 @@ public class ConnectionRepositoryImpl implements ConnectionRepository {
 							ConnectionDTO connTemp = mapper.convertValue(arrayNode.get(i), ConnectionDTO.class);
 							if (connTemp.getName().equals(connectionDTO.getName())) {
 								arrayNode.remove(i);
+								connectionDTO.setOrdered(connTemp.getOrdered());
 								arrayNode.add(mapper.valueToTree(connectionDTO));
 								rootNode.set("connections", arrayNode);
-								GaindeFileUtil.writeGaindeAndClose(folderConnection, mapper.writeValueAsString(rootNode));
+								GaindeFileUtil.writeGaindeAndClose(folderConnection,
+										mapper.writeValueAsString(rootNode));
 								return true;
 							}
 						}
@@ -82,6 +86,57 @@ public class ConnectionRepositoryImpl implements ConnectionRepository {
 			return false;
 		}
 		return false;
+	}
+
+	@Override
+	public void updateOrderConnection(List<ConnectionDTO> listConnections) throws IOException {
+		String contentGainde = GaindeFileUtil.readeGainde(folderConnection);
+		if (listConnections != null && contentGainde != null && !contentGainde.isEmpty()) {
+			listConnections.forEach((conn) -> {
+				LOGGER.info("conn  " + conn.getName());
+			});
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode rootNode = (ObjectNode) mapper.readTree(contentGainde);
+			if (rootNode != null) {
+				ArrayNode arrayNode = (ArrayNode) rootNode.get("connections");
+				if (arrayNode != null && !arrayNode.isEmpty()) {
+					for (int i = 0; i < arrayNode.size(); i++) {
+						ConnectionDTO connTemp = mapper.convertValue(arrayNode.get(i), ConnectionDTO.class);
+						int indexOf = listConnections.indexOf(connTemp);
+						if (indexOf >= 0) {
+							arrayNode.remove(i);
+							arrayNode.add(mapper.valueToTree(listConnections.get(indexOf)));
+						}
+					}
+					rootNode.set("connections", arrayNode);
+					GaindeFileUtil.writeGaindeAndClose(folderConnection, mapper.writeValueAsString(rootNode));
+				}
+			}
+		}
+
+	}
+
+	private void updateOrderConnectionAfterRemove(int index) throws IOException {
+		String contentGainde = GaindeFileUtil.readeGainde(folderConnection);
+		if (contentGainde != null && !contentGainde.isEmpty()) {
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode rootNode = (ObjectNode) mapper.readTree(contentGainde);
+			if (rootNode != null) {
+				ArrayNode arrayNode = (ArrayNode) rootNode.get("connections");
+				if (arrayNode != null && !arrayNode.isEmpty()) {
+					for (int i = index; i < arrayNode.size(); i++) {
+						ConnectionDTO connTemp = mapper.convertValue(arrayNode.get(i), ConnectionDTO.class);
+						arrayNode.remove(i);
+						connTemp.setOrdered(i);
+						arrayNode.add(mapper.valueToTree(connTemp));
+
+					}
+					rootNode.set("connections", arrayNode);
+					GaindeFileUtil.writeGaindeAndClose(folderConnection, mapper.writeValueAsString(rootNode));
+				}
+			}
+		}
+
 	}
 
 	@Override
@@ -99,6 +154,7 @@ public class ConnectionRepositoryImpl implements ConnectionRepository {
 							arrayNode.remove(i);
 							rootNode.set("connections", arrayNode);
 							GaindeFileUtil.writeGaindeAndClose(folderConnection, mapper.writeValueAsString(rootNode));
+							updateOrderConnectionAfterRemove(i);
 							return true;
 						}
 					}
@@ -122,6 +178,7 @@ public class ConnectionRepositoryImpl implements ConnectionRepository {
 				});
 			}
 		}
+		connections.sort((conn1, conn2) -> conn1.getOrdered() - conn2.getOrdered());
 		return connections;
 	}
 
@@ -136,13 +193,13 @@ public class ConnectionRepositoryImpl implements ConnectionRepository {
 				if (arrayNode != null && !arrayNode.isEmpty()) {
 					for (int i = 0; i < arrayNode.size(); i++) {
 						ConnectionDTO connTemp = mapper.convertValue(arrayNode.get(i), ConnectionDTO.class);
-						if (connTemp.getName().equals(name)) {							
+						if (connTemp.getName().equals(name)) {
 							return connTemp;
 						}
 					}
 				}
 			}
-		}		
+		}
 		return null;
 	}
 
