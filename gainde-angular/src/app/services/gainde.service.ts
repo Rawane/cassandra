@@ -369,6 +369,20 @@ export class GaindeService {
       }
     );    
   }
+  executeQuery(connectionName:string,keyspaceName:string,query:string){
+    this.httpClient
+    .post<JSON>(environment['basePathGainde']+'/table/query/'+connectionName+'/'+keyspaceName,query,this.httpOptions)
+    .subscribe(
+      (response) => {            
+        console.log('response  : ' + JSON.stringify(response));        
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.EXECUTE_QUERY,response);
+      },
+      (error) => {     
+        console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.EXECUTE_QUERY_ERROR,error['error']['error']);        
+      }
+    );    
+  }
   testCSPGateway(){   
     this.httpOptions.headers=this.httpOptions.headers.set('Accept','*/*');
     //this.httpOptions.headers=this.httpOptions.headers.set('Authorization','azazazazazazaza');

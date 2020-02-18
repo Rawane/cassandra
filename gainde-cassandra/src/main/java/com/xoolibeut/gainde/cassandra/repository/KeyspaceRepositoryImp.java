@@ -88,6 +88,8 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 				keyspaceDTO.setDurableWrite(keyspaceMetadata.isDurableWrites());
 				keyspaceMetadata.getTables().forEach(table->{
 					Map<String,String> mapTable=new HashMap<>();
+					LOGGER.info("exportAsString "+table.getName()+"   "+table.exportAsString());
+					LOGGER.info("asCQLQuery "+table.getName()+"   "+table.asCQLQuery());
 					mapTable.put("name", table.getName());
 					keyspaceDTO.getTables().add(mapTable);
 				});

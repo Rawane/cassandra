@@ -109,7 +109,10 @@ export class ViewKeyspaceComponent implements OnInit,OnDestroy {
       }
     }
 onExecuteQuery(){
-  console.log("onExecuteQuery "+this.queryContent);
+    console.log("onExecuteQuery "+this.queryContent);
+    let connectionName=this.gaindeService.currentGainde.connectionName;
+    let keyspaceName=this.gaindeService.currentGainde.keyspaceName;  
+    this.gaindeService.executeQuery(connectionName,keyspaceName,this.queryContent);
 }
 initEcranWithCurrentData(){
   if(this.gaindeService.currentGainde.content){
@@ -155,7 +158,7 @@ emitNotificationDialogSubject(content:any) {
 });
     this.allNotificationSubscription=this.gaindeService.mapTransfertViewKeyspaceSubject.subscribe((mapTransfert: Map<string,any>) => {
       let mapToString='';
-      mapTransfert.forEach((key,item)=>{
+        mapTransfert.forEach((key,item)=>{
         mapToString=mapToString+' '+item+'  value='+JSON.stringify(mapTransfert.get(item));        
       });   
      console.log('ViewKeyspaceComponent mapTransfert '+mapTransfert.get("type"));  

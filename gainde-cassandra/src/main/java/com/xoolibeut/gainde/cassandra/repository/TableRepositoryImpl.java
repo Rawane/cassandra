@@ -3,6 +3,7 @@ package com.xoolibeut.gainde.cassandra.repository;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -48,7 +49,8 @@ public class TableRepositoryImpl implements TableRepository {
 
 	public JsonNode executeQuery(String connectionName, String keyspaceName, String query) throws Exception {
 		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		if (session == null) {
+		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
+		if (session == null || cluster == null) {
 			throw new Exception("aucune session");
 		}
 		if (query == null || query.isEmpty()) {
@@ -62,17 +64,58 @@ public class TableRepositoryImpl implements TableRepository {
 				listQuery.add(item);
 			}
 		}
+		Collection<TableMetadata> tables = cluster.getMetadata().getKeyspace(keyspaceName).getTables();
+		for(int i=0;i<listQuery.size();i++) {
+			String item = listQuery.get(i);			
+			tables.forEach((table)->{
+				if(table.getName().equals(item)){
+					//listQuery.set(index, element)
+				}
+			});
+		}
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
-		ResultSet resultSet=session.execute(String.join(" ", listQuery));		
-		if(resultSet!=null) {
-			resultSet.all().forEach((row)->
-			LOGGER.info(row.getColumnDefinitions().toString())
-			);
+		rootNode.set("data", arrayNode);
+		ResultSet resultSet = session.execute(String.join(" ", listQuery));
+		if (resultSet != null) {
+			resultSet.all().forEach((row) -> {
+				ObjectNode jsonNode = mapper.createObjectNode();
+				row.getColumnDefinitions().asList().forEach((definition) -> {
+					LOGGER.info(definition.getName());
+					switch (definition.getType().getName()) {
+					case TIMESTAMP: {
+						if (row.getObject(definition.getName()) instanceof Date) {
+							Date date = (Date) row.getObject(definition.getName());
+							SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+							jsonNode.put(definition.getName(), dateFormat.format(date));
+						}
+						break;
+					}
+					case BLOB: {
+						if (row.getObject(definition.getName()) instanceof ByteBuffer) {
+							ByteBuffer byteBuffer = (ByteBuffer) row.getObject(definition.getName());
+							jsonNode.put(definition.getName(), new String(byteBuffer.array()));
+						}
+						break;
+					}
+					default:
+						if (row.getObject(definition.getName()) != null) {
+							String rowValue = row.getObject(definition.getName()).toString();
+							if (rowValue.length() > 1 && rowValue.startsWith("\"")) {
+								rowValue = rowValue.substring(1, rowValue.length() - 1);
+							}
+							jsonNode.put(definition.getName(), rowValue);
+						}
+						break;
+					}
+
+				});
+				arrayNode.add(jsonNode);
+			});
+
 		}
-		
-		
+
 		return rootNode;
 	}
 
