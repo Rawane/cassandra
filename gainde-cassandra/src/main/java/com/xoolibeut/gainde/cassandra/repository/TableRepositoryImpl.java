@@ -60,7 +60,8 @@ public class TableRepositoryImpl implements TableRepository {
 		keyQueryData.add("UPDATE");
 		keyQueryData.add("DELETE");
 		keyQueryData.add("TRUNCATE");
-
+		keyQueryData.add("SELECT");
+		
 		keyQueryStructure.add("CREATE");
 		keyQueryStructure.add("DROP");
 		keyQueryStructure.add("ALTER");
