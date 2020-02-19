@@ -102,6 +102,7 @@ public class ConnectionController {
 			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(list));
 		} catch (IOException ioException) {
+			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
@@ -118,6 +119,7 @@ public class ConnectionController {
 			cassandraRepository.connnectTocassandra(connectionDTO);
 			return ResponseEntity.status(200).build();
 		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
@@ -129,6 +131,7 @@ public class ConnectionController {
 			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(listGainde));
 		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
@@ -142,6 +145,7 @@ public class ConnectionController {
 			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(colonneTableDTOs));
 		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
@@ -159,6 +163,7 @@ public class ConnectionController {
 			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(tableInfo));
 		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
@@ -176,6 +181,7 @@ public class ConnectionController {
 			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(tableInfo));
 		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
@@ -190,6 +196,7 @@ public class ConnectionController {
 			mapRowCount.put("rows", rows);
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(mapRowCount));
 		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
@@ -201,6 +208,7 @@ public class ConnectionController {
 
 			return ResponseEntity.status(200).build();
 		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}

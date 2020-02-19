@@ -188,7 +188,7 @@
   border: solid 3px #162056;
 }
 .actionHistory{
-  max-width: 50px;
+  max-width: 60px;
 }
 .actionHistoryMedium{
   max-width: 150px;
@@ -254,3 +254,6 @@
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
 
+.zoomIcon{
+  transform: scale(2);
+}

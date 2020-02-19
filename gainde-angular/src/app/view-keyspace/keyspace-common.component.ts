@@ -48,17 +48,18 @@ export class KeyspaceComponent implements OnInit,OnDestroy {
     currentKeyspaceName:string;
     columnsSize:number;
     keyspaceForm:FormGroup; 
-    paginationTableDataSize;
-    paginationResultQuerySize;
-    paginationHistoryQuerySize;
+    paginationTableDataSize:number;
+    paginationResultQuerySize:number;
+    paginationHistoryQuerySize:number;
     filterHistoryData='';
     zoomData=false;
     setColumnInvisible=new Set<string>();
     historyDataSource=new MatTableDataSource<JSON>();
-    displayedColumnsHistory=['query','date','count','action'];
-
-  previousIndex: number;
-  queryContent:string='';
+    displayedColumnsHistory=['query','date','count','action','actionSupp'];
+    previousIndex: number;
+    queryContent:string='';
+    isQueryLoading=false;
+    isDataLoading=false;
     constructor(protected gaindeService:GaindeService,protected router:Router,protected formBuilder:FormBuilder,
         protected snackBar:MatSnackBar,protected dialog: MatDialog) {
            
@@ -88,6 +89,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy {
             this.openSnackBar('La ligne a été supprimée', '');
             let connectionName = this.gaindeService.currentGainde.connectionName;
             let keyspaceName = this.gaindeService.currentGainde.keyspaceName;
+            this.isDataLoading=true;
             this.gaindeService.getAllDataTable(connectionName, keyspaceName, mapTransfert.get("content"));
           }
         
@@ -97,6 +99,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy {
             this.openSnackBar('Données mis à jour avec succès', '');
             //this.dialog.closeAll();
             this.emitNotificationDialogSubject({ 'errorDialog': false, 'data': mapTransfert.get("content") });
+            this.isDataLoading=true;
             this.gaindeService.getAllDataTable(connectionName, keyspaceName, mapTransfert.get("content"));
           }
         
@@ -105,6 +108,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy {
             let keyspaceName = this.gaindeService.currentGainde.keyspaceName;
             this.openSnackBar('Données insérées avec succès', '');
             this.emitNotificationDialogSubject({ 'errorDialog': false, 'data': mapTransfert.get("content") });
+            this.isDataLoading=true;
             this.gaindeService.getAllDataTable(connectionName, keyspaceName, mapTransfert.get("content"));
           }
           protected openSnackBar(message: string, action: string) {
@@ -181,6 +185,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy {
         }
     }
     protected doAfterGetAllData(mapTransfert: Map<string, any>) {
+      this.isDataLoading=false;
         if (mapTransfert.get("content")['columns']) {
           this.displayedColumnsTableData = [];
           mapTransfert.get("content")['columns'].forEach(col => {
@@ -254,12 +259,15 @@ export class KeyspaceComponent implements OnInit,OnDestroy {
                 default: return item[property];
             }
             };
+            this.isQueryLoading=false;
         }        
         this.gaindeService.saveQuery(new HistoryDTO(this.queryContent));        
     }
-    protected doAfterGetAllHistory(mapTransfert: Map<string, any>):void {     
-        this.historyDataSource.data = mapTransfert.get("content");
+    protected doAfterGetAllHistory(mapTransfert: Map<string, any>):void {  
+      console.log("doAfterGetAllHistory"); 
+        //this.historyDataSource.data = mapTransfert.get("content");
         if(this.historyDataSource.data){
+          //console.log("2 doAfterGetAllHistory "+JSON.stringify(this.historyDataSource.data)); 
             this.paginationHistoryQuerySize = this.historyDataSource.data.length;          
             this.historyDataSource.sort = this.sort;
             this.historyDataSource.filter = '';

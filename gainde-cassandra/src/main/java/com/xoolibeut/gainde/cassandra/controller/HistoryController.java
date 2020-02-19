@@ -9,7 +9,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,6 +44,16 @@ public class HistoryController {
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
+	@DeleteMapping("/{id}")
+	public ResponseEntity<String> deleteHistory(@PathVariable("id") String id) {
+		try {
+			historyRepository.removeHistory(id);			
+			return ResponseEntity.status(204).build();
+		} catch (IOException ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
+		}
+	}
 
 	@GetMapping("/all")
 	public ResponseEntity<String> listHistories() {
@@ -50,6 +62,7 @@ public class HistoryController {
 			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(list));
 		} catch (IOException ioException) {
+			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}

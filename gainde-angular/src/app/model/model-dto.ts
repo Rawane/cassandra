@@ -92,7 +92,9 @@ export enum ActionHttp{
     SAVE_QUERY_HISTORY,
     SAVE_QUERY_HISTORY_ERROR,
     ALL_HISTORY,
-    ALL_HISTORY_ERROR
+    ALL_HISTORY_ERROR,
+    DELETE_HISTORY,
+    DELETE_HISTORY_ERROR
 }
 export class TableDTO {
     columns:Array<ColumnDTO>=new Array();

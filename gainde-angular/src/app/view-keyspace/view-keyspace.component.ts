@@ -62,18 +62,19 @@ export class ViewKeyspaceComponent extends KeyspaceComponent {
   
     dropListDropped(event: CdkDropList, index: number) {
       if (event) {
-        console.log('dropListDropped prev '+this.previousIndex+'   new '+index);
+        //console.log('dropListDropped prev '+this.previousIndex+'   new '+index);
         moveItemInArray(this.dispColumnsHeadTableData, this.previousIndex, index);
         //console.log('dropListDropped '+JSON.stringify(this.dispColumnsHeadTableData));
         this.setDisplayedColumns();
       }
     }
 onExecuteQuery(){
-    console.log("onExecuteQuery "+this.queryContent);
+    //console.log("onExecuteQuery "+this.queryContent);
     this.tableResultQueryDataSource.data=[];
     let connectionName=this.gaindeService.currentGainde.connectionName;
     let keyspaceName=this.gaindeService.currentGainde.keyspaceName;  
     this.gaindeService.executeQuery(connectionName,keyspaceName,this.queryContent);
+    this.isQueryLoading=true;
 }
 
   ngOnInit() {
@@ -155,12 +156,12 @@ onExecuteQuery(){
             break;
           }
         case ActionHttp.ALL_DATA_TABLE:
-          {
+          { 
             this.doAfterGetAllData(mapTransfert);
             break;
           }
         case ActionHttp.ALL_DATA_TABLE_ERROR:
-          {
+          { this.isDataLoading=false;
             this.openDialog('Table ', mapTransfert.get("content"), false, '', ActionDialog.INFO);
             break;
           }
@@ -205,12 +206,12 @@ onExecuteQuery(){
             break;
           }
         case ActionHttp.EXECUTE_QUERY:
-          {
+          { 
             this.doAfterGetExecuteQuery(mapTransfert);
             break;
           }
         case ActionHttp.EXECUTE_QUERY_ERROR:
-          {
+          { this.isQueryLoading=false;
             this.openDialog('Execute Query ', mapTransfert.get("content"), false, '', ActionDialog.INFO);
             break;
           }
@@ -230,6 +231,16 @@ onExecuteQuery(){
               break;
             }
           case ActionHttp.ALL_HISTORY_ERROR:
+            {
+              this.openDialog('History', mapTransfert.get("content"), false, '', ActionDialog.INFO);
+              break;
+            }
+            case ActionHttp.DELETE_HISTORY:
+            { this.openSnackBar('La ligne a étée supprimée', '');
+              this.gaindeService.getAllHistories();
+              break;
+            }
+          case ActionHttp.DELETE_HISTORY_ERROR:
             {
               this.openDialog('History', mapTransfert.get("content"), false, '', ActionDialog.INFO);
               break;
@@ -281,6 +292,7 @@ onExecuteQuery(){
       {
         //this.selectedPageIndex=0;
         if(this.currentTableKeys){
+          this.isDataLoading=true;
           this.gaindeService.getAllDataTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
         }  
       }else{
@@ -289,9 +301,10 @@ onExecuteQuery(){
     }
   }
   onClickNavigateTab(){
-    console.log('onClickNavigateTab  : ' + this.selectedPageIndex);
+    //console.log('onClickNavigateTab  : ' + this.selectedPageIndex);
     if(this.selectedPageIndex==1){
       if(this.currentTableKeys && this.tableDatasDataSource.data.length==0){
+        this.isDataLoading=true;
         this.gaindeService.getAllDataTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
       }  
     }
@@ -306,7 +319,7 @@ onExecuteQuery(){
     
   }
   onClickAddNewRow(name){
-    console.log('onClickEditRow  : ' + name); 
+    //console.log('onClickEditRow  : ' + name); 
     let row:any={};
     this.dispColumnsHeadTableData.forEach(eltD=>{
       row[eltD.name]="";
@@ -384,21 +397,21 @@ onExecuteQuery(){
     }
   }
   onClickAddNewTable(connectionName:string,keyspaceName:string){
-    console.log('onClickAddNewTable connectionName='+connectionName+' keyspace '+keyspaceName);
+    //console.log('onClickAddNewTable connectionName='+connectionName+' keyspace '+keyspaceName);
     this.gaindeService.currentGainde.connectionName=connectionName;
     this.gaindeService.currentGainde.keyspaceName=keyspaceName;  
     this.gaindeService.currentGainde.tableName=null;   
     this.openDialogTableInfo(5);    
   }
   onClickEditTable(connectionName:string,keyspaceName:string,tableName:string){
-    console.log('onClickEditTable connectionName='+connectionName+' keyspace '+keyspaceName+' table name '+tableName);   
+   // console.log('onClickEditTable connectionName='+connectionName+' keyspace '+keyspaceName+' table name '+tableName);   
     this.gaindeService.currentGainde.connectionName=connectionName;
     this.gaindeService.currentGainde.keyspaceName=keyspaceName;  
     this.gaindeService.currentGainde.tableName=tableName; 
     this.router.navigate(['/editTable']);
   }
   onClickEditCurrentTable(){    
-    console.log('onClickEditTableView ='+JSON.stringify(this.currentTableKeys));   
+    //console.log('onClickEditTableView ='+JSON.stringify(this.currentTableKeys));   
     this.gaindeService.currentGainde.connectionName=this.currentTableKeys[0];
     this.gaindeService.currentGainde.keyspaceName=this.currentTableKeys[1];  
     this.gaindeService.currentGainde.tableName=this.currentTableKeys[2]; 
@@ -411,7 +424,8 @@ onExecuteQuery(){
   }
   onRefreshData(tableName:string){
     let connectionName=this.gaindeService.currentGainde.connectionName;
-    let keyspaceName=this.gaindeService.currentGainde.keyspaceName;              
+    let keyspaceName=this.gaindeService.currentGainde.keyspaceName; 
+    this.isDataLoading=true;             
     this.gaindeService.getAllDataTable(connectionName,keyspaceName,tableName);
   }
   onStrategyChange(){
@@ -424,12 +438,15 @@ onExecuteQuery(){
     });
   } 
   onClickEditQuery(query){
-  this.queryContent=query;
-  this.selectedKeysPageIndex=2;
+    this.queryContent=query;
+    this.selectedKeysPageIndex=2;
+  }
+  onClickRemoveHistoryQuery(id:string){
+    this.gaindeService.deleteHistory(id);
   }
   onZoomTable(){ 
     this.zoomData=!this.zoomData;
-    console.log('onZoomTable  : ' + this.zoomData);
+    //console.log('onZoomTable  : ' + this.zoomData);
   }
    openDialog(pTitle:string,pText:string, cancelButton:boolean,map:any,action:ActionDialog): void {
     let dialogRef = this.dialog.open(DialogInfoKeyspaceComponent, {
@@ -438,9 +455,9 @@ onExecuteQuery(){
     });
   
     dialogRef.afterClosed().subscribe(result => { 
-      console.log('1 afterClosed '+JSON.stringify(result));
+      //console.log('1 afterClosed '+JSON.stringify(result));
       if(result!=null){
-        console.log('1 afterClosed '+JSON.stringify(result));
+       // console.log('1 afterClosed '+JSON.stringify(result));
         switch (result['action'] as ActionDialog)  {
           case ActionDialog.ACTION_DELETE_KEYSAPCE:
           {
@@ -467,10 +484,10 @@ onExecuteQuery(){
             map.delete('gainDeTableName');
             let data={};
             map.forEach((value,key)=>{
-              console.log("key "+key+"  value "+value);
+              //console.log("key "+key+"  value "+value);
               data[key]=value;
             });
-            console.log("map data  "+JSON.stringify(data));
+            //console.log("map data  "+JSON.stringify(data));
             this.gaindeService.removeRowDataTable(data,this.currentTableKeys[0],this.currentTableKeys[1],tableName);
             break;
           }
@@ -501,7 +518,7 @@ onExecuteQuery(){
     dialogRefTableInfo.afterClosed().subscribe(result => { 
       
       if(result!=null){
-       console.log("openDialogTableInfo "+result);
+       //console.log("openDialogTableInfo "+result);
        this.gaindeService.currentGainde.counter=result;
        this.router.navigate(['/addTable']);
       dialogRefTableInfo=null;
@@ -611,7 +628,7 @@ setColumns = new Set<string>();
 
   ngOnInit() {
     this.notificationSubscription=this.viewParent.notificationDialogSubject.subscribe((content:any) => {
-      console.log("notificationSubscription "+JSON.stringify(content));
+      //console.log("notificationSubscription "+JSON.stringify(content));
       if(content['errorDialog']){
         this.messageError="Une erreur non spécifié s'est produite";
         if(content['data'] && content['data']){
@@ -680,11 +697,11 @@ setColumns = new Set<string>();
   }
   onValueChange(name:any,value:any){    
     this.setColumns.add(name);
-    console.log("onValueChange "+name+" value "+value);
+    //console.log("onValueChange "+name+" value "+value);
   }
   onValueChangeDate(name:any,value:Date){    
     this.setColumns.add(name);
-    console.log("onValueChange "+name+" value "+value);
+    //console.log("onValueChange "+name+" value "+value);
   }
   public openSnackBar(message: string, action: string) {
     this.snackBar.open(message, action, {

@@ -11,4 +11,6 @@ public interface HistoryRepository {
 	boolean createOrUpdateHistory(HistoryDTO historyDTO) throws IOException, NoSuchAlgorithmException;
 
 	List<HistoryDTO> readlAllhystories() throws IOException;
+
+	public boolean removeHistory(String id) throws IOException;
 }

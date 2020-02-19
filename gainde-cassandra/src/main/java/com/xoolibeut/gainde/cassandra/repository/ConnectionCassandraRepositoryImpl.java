@@ -158,7 +158,7 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 		if (cluster != null) {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(keyspaceName);
 			if (keyspaceMetadata != null) {
-				TableMetadata tableMetadata = keyspaceMetadata.getTable(tableName);
+				TableMetadata tableMetadata = keyspaceMetadata.getTable("\""+tableName+"\"");
 				if (tableMetadata != null) {
 					LOGGER.info("exportAsString "+tableMetadata.getName()+"   "+tableMetadata.exportAsString());
 					tableInfoDTO.setName(tableMetadata.getName());
@@ -192,7 +192,7 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 
 	public long countAllRows(String connectionName, String keyspaceName, String tableName) {
 		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		ResultSet resulset = session.execute(QueryBuilder.select().countAll().from(keyspaceName, tableName));
+		ResultSet resulset = session.execute(QueryBuilder.select().countAll().from(keyspaceName, "\""+tableName+"\""));
 		if (resulset != null) {
 			Row row = resulset.one();
 			if (row != null) {

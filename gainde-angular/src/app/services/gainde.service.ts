@@ -412,6 +412,20 @@ export class GaindeService {
       );
       
   }  
+  deleteHistory(id:string){
+    this.httpClient
+    .delete<JSON>(environment['basePathGainde']+'/history/'+id,this.httpOptions)
+    .subscribe(
+      (response) => {            
+       console.log('response  : ' + JSON.stringify(response));   
+       this.emitMapTransfertKeyspaceSubject(ActionHttp.DELETE_HISTORY,id);  
+      },
+      (error) => {
+        console.log('Erreur ! : ' + JSON.stringify(error));            
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.DELETE_HISTORY_ERROR,error['error']['error']);  
+      }
+    );    
+  }
   testCSPGateway(){   
     this.httpOptions.headers=this.httpOptions.headers.set('Accept','*/*');
     //this.httpOptions.headers=this.httpOptions.headers.set('Authorization','azazazazazazaza');

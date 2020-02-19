@@ -21,7 +21,7 @@ import com.xoolibeut.gainde.cassandra.util.GaindeFileUtil;
 
 @Repository
 @PropertySource("classpath:gainde.properties")
-public class HistoryRepositoryImpl implements HistoryRepository{
+public class HistoryRepositoryImpl implements HistoryRepository {
 	private static final Logger LOGGER = LoggerFactory.getLogger(HistoryRepositoryImpl.class);
 	@Value("${xoolibeut.gainde.connection.folder}")
 	private String folderHistory;
@@ -53,7 +53,7 @@ public class HistoryRepositoryImpl implements HistoryRepository{
 			for (int i = 0; i < arrayNode.size(); i++) {
 				HistoryDTO historyTemp = mapper.convertValue(arrayNode.get(i), HistoryDTO.class);
 				if (historyTemp.getId().equals(historyDTO.getId())) {
-					historyDTO.setCount(historyTemp.getCount()+1);
+					historyDTO.setCount(historyTemp.getCount() + 1);
 					arrayNode.remove(i);
 					arrayNode.add(mapper.valueToTree(historyDTO));
 					rootNode.set("histories", arrayNode);
@@ -69,6 +69,31 @@ public class HistoryRepositoryImpl implements HistoryRepository{
 			return false;
 		}
 		return true;
+	}
+
+	public boolean removeHistory(String id) throws IOException {
+		LOGGER.info("createHistory History à créé dans le fichier " + folderHistory);
+		if (id != null && !id.isEmpty()) {
+			LOGGER.info("Supression History  " + id);
+			String contentGainde = GaindeFileUtil.readeGaindeHistory(folderHistory);
+			ObjectMapper mapper = new ObjectMapper();
+			ObjectNode rootNode;
+			ArrayNode arrayNode;
+			if (contentGainde != null && !contentGainde.isEmpty()) {
+				rootNode = (ObjectNode) mapper.readTree(contentGainde);
+				arrayNode = (ArrayNode) rootNode.get("histories");
+				for (int i = 0; i < arrayNode.size(); i++) {
+					HistoryDTO historyTemp = mapper.convertValue(arrayNode.get(i), HistoryDTO.class);
+					if (historyTemp.getId().equals(id)) {
+						arrayNode.remove(i);
+						GaindeFileUtil.writeGaindeHistoryAndClose(folderHistory, mapper.writeValueAsString(rootNode));
+						return true;
+					}
+				}
+
+			}
+		}
+		return false;
 	}
 
 	public List<HistoryDTO> readlAllhystories() throws IOException {
@@ -87,16 +112,17 @@ public class HistoryRepositoryImpl implements HistoryRepository{
 		histories.sort((date1, date2) -> date2.getDate().compareTo(date1.getDate()));
 		return histories;
 	}
-	private static String toHexString(byte[] bytes) {
-	    StringBuilder hexString = new StringBuilder();
-	    for (int i = 0; i < bytes.length; i++) {
-	        String hex = Integer.toHexString(0xFF & bytes[i]);
-	        if (hex.length() == 1) {
-	            hexString.append('0');
-	        }
-	        hexString.append(hex);
-	    }
 
-	    return hexString.toString();
+	private static String toHexString(byte[] bytes) {
+		StringBuilder hexString = new StringBuilder();
+		for (int i = 0; i < bytes.length; i++) {
+			String hex = Integer.toHexString(0xFF & bytes[i]);
+			if (hex.length() == 1) {
+				hexString.append('0');
+			}
+			hexString.append(hex);
+		}
+
+		return hexString.toString();
 	}
 }
