@@ -3,6 +3,7 @@ package com.xoolibeut.gainde.cassandra.repository;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -84,21 +85,27 @@ public class TableRepositoryImpl implements TableRepository {
 					listQuery.add(item);
 				}
 			}
-			/*
-			 * Collection<TableMetadata> tables =
-			 * cluster.getMetadata().getKeyspace(keyspaceName).getTables(); for (int i = 0;
-			 * i < listQuery.size(); i++) { String item = listQuery.get(i); AtomicInteger
-			 * atomicInteger = new AtomicInteger(i); tables.forEach((table) -> { if
-			 * (item.startsWith(table.getName())) { listQuery.set(atomicInteger.get(),
-			 * keyspaceName + "." + item); } }); }
-			 */
-			if ("INSERT".equals(listQuery.get(0).toUpperCase()) && !listQuery.get(2).contains(".")) {
+			if ("SELECT".equalsIgnoreCase(listQuery.get(0)) && !listQuery.get(2).contains(".")) {				
+				Collection<TableMetadata> tables = cluster.getMetadata().getKeyspace(keyspaceName).getTables();
+				for (int i = 0; i < listQuery.size(); i++) {
+					String item = listQuery.get(i);
+					AtomicInteger atomicInteger = new AtomicInteger(i);
+					tables.forEach((table) -> {
+						if (item.startsWith(table.getName())) {
+							listQuery.set(atomicInteger.get(), keyspaceName + "." + item);
+						}
+					});
+				}
+
+			}
+
+			if ("INSERT".equalsIgnoreCase(listQuery.get(0)) && !listQuery.get(2).contains(".")) {
 				listQuery.set(2, keyspaceName + "." + listQuery.get(2));
 			}
-			if ("UPDATE".equals(listQuery.get(0).toUpperCase()) && !listQuery.get(1).contains(".")) {
+			if ("UPDATE".equalsIgnoreCase(listQuery.get(0)) && !listQuery.get(1).contains(".")) {
 				listQuery.set(1, keyspaceName + "." + listQuery.get(1));
 			}
-			if ("CREATE".equals(listQuery.get(0).toUpperCase())) {
+			if ("CREATE".equalsIgnoreCase(listQuery.get(0))) {
 				// Options
 			}
 			if ("ALTER".equals(listQuery.get(0).toUpperCase()) && !listQuery.get(2).contains(".")) {
