@@ -271,7 +271,7 @@ public class TableRepositoryTest {
 			column.setPartitionKey(false);
 			column.setType("10");
 			tableDTO.getColumns().add(column);
-			tableRepository.createTableTest(tableDTO, "LOCAL", "x48c95551_20c5_4c4e_kps_rawanex");
+			tableRepository.createTable(tableDTO, "LOCAL", "x48c95551_20c5_4c4e_kps_rawanex");
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail("Exception non attendu");

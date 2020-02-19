@@ -19,14 +19,14 @@
     <label class="col-3 labelRow" for="name">{{col['name']}}</label>
     <div class="col-7">
         <input   class="form-control"  [(ngModel)]="data['row'][col['name']]"
-         *ngIf="(!col['primaryKey'] || data['added']) && col['type']!='DATE'" (change)="onValueChange(col['name'],data['row'][col['name']])"> 
+         *ngIf="(!col['partitionKey'] || data['added']) && col['type']!='DATE'" (change)="onValueChange(col['name'],data['row'][col['name']])"> 
 
         <input matInput [matDatepicker]="picker"  class="gaindeFormControl"  [(ngModel)]="data['row'][col['name']]" 
-        *ngIf="(!col['primaryKey'] || data['added']) && col['type']=='DATE'" (dateChange)="onValueChangeDate(col['name'],data['row'][col['name']])">
-        <mat-datepicker-toggle [ngClass]="{'elementNotVisible':((!col['primaryKey'] || data['added']) && col['type']!='DATE') || (col['primaryKey'] && !data['added'])}" matSuffix [for]="picker"  ></mat-datepicker-toggle>
-        <mat-datepicker #picker [ngClass]="{'elementNotVisible':((!col['primaryKey'] || data['added']) && col['type']!='DATE') || (col['primaryKey'] && !data['added'])}"  ></mat-datepicker>
+        *ngIf="(!col['partitionKey'] || data['added']) && col['type']=='DATE'" (dateChange)="onValueChangeDate(col['name'],data['row'][col['name']])">
+        <mat-datepicker-toggle [ngClass]="{'elementNotVisible':((!col['partitionKey'] || data['added']) && col['type']!='DATE') || (col['partitionKey'] && !data['added'])}" matSuffix [for]="picker"  ></mat-datepicker-toggle>
+        <mat-datepicker #picker [ngClass]="{'elementNotVisible':((!col['partitionKey'] || data['added']) && col['type']!='DATE') || (col['partitionKey'] && !data['added'])}"  ></mat-datepicker>
      
-        <span *ngIf="col['primaryKey'] && !data['added']">{{data['row'][col['name']]}}</span>
+        <span *ngIf="col['partitionKey'] && !data['added']">{{data['row'][col['name']]}}</span>
     </div>
     <div class="col-1">
         <span >{{col['type']}}</span>

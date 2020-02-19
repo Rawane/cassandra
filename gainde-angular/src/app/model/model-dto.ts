@@ -6,6 +6,13 @@ export class ConnectionDTO {
     }
    
 }
+export class HistoryDTO {
+    constructor( public query: string
+       ){
+
+    }
+   
+}
 export class KeyspaceDTO {    
     constructor( public name: string,public strategy:string,
         public replication:string,public durableWrite:boolean,
@@ -81,7 +88,11 @@ export enum ActionHttp{
     ORDERED_CONNECTION,
     ORDERED_CONNECTION_ERROR,
     EXECUTE_QUERY,
-    EXECUTE_QUERY_ERROR
+    EXECUTE_QUERY_ERROR,
+    SAVE_QUERY_HISTORY,
+    SAVE_QUERY_HISTORY_ERROR,
+    ALL_HISTORY,
+    ALL_HISTORY_ERROR
 }
 export class TableDTO {
     columns:Array<ColumnDTO>=new Array();
@@ -151,3 +162,8 @@ export enum ActionDialog {
     ACTION_DELETE_ONE_ROW,
     ACTION_DELETE_ALL_RAWS
 }
+
+export interface Meta {
+    name:string; 
+    metas:Meta[];
+  }

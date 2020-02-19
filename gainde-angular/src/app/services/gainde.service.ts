@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {HttpClient,HttpHeaders} from '@angular/common/http';
 import {Subject} from 'rxjs'
 import {environment} from '../../environments/environment';
-import {ConnectionDTO, KeyspaceDTO,ActionHttp,GaindeCommunication, TableDTO} from '../model/model-dto';
+import {ConnectionDTO, KeyspaceDTO,ActionHttp,GaindeCommunication, TableDTO,HistoryDTO} from '../model/model-dto';
 
 @Injectable()
 export class GaindeService {
@@ -383,6 +383,35 @@ export class GaindeService {
       }
     );    
   }
+  saveQuery(history:HistoryDTO){
+    this.httpClient
+    .post<JSON>(environment['basePathGainde']+'/history',history,this.httpOptions)
+    .subscribe(
+      (response) => {            
+        console.log('response  : ' + JSON.stringify(response));        
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.SAVE_QUERY_HISTORY,response);
+      },
+      (error) => {     
+        console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.SAVE_QUERY_HISTORY_ERROR,error['error']['error']);        
+      }
+    );    
+  }
+  getAllHistories() {   
+    this.httpClient
+      .get<any>(environment['basePathGainde']+'/history/all',this.httpOptions)
+      .subscribe(
+        (response) => {               
+        //console.log('response  : ' + JSON.stringify(response));            
+           this.emitMapTransfertKeyspaceSubject(ActionHttp.ALL_HISTORY,response);
+        },
+        (error) => {
+          console.log('Erreur ! : ' + error);         
+           this.emitMapTransfertKeyspaceSubject(ActionHttp.ALL_HISTORY_ERROR,error['error']['error']);
+        }
+      );
+      
+  }  
   testCSPGateway(){   
     this.httpOptions.headers=this.httpOptions.headers.set('Accept','*/*');
     //this.httpOptions.headers=this.httpOptions.headers.set('Authorization','azazazazazazaza');

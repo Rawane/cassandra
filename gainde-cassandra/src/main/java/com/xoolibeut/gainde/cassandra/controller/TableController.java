@@ -31,13 +31,13 @@ public class TableController {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TableController.class);
 	@Autowired
 	private TableRepository tableRepository;
-	
+
 	@PostMapping("/query/{connectionName}/{kespace}")
 	public ResponseEntity<String> executeQuery(@PathVariable("connectionName") String connectionName,
 			@PathVariable("kespace") String keyspaceName, @RequestBody String query) {
 		try {
 			JsonNode jsonNode = tableRepository.executeQuery(connectionName, keyspaceName, query);
-			ObjectMapper mapper = new ObjectMapper();
+			ObjectMapper mapper = new ObjectMapper();			
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
@@ -137,10 +137,11 @@ public class TableController {
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
+
 	@PostMapping("/delete/{connectionName}/{kespace}/{tableName}")
 	public ResponseEntity<String> removeRowDataTable(@PathVariable("connectionName") String connectionName,
 			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName,
-			@RequestBody Map<String,Object> map) {
+			@RequestBody Map<String, Object> map) {
 		try {
 			tableRepository.removeRowData(connectionName, keyspaceName, tableName, map);
 			return ResponseEntity.status(204).build();
@@ -149,10 +150,10 @@ public class TableController {
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
+
 	@DeleteMapping("/delete/all/{connectionName}/{kespace}/{tableName}")
 	public ResponseEntity<String> removeAllDataTable(@PathVariable("connectionName") String connectionName,
-			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName
-			) {
+			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName) {
 		try {
 			tableRepository.removeAllData(connectionName, keyspaceName, tableName);
 			return ResponseEntity.status(204).build();
@@ -161,6 +162,7 @@ public class TableController {
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
+
 	@PutMapping("/update/{connectionName}/{kespace}/{tableName}")
 	public ResponseEntity<String> updateDataTable(@PathVariable("connectionName") String connectionName,
 			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName,

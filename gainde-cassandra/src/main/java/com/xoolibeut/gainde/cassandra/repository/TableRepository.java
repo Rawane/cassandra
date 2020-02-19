@@ -24,8 +24,7 @@ public interface TableRepository {
 
 	JsonNode getAllDataPaginateByPageX(String connectionName, String keyspaceName, String tableName, int page,
 			Map<String, Object> mapPrimaryKey) throws Exception;
-
-	void createTableTest(TableDTO tableDTO, String connectionName, String keyspaceName) throws Exception;
+	
 
 	void removeRowData(String connectionName, String keyspaceName, String tableName, Map<String, Object> map)
 			throws Exception;
