@@ -1,11 +1,11 @@
 package com.xoolibeut.gainde.cassandra.repository;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.datastax.driver.core.Cluster;
@@ -16,13 +16,11 @@ import com.xoolibeut.gainde.cassandra.controller.dtos.KeyspaceDTO;
 @Repository
 public class KeyspaceRepositoryImp implements KeyspaceRepository {
 	private static final Logger LOGGER = LoggerFactory.getLogger(KeyspaceRepositoryImp.class);
-
+	@Autowired
+	private ConnectionCassandraRepository cassandraRepository;
 	@Override
 	public void createKeyspace(String connectionName, KeyspaceDTO keyspaceDTO) throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
+		Session session = getSession(connectionName);
 		StringBuilder sb = new StringBuilder("CREATE KEYSPACE IF NOT EXISTS ").append(addQuote(keyspaceDTO.getName()))
 				.append(" WITH replication = {").append("'class':'").append(keyspaceDTO.getStrategy());
 		if ("SimpleStrategy".equals(keyspaceDTO.getStrategy())) {
@@ -41,15 +39,11 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 
 	@Override
 	public void alterKeyspace(String connectionName, KeyspaceDTO keyspaceDTO) throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
+		Session session = getSession(connectionName);
 		StringBuilder sb = new StringBuilder("ALTER KEYSPACE ").append(addQuote(keyspaceDTO.getName()))
 				.append(" WITH replication = {").append("'class':'").append(keyspaceDTO.getStrategy())
 				.append("','replication_factor':").append(keyspaceDTO.getReplication())
 				.append("} AND DURABLE_WRITES = " + keyspaceDTO.isDurableWrite() + ";");
-
 		String query = sb.toString();
 		session.execute(query);
 
@@ -57,27 +51,17 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 
 	@Override
 	public void dropKeyspace(String connectionName, String keyspace) throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
+		Session session = getSession(connectionName);
 		session.execute("DROP KEYSPACE " + keyspace);
 
 	}
 
-	@Override
-	public List<KeyspaceDTO> getAllKeyspace(String connectionName) throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
-		return null;
-	}
+	
 
 	@Override
 	public KeyspaceDTO getKeyspace(String connectionName, String keyspaceName) throws Exception {
 		KeyspaceDTO keyspaceDTO = new KeyspaceDTO();
-		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
+		Cluster cluster = getCluster(connectionName);
 		if (cluster != null) {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
 			if (keyspaceMetadata != null) {
@@ -98,7 +82,12 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 		}
 		return keyspaceDTO;
 	}
-
+	private Session getSession(String connectionName) throws Exception {		
+		return cassandraRepository.getSession(connectionName);
+	}
+	private Cluster getCluster(String connectionName) throws Exception {
+		return cassandraRepository.getCluster(connectionName);
+	}
 	/**
 	 * Pour la gestion des majuscule
 	 * 

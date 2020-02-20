@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.datastax.driver.core.AuthProvider;
@@ -33,6 +34,8 @@ import com.xoolibeut.gainde.cassandra.util.DateCodec;
 @Repository
 public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRepository {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionCassandraRepositoryImpl.class);
+	@Autowired
+	private ConnectionRepository connectionRepository;
 
 	public void connnectTocassandra(ConnectionDTO connectionDTO) throws Exception {
 		LOGGER.info("Start connnectTocassandra");
@@ -59,9 +62,9 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 		}
 	}
 
-	public List<GaindeMetadataDTO> getAllMetadatas(String connectionName) {
+	public List<GaindeMetadataDTO> getAllMetadatas(String connectionName) throws Exception {
 		List<GaindeMetadataDTO> gaindeMetadatas = new ArrayList<GaindeMetadataDTO>();
-		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
+		Cluster cluster = getCluster(connectionName);
 		if (cluster != null) {
 			List<KeyspaceMetadata> keyspaceMetadatas = cluster.getMetadata().getKeyspaces();
 			if (keyspaceMetadatas != null) {
@@ -85,20 +88,22 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 		return gaindeMetadatas;
 	}
 
-	public List<ColonneTableDTO> getAllColumns(String connectionName, String keyspaceName, String tableName) {
+	public List<ColonneTableDTO> getAllColumns(String connectionName, String keyspaceName, String tableName)
+			throws Exception {
 
 		return buildAllColumns(connectionName, keyspaceName, tableName, false);
 	}
 
-	public List<ColonneTableDTO> getAllColumnsTypeNative(String connectionName, String keyspaceName, String tableName) {
+	public List<ColonneTableDTO> getAllColumnsTypeNative(String connectionName, String keyspaceName, String tableName)
+			throws Exception {
 
 		return buildAllColumns(connectionName, keyspaceName, tableName, true);
 	}
 
 	private List<ColonneTableDTO> buildAllColumns(String connectionName, String keyspaceName, String tableName,
-			boolean colNative) {
+			boolean colNative) throws Exception {
 		List<ColonneTableDTO> listColumDTO = new ArrayList<>();
-		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
+		Cluster cluster = getCluster(connectionName);
 		if (cluster != null) {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
 			if (keyspaceMetadata != null) {
@@ -138,11 +143,6 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 						} else {
 							colonneDTO.setType(columMeta.getType().getName().name());
 						}
-						System.out.println("@@" + columMeta.getName() + "@@");
-						System.out.println("--------------------");
-						System.out.println("@@" + listIndex.get(0) + "@@");
-						System.out.println("TEST " + columMeta.getName().equalsIgnoreCase(listIndex.get(0))
-								+ "   test content " + listIndex.contains(columMeta.getName()));
 						colonneDTO.setIndexed(listIndex.contains(columMeta.getName()));
 						colonneDTO.setPartitionKey(listPartionkey.contains(columMeta.getName()));
 						colonneDTO.setClusteredColumn(listClusteredColumn.contains(columMeta.getName()));
@@ -157,9 +157,9 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 		return listColumDTO;
 	}
 
-	public TableDTO getTableInfo(String connectionName, String keyspaceName, String tableName) {
+	public TableDTO getTableInfo(String connectionName, String keyspaceName, String tableName) throws Exception {
 		TableDTO tableInfoDTO = new TableDTO();
-		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
+		Cluster cluster = getCluster(connectionName);
 		if (cluster != null) {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
 			if (keyspaceMetadata != null) {
@@ -195,8 +195,8 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 		return tableInfoDTO;
 	}
 
-	public long countAllRows(String connectionName, String keyspaceName, String tableName) {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
+	public long countAllRows(String connectionName, String keyspaceName, String tableName) throws Exception {
+		Session session = getSession(connectionName);
 		ResultSet resulset = session
 				.execute(QueryBuilder.select().countAll().from(addQuote(keyspaceName), addQuote(tableName)));
 		if (resulset != null) {
@@ -243,5 +243,31 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 			return element.substring(1, element.length() - 1);
 		}
 		return element;
+	}
+
+	public Session getSession(String connectionName) throws Exception {
+		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
+		if (session == null) {
+			ConnectionDTO connectionDTO = connectionRepository.getConnection(connectionName);
+			this.connnectTocassandra(connectionDTO);
+			session = GaindeSessionConnection.getInstance().getSession(connectionName);
+			if (session == null) {
+				throw new Exception("aucune session");
+			}
+		}
+		return session;
+	}
+
+	public Cluster getCluster(String connectionName) throws Exception {
+		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
+		if (cluster == null) {
+			ConnectionDTO connectionDTO = connectionRepository.getConnection(connectionName);
+			this.connnectTocassandra(connectionDTO);
+			cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
+			if (cluster == null) {
+				throw new Exception("aucune session");
+			}
+		}
+		return cluster;
 	}
 }

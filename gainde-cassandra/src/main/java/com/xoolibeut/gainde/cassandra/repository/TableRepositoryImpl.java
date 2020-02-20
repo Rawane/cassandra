@@ -15,6 +15,7 @@ import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.datastax.driver.core.Cluster;
@@ -50,19 +51,18 @@ public class TableRepositoryImpl implements TableRepository {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TableRepositoryImpl.class);
 	private List<String> keyQueryData;
 	private List<String> keyQueryStructure;
-
+	@Autowired
+	private ConnectionCassandraRepository cassandraRepository;
 	@PostConstruct
 	public void init() {
 		keyQueryData = new ArrayList<String>();
 		keyQueryStructure = new ArrayList<String>();
-
 		keyQueryData.add("INSERT");
 		keyQueryData.add("UPDATE");
 		keyQueryData.add("DELETE");
 		keyQueryData.add("TRUNCATE");
 		keyQueryData.add("SELECT");
 		keyQueryData.add("BATCH");
-
 		keyQueryStructure.add("CREATE");
 		keyQueryStructure.add("DROP");
 		keyQueryStructure.add("ALTER");
@@ -70,11 +70,8 @@ public class TableRepositoryImpl implements TableRepository {
 	}
 
 	public JsonNode executeQuery(String connectionName, String keyspaceName, String pQuery) throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
-		if (session == null || cluster == null) {
-			throw new Exception("aucune session");
-		}
+		Session session = getSession(connectionName);
+		Cluster cluster = getCluster(connectionName);
 		if (pQuery == null || pQuery.isEmpty()) {
 			throw new Exception("Veuillez renseigner le query");
 		}
@@ -97,32 +94,37 @@ public class TableRepositoryImpl implements TableRepository {
 				ObjectNode jsonNode = mapper.createObjectNode();
 				row.getColumnDefinitions().asList().forEach((definition) -> {
 					LOGGER.info(definition.getName());
-					switch (definition.getType().getName()) {
-					case TIMESTAMP: {
-						if (row.getObject(definition.getName()) instanceof Date) {
-							Date date = (Date) row.getObject(definition.getName());
-							SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-							jsonNode.put(definition.getName(), dateFormat.format(date));
-						}
-						break;
-					}
-					case BLOB: {
-						if (row.getObject(definition.getName()) instanceof ByteBuffer) {
-							ByteBuffer byteBuffer = (ByteBuffer) row.getObject(definition.getName());
-							jsonNode.put(definition.getName(), new String(byteBuffer.array()));
-						}
-						break;
-					}
-					default:
-						if (row.getObject(definition.getName()) != null) {
-							String rowValue = row.getObject(definition.getName()).toString();
-							if (rowValue.length() > 1 && rowValue.startsWith("\"")) {
-								rowValue = rowValue.substring(1, rowValue.length() - 1);
+					Object object = row.getObject(addQuote(definition.getName()));
+					if (object != null) {
+						switch (definition.getType().getName()) {
+						case TIMESTAMP: {
+							if (object instanceof Date) {
+								Date date = (Date) object;
+								SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+								jsonNode.put(definition.getName(), dateFormat.format(date));
 							}
-							jsonNode.put(definition.getName(), rowValue);
-
+							break;
 						}
-						break;
+						case BLOB: {
+							if (object instanceof ByteBuffer) {
+								ByteBuffer byteBuffer = (ByteBuffer) object;
+								jsonNode.put(definition.getName(), new String(byteBuffer.array()));
+							}
+							break;
+						}
+						default:
+							if (object != null) {
+								String rowValue = object.toString();
+								if (rowValue.length() > 1 && rowValue.startsWith("\"")) {
+									rowValue = rowValue.substring(1, rowValue.length() - 1);
+								}
+								jsonNode.put(definition.getName(), rowValue);
+
+							}
+							break;
+						}
+					} else {
+						jsonNode.put(definition.getName(), "");
 					}
 					if (!atomicBoolean.get()) {
 						arrayColumns.add(definition.getName());
@@ -138,14 +140,10 @@ public class TableRepositoryImpl implements TableRepository {
 		return rootNode;
 	}
 
-	
-
 	public void createTable(TableDTO tableDTO, String connectionName, String keyspaceName) throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
-		Create createTable = SchemaBuilder.createTable(addQuote(keyspaceName), addQuote(tableDTO.getName())).ifNotExists();
+		Session session = getSession(connectionName);
+		Create createTable = SchemaBuilder.createTable(addQuote(keyspaceName), addQuote(tableDTO.getName()))
+				.ifNotExists();
 		tableDTO.getColumns().forEach(column -> {
 			Integer typeList = null;
 			Integer typeMap = null;
@@ -174,17 +172,15 @@ public class TableRepositoryImpl implements TableRepository {
 		session.execute(createTable);
 		tableDTO.getIndexColumns().forEach(indexColumn -> {
 			SchemaStatement createIndex = SchemaBuilder.createIndex(addQuote(indexColumn.getColumName())).ifNotExists()
-					.onTable(addQuote(keyspaceName), addQuote(tableDTO.getName())).andColumn(addQuote(indexColumn.getColumName()));
+					.onTable(addQuote(keyspaceName), addQuote(tableDTO.getName()))
+					.andColumn(addQuote(indexColumn.getColumName()));
 			session.execute(createIndex);
 		});
 
 	}
 
 	public void dropTable(String connectionName, String keyspaceName, String tableName) throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
+		Session session = getSession(connectionName);
 		Drop dropTable = SchemaBuilder.dropTable(addQuote(keyspaceName), addQuote(tableName)).ifExists();
 		session.execute(dropTable);
 
@@ -192,10 +188,7 @@ public class TableRepositoryImpl implements TableRepository {
 
 	public void alterTable(TableDTO oldTableDTO, TableDTO tableDTO, String connectionName, String keyspaceName)
 			throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
+		Session session = getSession(connectionName);
 		if (!oldTableDTO.getName().equals(tableDTO.getName())) {
 			throw new Exception("Vous ne pouvez pas modifier le nom de la table");
 		}
@@ -206,7 +199,6 @@ public class TableRepositoryImpl implements TableRepository {
 		List<IndexColumn> indexColumnAdded = new ArrayList<>();
 		List<ColonneTableDTO> colonneRenamed = new ArrayList<>();
 		tableDTO.getColumns().forEach(column -> {
-
 			if (oldTableDTO.getColumns().contains(column)) {
 				int index = oldTableDTO.getColumns().indexOf(column);
 				ColonneTableDTO oldColum = oldTableDTO.getColumns().get(index);
@@ -290,7 +282,7 @@ public class TableRepositoryImpl implements TableRepository {
 			if (column.getTypeMap() != null) {
 				typeMap = Integer.parseInt(column.getTypeMap());
 			}
-			SchemaStatement schema = SchemaBuilder.alterTable(addQuote(keyspaceName),  addQuote(oldTableDTO.getName()))
+			SchemaStatement schema = SchemaBuilder.alterTable(addQuote(keyspaceName), addQuote(oldTableDTO.getName()))
 					.addColumn(addQuote(column.getName()))
 					.type(GaindeUtil.getDataType(Integer.parseInt(column.getType()), typeList, typeMap));
 			LOGGER.info("alterTable added " + schema);
@@ -311,7 +303,8 @@ public class TableRepositoryImpl implements TableRepository {
 		});
 		indexColumnAdded.forEach(indexC -> {
 			SchemaStatement createIndex = SchemaBuilder.createIndex(addQuote(indexC.getName()))
-					.onTable(addQuote(keyspaceName), addQuote(oldTableDTO.getName())).andColumn(addQuote(indexC.getColumName()));
+					.onTable(addQuote(keyspaceName), addQuote(oldTableDTO.getName()))
+					.andColumn(addQuote(indexC.getColumName()));
 			LOGGER.info("alterTable  createIndex " + createIndex);
 			session.execute(createIndex);
 		});
@@ -320,11 +313,8 @@ public class TableRepositoryImpl implements TableRepository {
 
 	public JsonNode getAllDataByTableName(String connectionName, String keyspaceName, String tableName)
 			throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
+		Session session = getSession(connectionName);
+		Cluster cluster = getCluster(connectionName);		
 		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(addQuote(tableName));
 		LOGGER.info("exportAsString " + table.getName() + "   " + table.exportAsString());
 		LOGGER.info("asCQLQuery " + table.getName() + "   " + table.asCQLQuery());
@@ -359,9 +349,6 @@ public class TableRepositoryImpl implements TableRepository {
 			throws Exception {
 		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
 		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
 		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(tableName);
 		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
 		List<String> partionKeys = new ArrayList<String>();
@@ -395,11 +382,8 @@ public class TableRepositoryImpl implements TableRepository {
 
 	public JsonNode getAllDataPaginateByPageX(String connectionName, String keyspaceName, String tableName, int page,
 			Map<String, Object> mapPrimaryKey) throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
+		Session session = getSession(connectionName);
+		Cluster cluster = getCluster(connectionName);		
 		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(addQuote(tableName));
 		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
 		List<String> partionKeys = new ArrayList<String>();
@@ -424,7 +408,8 @@ public class TableRepositoryImpl implements TableRepository {
 			}
 			atomicInt.incrementAndGet();
 		});
-		Select.Where where = QueryBuilder.select().from(addQuote(keyspaceName),addQuote(tableName)).where(clauses.get(0));
+		Select.Where where = QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableName))
+				.where(clauses.get(0));
 		String query = "SELECT * FROM " + addQuote(keyspaceName) + "." + addQuote(tableName) + clauseWhere.get(0);
 		if (clauses.size() > 1) {
 			for (int i = 1; i < clauses.size(); i++) {
@@ -454,10 +439,7 @@ public class TableRepositoryImpl implements TableRepository {
 
 	public void insertData(String connectionName, String keyspaceName, String tableName, JsonNode map)
 			throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
+		Session session = getSession(connectionName);
 		List<String> keys = new ArrayList<String>();
 		List<Object> values = new ArrayList<Object>();
 		JsonNode dataNode = map.get("data");
@@ -478,10 +460,7 @@ public class TableRepositoryImpl implements TableRepository {
 
 	public void updateData(String connectionName, String keyspaceName, String tableName, JsonNode map)
 			throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
+		Session session = getSession(connectionName);
 		JsonNode dataNode = map.get("data");
 		ArrayNode arrayNode = (ArrayNode) map.get("partitionKeys");
 		List<String> primaryKeys = new ArrayList<String>();
@@ -517,31 +496,34 @@ public class TableRepositoryImpl implements TableRepository {
 	private ObjectNode buildRowNode(ObjectMapper mapper, List<ColumnMetadata> columns, Row row) {
 		ObjectNode rowNode = mapper.createObjectNode();
 		columns.forEach(column -> {
-			if (row.getObject(column.getName()) != null) {
-				// LOGGER.debug( "classs row " + row.getObject(column.getName()).getClass() + "
-				// col name " + column.getName());
+			Object object = row.getObject(addQuote(column.getName()));
+			if (object != null) {
 				switch (column.getType().getName()) {
 				case TIMESTAMP: {
-					if (row.getObject(column.getName()) instanceof Date) {
-						Date date = (Date) row.getObject(column.getName());
+					if (object instanceof Date) {
+						Date date = (Date) object;
 						SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 						rowNode.put(column.getName(), dateFormat.format(date));
 					}
 					break;
 				}
 				case BLOB: {
-					if (row.getObject(column.getName()) instanceof ByteBuffer) {
-						ByteBuffer byteBuffer = (ByteBuffer) row.getObject(column.getName());
-						rowNode.put(column.getName(), new String(byteBuffer.array()));
+					if (object instanceof ByteBuffer) {
+						ByteBuffer byteBuffer = (ByteBuffer) object;
+						String value = new String(byteBuffer.array());
+						LOGGER.info(column.getName() + "   BLOB BLOB  " + value);
+						rowNode.put(column.getName(), value);
 					}
 					break;
 				}
 				default:
-					String rowValue = row.getObject(column.getName()).toString();
-					if (rowValue.length() > 1 && rowValue.startsWith("\"")) {
-						rowValue = rowValue.substring(1, rowValue.length() - 1);
+					if (object != null) {
+						String rowValue = object.toString();
+						if (rowValue.length() > 1 && rowValue.startsWith("\"")) {
+							rowValue = rowValue.substring(1, rowValue.length() - 1);
+						}
+						rowNode.put(column.getName(), rowValue);
 					}
-					rowNode.put(column.getName(), rowValue);
 					break;
 				}
 
@@ -598,7 +580,8 @@ public class TableRepositoryImpl implements TableRepository {
 			clauses.add(QueryBuilder.eq(addQuote(key), map.get(key)));
 		});
 
-		Delete.Where deleteWhere = QueryBuilder.delete().from(addQuote(keyspaceName), addQuote(tableName)).where(clauses.get(0));
+		Delete.Where deleteWhere = QueryBuilder.delete().from(addQuote(keyspaceName), addQuote(tableName))
+				.where(clauses.get(0));
 		if (clauses.size() > 1) {
 			for (int i = 1; i < clauses.size(); i++) {
 				deleteWhere.and(clauses.get(i));
@@ -619,6 +602,7 @@ public class TableRepositoryImpl implements TableRepository {
 		LOGGER.info("removeAllData   " + truncate);
 		session.execute(truncate);
 	}
+
 	/**
 	 * Pour la gestion des majuscule
 	 * 
@@ -628,6 +612,7 @@ public class TableRepositoryImpl implements TableRepository {
 	private String addQuote(String element) {
 		return "\"" + element + "\"";
 	}
+
 	private String buildQueryAddKeyspace(String keyspaceName, String pQuery, Cluster cluster) {
 		String query;
 		String[] arrayQuery = pQuery.split(" ");
@@ -676,5 +661,11 @@ public class TableRepositoryImpl implements TableRepository {
 
 		query = String.join(" ", listQuery);
 		return query;
+	}
+	private Session getSession(String connectionName) throws Exception {		
+		return cassandraRepository.getSession(connectionName);
+	}
+	private Cluster getCluster(String connectionName) throws Exception {
+		return cassandraRepository.getCluster(connectionName);
 	}
 }
