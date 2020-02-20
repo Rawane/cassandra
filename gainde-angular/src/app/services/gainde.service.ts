@@ -397,9 +397,16 @@ export class GaindeService {
       }
     );    
   }
-  getAllHistories() {   
-    this.httpClient
-      .get<any>(environment['basePathGainde']+'/history/all',this.httpOptions)
+  getAllHistories(all:boolean,connectionName:string) { 
+   // console.log('getAllHistories  : ' + all);        
+    let url= environment['basePathGainde']+'/history'; 
+    if(all){
+      url=url+'/all';
+      }else{
+        url=url+'/list/'+connectionName;
+      } 
+      this.httpClient
+      .get<any>(url,this.httpOptions)
       .subscribe(
         (response) => {               
         //console.log('response  : ' + JSON.stringify(response));            
@@ -410,7 +417,6 @@ export class GaindeService {
            this.emitMapTransfertKeyspaceSubject(ActionHttp.ALL_HISTORY_ERROR,error['error']['error']);
         }
       );
-      
   }  
   deleteHistory(id:string){
     this.httpClient

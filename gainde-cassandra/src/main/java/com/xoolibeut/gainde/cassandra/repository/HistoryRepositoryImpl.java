@@ -34,7 +34,7 @@ public class HistoryRepositoryImpl implements HistoryRepository {
 			historyDTO.setDate(cal.getTime());
 			historyDTO.setCount(1);
 			MessageDigest messageDigest = MessageDigest.getInstance("MD5");
-			messageDigest.update(historyDTO.getQuery().getBytes());
+			messageDigest.update((historyDTO.getQuery()+historyDTO.getConnectionName()).getBytes());
 			byte[] idByte = messageDigest.digest();
 			historyDTO.setId(new String(toHexString(idByte)));
 			LOGGER.info("createHistory History à créé dans le fichier " + historyDTO.toString());
@@ -96,7 +96,7 @@ public class HistoryRepositoryImpl implements HistoryRepository {
 		return false;
 	}
 
-	public List<HistoryDTO> readlAllhystories() throws IOException {
+	public List<HistoryDTO> readlAllHystories() throws IOException {
 		List<HistoryDTO> histories = new ArrayList<>();
 		String contentGainde = GaindeFileUtil.readeGaindeHistory(folderHistory);
 		if (contentGainde != null && !contentGainde.isEmpty()) {
@@ -110,6 +110,28 @@ public class HistoryRepositoryImpl implements HistoryRepository {
 			}
 		}
 		histories.sort((date1, date2) -> date2.getDate().compareTo(date1.getDate()));
+		return histories;
+	}
+
+	public List<HistoryDTO> listHystoriesByConnection(String connectionName) throws IOException {
+		List<HistoryDTO> histories = new ArrayList<>();
+		if (connectionName != null && !connectionName.isEmpty()) {
+			String contentGainde = GaindeFileUtil.readeGaindeHistory(folderHistory);
+			if (contentGainde != null && !contentGainde.isEmpty()) {
+				ObjectMapper mapper = new ObjectMapper();
+				ObjectNode rootNode = (ObjectNode) mapper.readTree(contentGainde);
+				if (rootNode != null) {
+					ArrayNode arrayNode = (ArrayNode) rootNode.get("histories");
+					arrayNode.forEach(jsonNode -> {
+						HistoryDTO histo = mapper.convertValue(jsonNode, HistoryDTO.class);
+						if (connectionName.equals(histo.getConnectionName())) {
+							histories.add(histo);
+						}
+					});
+				}
+			}
+			histories.sort((date1, date2) -> date2.getDate().compareTo(date1.getDate()));
+		}
 		return histories;
 	}
 

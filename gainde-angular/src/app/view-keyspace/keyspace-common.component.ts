@@ -43,8 +43,10 @@ export class KeyspaceComponent implements OnInit,OnDestroy {
     filterTableData='';
     filterTableKeyspaceData='';
     bigTable:boolean=false;
-    selectedPageIndex=0;
-    selectedKeysPageIndex=0; 
+    selectedPageIndex:number=0;
+    selectedKeysPageIndex:number=0; 
+    notificationSelectKeyIndex=new Subject<number>();
+    notificationSelectKeyIndexSubs:Subscription;
     currentKeyspaceName:string;
     columnsSize:number;
     keyspaceForm:FormGroup; 
@@ -58,8 +60,9 @@ export class KeyspaceComponent implements OnInit,OnDestroy {
     displayedColumnsHistory=['query','date','count','action','actionSupp'];
     previousIndex: number;
     queryContent:string='';
-    isQueryLoading=false;
-    isDataLoading=false;
+    isQueryLoading:boolean=false;
+    isDataLoading:boolean=false;
+    allHistory:boolean=true;
     constructor(protected gaindeService:GaindeService,protected router:Router,protected formBuilder:FormBuilder,
         protected snackBar:MatSnackBar,protected dialog: MatDialog) {
            
@@ -68,7 +71,16 @@ export class KeyspaceComponent implements OnInit,OnDestroy {
            
           }  
           ngOnDestroy() {
-            this.allNotificationSubscription.unsubscribe();
+            if( this.allNotificationSubscription){
+              this.allNotificationSubscription.unsubscribe();
+            }
+            if( this.notifKeyspaceByDialog){
+              this.notifKeyspaceByDialog.unsubscribe();
+            }
+            if(this.notificationSelectKeyIndexSubs){
+              this.notificationSelectKeyIndexSubs.unsubscribe();
+            }
+            
           }
             
  
@@ -240,10 +252,11 @@ export class KeyspaceComponent implements OnInit,OnDestroy {
                  
       }
       protected doAfterGetExecuteQuery(mapTransfert: Map<string, any>):void {
+        this.isQueryLoading=false;      
         this.openSnackBar('Query exécuté avec succes', '');
         this.displayedColumnsQueryData =mapTransfert.get("content")['columns'];   
         if(this.displayedColumnsQueryData.length>0){
-            this.selectedKeysPageIndex=3;           
+                 
             this.tableResultQueryDataSource.data = mapTransfert.get("content")['data'];
             this.paginationResultQuerySize = mapTransfert.get("content")['data'].length;
             this.tableResultQueryDataSource.paginator = this.paginator;
@@ -259,13 +272,15 @@ export class KeyspaceComponent implements OnInit,OnDestroy {
                 default: return item[property];
             }
             };
-            this.isQueryLoading=false;
-        }        
-        this.gaindeService.saveQuery(new HistoryDTO(this.queryContent));        
+           //this.selectedKeysPageIndex=3; 
+           this.notificationSelectKeyIndex.next(3);    
+        } 
+        
+        this.gaindeService.saveQuery(new HistoryDTO(this.queryContent,this.gaindeService.currentGainde.connectionName));        
     }
     protected doAfterGetAllHistory(mapTransfert: Map<string, any>):void {  
-      console.log("doAfterGetAllHistory"); 
-        //this.historyDataSource.data = mapTransfert.get("content");
+      //console.log("doAfterGetAllHistory"); 
+        this.historyDataSource.data = mapTransfert.get("content");
         if(this.historyDataSource.data){
           //console.log("2 doAfterGetAllHistory "+JSON.stringify(this.historyDataSource.data)); 
             this.paginationHistoryQuerySize = this.historyDataSource.data.length;          

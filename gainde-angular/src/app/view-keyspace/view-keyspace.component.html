@@ -13,7 +13,11 @@
                     <mat-icon >close</mat-icon> 
                 </button>
             </div>
-            <div class="col-md-6 col-lg-8"> 
+            <div class="col-md-2 col-lg-2">                
+                
+            </div>
+            <div class="col-md-4 col-lg-6">                
+                <p mat-line *ngIf="currentConnection.ip" style="font-weight: 14px;"> {{currentConnection.ip}}:{{currentConnection.port}}</p>   
             </div>
         </div>
         <div class="row rowContent">    
@@ -101,7 +105,7 @@
                             </div>
                            
                         </div>
-                        <mat-tab-group class="tabTableGainde" (click)="onClickNavigateKeyspace()" [(selectedIndex)]="selectedKeysPageIndex">
+                        <mat-tab-group class="tabTableGainde" (selectedTabChange)="onClickNavigateKeyspace()" [(selectedIndex)]="selectedKeysPageIndex">
                             <mat-tab label="Infos" > 
                                 <div>
                                     <div *ngIf="keyspaceInfo">
@@ -210,7 +214,7 @@
                                         <div class="row rowContentArea">                                            
                                                 <mat-label>Saisissez votre query</mat-label>
                                                 <textarea matInput placeholder="Select * from tableName" class="form-control textArea"
-                                                rows="8" appAutofocus  [(ngModel)]="queryContent" spellcheck="false"></textarea>
+                                                rows="8" appAutofocus  [(ngModel)]="queryContent" spellcheck="false" (keydown.enter)="onExecuteQuery()"></textarea>
                                            
                                         </div>
                                         <div class="row">
@@ -229,7 +233,12 @@
                             <mat-tab label="Result Query" > 
                                 <div>
                                     <div class="row" style="margin-top:30px">    
-                                        <div class="col"> </div>                                 
+                                        <div class="col"> 
+                                            <mat-form-field >
+                                                <input matInput (keyup)="onApplyFilterResultQuery($event.target.value)" placeholder="Filter"
+                                                [(ngModel)]="filterResultQueryData">
+                                            </mat-form-field> 
+                                        </div>                                 
                                         <div class="col" > 
                                             <mat-icon  (click)="onZoomTable()" class="actionClick zoomIcon" matTooltip="Agrandir">
                                           {{zoomData?'zoom_out':'zoom_in'}}
@@ -258,13 +267,19 @@
                             </mat-tab>
                             <mat-tab label="History Query" > 
                                 <div class="row" style="margin-top:30px">    
-                                    <div class="col"> </div>                                 
+                                    <div class="col"> 
+                                        <mat-form-field >
+                                            <input matInput (keyup)="onApplyFilterHistory($event.target.value)" placeholder="Filter"
+                                            [(ngModel)]="filterHistoryData">
+                                        </mat-form-field>          
+                                    </div>                                 
                                     <div class="col" > 
                                         <mat-icon   (click)="onZoomTable()"  class="actionClick zoomIcon" matTooltip="Agrandir">
                                       {{zoomData?'zoom_out':'zoom_in'}}
                                       </mat-icon>
                                     </div>
-                                    <div class="col"> </div>  
+                                    <div class="col"> <input type="checkbox" class="gaindeFormControl"  [(ngModel)]="allHistory"  [matTooltip]="!allHistory?'Toute l historique':'historique de '+currentConnection.name" (click)="onClickFilterHistoryByConnection()">
+                                     </div>  
                                  </div>
                                 <div >
                                     <div *ngIf="keyspaceInfo && historyDataSource.data">

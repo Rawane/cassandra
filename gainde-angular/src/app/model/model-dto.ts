@@ -7,7 +7,7 @@ export class ConnectionDTO {
    
 }
 export class HistoryDTO {
-    constructor( public query: string
+    constructor( public query: string,public connectionName:string
        ){
 
     }

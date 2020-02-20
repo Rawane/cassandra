@@ -58,7 +58,7 @@ public class HistoryController {
 	@GetMapping("/all")
 	public ResponseEntity<String> listHistories() {
 		try {
-			List<HistoryDTO> list = historyRepository.readlAllhystories();
+			List<HistoryDTO> list = historyRepository.readlAllHystories();
 			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(list));
 		} catch (IOException ioException) {
@@ -66,7 +66,17 @@ public class HistoryController {
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
-
+	@GetMapping("/list/{connectionName}")
+	public ResponseEntity<String> listHistories(@PathVariable("connectionName") String connectionName) {
+		try {
+			List<HistoryDTO> list = historyRepository.listHystoriesByConnection(connectionName);
+			ObjectMapper mapper = new ObjectMapper();
+			return ResponseEntity.status(200).body(mapper.writeValueAsString(list));
+		} catch (IOException ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
+		}
+	}
 	private String buildMessage(String code, String message) {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();

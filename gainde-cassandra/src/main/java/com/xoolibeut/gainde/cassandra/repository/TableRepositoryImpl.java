@@ -138,62 +138,14 @@ public class TableRepositoryImpl implements TableRepository {
 		return rootNode;
 	}
 
-	private String buildQueryAddKeyspace(String keyspaceName, String pQuery, Cluster cluster) {
-		String query;
-		String[] arrayQuery = pQuery.split(" ");
-		List<String> listQuery = new ArrayList<String>();
-		for (int i = 0; i < arrayQuery.length; i++) {
-			String item = arrayQuery[i].trim();
-			if (!item.isEmpty()) {
-				listQuery.add(item);
-			}
-		}
-		if (keyQueryData.contains(listQuery.get(0).toUpperCase())) {
-			Collection<TableMetadata> tables = cluster.getMetadata().getKeyspace(keyspaceName).getTables();
-			for (int i = 0; i < listQuery.size(); i++) {
-				String item = listQuery.get(i);
-				AtomicInteger atomicInteger = new AtomicInteger(i);
-				tables.forEach((table) -> {
-					if (item.startsWith(table.getName())) {
-						listQuery.set(atomicInteger.get(), keyspaceName + "." + item);
-					}
-				});
-			}
-
-		} else {
-
-			if ("CREATE".equalsIgnoreCase(listQuery.get(0))) {
-				if ("TABLE".equalsIgnoreCase(listQuery.get(1))) {
-					if (listQuery.size() >= 5) {
-						if ("IFNOTEXISTS".equalsIgnoreCase(listQuery.get(2) + listQuery.get(3) + listQuery.get(4))) {
-							if (!listQuery.get(5).contains(".")) {
-								listQuery.set(5, keyspaceName + "." + listQuery.get(5));
-							}
-						} else {
-							if (!listQuery.get(2).contains(".")) {
-								listQuery.set(2, keyspaceName + "." + listQuery.get(2));
-							}
-						}
-					}
-				} else {
-					if ("INDEX".equalsIgnoreCase(listQuery.get(1))) {
-
-					}
-				}
-
-			}
-		}
-
-		query = String.join(" ", listQuery);
-		return query;
-	}
+	
 
 	public void createTable(TableDTO tableDTO, String connectionName, String keyspaceName) throws Exception {
 		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
 		if (session == null) {
 			throw new Exception("aucune session");
 		}
-		Create createTable = SchemaBuilder.createTable(keyspaceName,"\""+ tableDTO.getName()+"\"").ifNotExists();
+		Create createTable = SchemaBuilder.createTable(addQuote(keyspaceName), addQuote(tableDTO.getName())).ifNotExists();
 		tableDTO.getColumns().forEach(column -> {
 			Integer typeList = null;
 			Integer typeMap = null;
@@ -206,23 +158,23 @@ public class TableRepositoryImpl implements TableRepository {
 			DataType datype = GaindeUtil.getDataType(Integer.parseInt(column.getType()), typeList, typeMap);
 			if (column.isPartitionKey()) {
 				if (column.isClusteredColumn()) {
-					createTable.addClusteringColumn("\""+column.getName()+"\"", datype);
+					createTable.addClusteringColumn(addQuote(column.getName()), datype);
 				} else {
-					createTable.addPartitionKey("\""+column.getName()+"\"", datype);
+					createTable.addPartitionKey(addQuote(column.getName()), datype);
 				}
 			} else {
 				if (column.isClusteredColumn()) {
-					createTable.addClusteringColumn("\""+column.getName()+"\"", datype);
+					createTable.addClusteringColumn(addQuote(column.getName()), datype);
 				} else {
-					createTable.addColumn("\""+column.getName()+"\"", datype);
+					createTable.addColumn(addQuote(column.getName()), datype);
 				}
 			}
 		});
 		LOGGER.info("createTable  " + createTable);
 		session.execute(createTable);
 		tableDTO.getIndexColumns().forEach(indexColumn -> {
-			SchemaStatement createIndex = SchemaBuilder.createIndex(indexColumn.getColumName()).ifNotExists()
-					.onTable(keyspaceName, tableDTO.getName()).andColumn(indexColumn.getColumName());
+			SchemaStatement createIndex = SchemaBuilder.createIndex(addQuote(indexColumn.getColumName())).ifNotExists()
+					.onTable(addQuote(keyspaceName), addQuote(tableDTO.getName())).andColumn(addQuote(indexColumn.getColumName()));
 			session.execute(createIndex);
 		});
 
@@ -233,7 +185,7 @@ public class TableRepositoryImpl implements TableRepository {
 		if (session == null) {
 			throw new Exception("aucune session");
 		}
-		Drop dropTable = SchemaBuilder.dropTable(keyspaceName, "\""+tableName+"\"").ifExists();
+		Drop dropTable = SchemaBuilder.dropTable(addQuote(keyspaceName), addQuote(tableName)).ifExists();
 		session.execute(dropTable);
 
 	}
@@ -309,8 +261,8 @@ public class TableRepositoryImpl implements TableRepository {
 		});
 		// Exécution de la requete
 		colonneRemoved.forEach(column -> {
-			SchemaStatement schema = SchemaBuilder.alterTable(keyspaceName, "\""+oldTableDTO.getName()+"\"")
-					.dropColumn("\""+column.getName()+"\"");
+			SchemaStatement schema = SchemaBuilder.alterTable(addQuote(keyspaceName), addQuote(oldTableDTO.getName()))
+					.dropColumn(addQuote(column.getName()));
 			session.execute(schema);
 		});
 		colonneAlter.forEach(column -> {
@@ -322,8 +274,8 @@ public class TableRepositoryImpl implements TableRepository {
 			if (column.getTypeMap() != null) {
 				typeMap = Integer.parseInt(column.getTypeMap());
 			}
-			Statement schema = SchemaBuilder.alterTable(keyspaceName, "\""+oldTableDTO.getName()+"\"")
-					.alterColumn("\""+column.getName()+"\"")
+			Statement schema = SchemaBuilder.alterTable(addQuote(keyspaceName), addQuote(oldTableDTO.getName()))
+					.alterColumn(addQuote(column.getName()))
 					.type(GaindeUtil.getDataType(Integer.parseInt(column.getType()), typeList, typeMap))
 					.enableTracing();
 			LOGGER.info("alterTable  " + schema);
@@ -338,8 +290,8 @@ public class TableRepositoryImpl implements TableRepository {
 			if (column.getTypeMap() != null) {
 				typeMap = Integer.parseInt(column.getTypeMap());
 			}
-			SchemaStatement schema = SchemaBuilder.alterTable(keyspaceName,  "\""+oldTableDTO.getName()+"\"")
-					.addColumn("\""+column.getName()+"\"")
+			SchemaStatement schema = SchemaBuilder.alterTable(addQuote(keyspaceName),  addQuote(oldTableDTO.getName()))
+					.addColumn(addQuote(column.getName()))
 					.type(GaindeUtil.getDataType(Integer.parseInt(column.getType()), typeList, typeMap));
 			LOGGER.info("alterTable added " + schema);
 			session.execute(schema);
@@ -347,19 +299,19 @@ public class TableRepositoryImpl implements TableRepository {
 		colonneRenamed.forEach(column -> {
 			// LOGGER.debug("colonne à renommer " + column.getOldName() + " new name " +
 			// column.getName());
-			Statement schema = SchemaBuilder.alterTable(keyspaceName, oldTableDTO.getName())
-					.renameColumn("\""+column.getOldName()+"\"").to("\""+column.getName()+"\"");
+			Statement schema = SchemaBuilder.alterTable(addQuote(keyspaceName), oldTableDTO.getName())
+					.renameColumn(addQuote(column.getOldName())).to(addQuote(column.getName()));
 			LOGGER.info("alterTable renamed " + schema);
 			session.execute(schema);
 		});
 		indexColumnRemoved.forEach(indexC -> {
-			Drop drop = SchemaBuilder.dropIndex("\""+keyspaceName+"\"", "\""+indexC.getName()+"\"");
+			Drop drop = SchemaBuilder.dropIndex(addQuote(keyspaceName), addQuote(indexC.getName()));
 			LOGGER.info("alterTable drop " + drop);
 			session.execute(drop);
 		});
 		indexColumnAdded.forEach(indexC -> {
-			SchemaStatement createIndex = SchemaBuilder.createIndex("\""+indexC.getName()+"\"")
-					.onTable("\""+keyspaceName+"\"", "\""+oldTableDTO.getName()+"\"").andColumn("\""+indexC.getColumName()+"\"");
+			SchemaStatement createIndex = SchemaBuilder.createIndex(addQuote(indexC.getName()))
+					.onTable(addQuote(keyspaceName), addQuote(oldTableDTO.getName())).andColumn(addQuote(indexC.getColumName()));
 			LOGGER.info("alterTable  createIndex " + createIndex);
 			session.execute(createIndex);
 		});
@@ -373,7 +325,7 @@ public class TableRepositoryImpl implements TableRepository {
 		if (session == null) {
 			throw new Exception("aucune session");
 		}
-		TableMetadata table = cluster.getMetadata().getKeyspace(keyspaceName).getTable("\""+tableName+"\"");
+		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(addQuote(tableName));
 		LOGGER.info("exportAsString " + table.getName() + "   " + table.exportAsString());
 		LOGGER.info("asCQLQuery " + table.getName() + "   " + table.asCQLQuery());
 		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
@@ -386,7 +338,7 @@ public class TableRepositoryImpl implements TableRepository {
 		clusteredColumnMetaKeys.forEach(columnMeta -> {
 			clusteredColumKeys.add(columnMeta.getName());
 		});
-		ResultSet resulSet = session.execute(QueryBuilder.select().from(keyspaceName, "\""+tableName+"\""));
+		ResultSet resulSet = session.execute(QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableName)));
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
@@ -410,7 +362,7 @@ public class TableRepositoryImpl implements TableRepository {
 		if (session == null) {
 			throw new Exception("aucune session");
 		}
-		TableMetadata table = cluster.getMetadata().getKeyspace(keyspaceName).getTable(tableName);
+		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(tableName);
 		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
 		List<String> partionKeys = new ArrayList<String>();
 		partionMetaKeys.forEach(columnMeta -> {
@@ -421,7 +373,7 @@ public class TableRepositoryImpl implements TableRepository {
 		clusteredColumnMetaKeys.forEach(columnMeta -> {
 			clusteredColumKeys.add(columnMeta.getName());
 		});
-		Select statement = QueryBuilder.select().from(keyspaceName, tableName);
+		Select statement = QueryBuilder.select().from(addQuote(keyspaceName), tableName);
 		statement.setFetchSize(page);
 		ResultSet resulSet = session.execute(statement);
 		ObjectMapper mapper = new ObjectMapper();
@@ -448,7 +400,7 @@ public class TableRepositoryImpl implements TableRepository {
 		if (session == null) {
 			throw new Exception("aucune session");
 		}
-		TableMetadata table = cluster.getMetadata().getKeyspace(keyspaceName).getTable(tableName);
+		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(addQuote(tableName));
 		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
 		List<String> partionKeys = new ArrayList<String>();
 		partionMetaKeys.forEach(columnMeta -> {
@@ -472,8 +424,8 @@ public class TableRepositoryImpl implements TableRepository {
 			}
 			atomicInt.incrementAndGet();
 		});
-		Select.Where where = QueryBuilder.select().from(keyspaceName, tableName).where(clauses.get(0));
-		String query = "SELECT * FROM " + keyspaceName + "." + tableName + clauseWhere.get(0);
+		Select.Where where = QueryBuilder.select().from(addQuote(keyspaceName),addQuote(tableName)).where(clauses.get(0));
+		String query = "SELECT * FROM " + addQuote(keyspaceName) + "." + addQuote(tableName) + clauseWhere.get(0);
 		if (clauses.size() > 1) {
 			for (int i = 1; i < clauses.size(); i++) {
 				where.and(clauses.get(i));
@@ -514,11 +466,11 @@ public class TableRepositoryImpl implements TableRepository {
 
 			String key = iterField.next();
 			if (dataNode.get(key).get("data").asText() != null && !dataNode.get(key).get("data").asText().isEmpty()) {
-				keys.add(key);
+				keys.add(addQuote(key));
 				values.add(GaindeUtil.getData(dataNode.get(key)));
 			}
 		}
-		Insert insert = QueryBuilder.insertInto(keyspaceName, tableName).values(keys, values);
+		Insert insert = QueryBuilder.insertInto(addQuote(keyspaceName), addQuote(tableName)).values(keys, values);
 		// insert.setConsistencyLevel(ConsistencyLevel.ALL);
 		LOGGER.info("insert Data " + insert);
 		session.execute(insert);
@@ -542,17 +494,17 @@ public class TableRepositoryImpl implements TableRepository {
 		if (primaryKeys.isEmpty()) {
 			throw new Exception("Aucun clé primaire pour where clause");
 		}
-		Clause clause = QueryBuilder.eq(primaryKeys.get(0), primaryValues.get(0));
+		Clause clause = QueryBuilder.eq(addQuote(primaryKeys.get(0)), primaryValues.get(0));
 		Iterator<String> iterField = dataNode.fieldNames();
 		while (iterField.hasNext()) {
 			String key = iterField.next();
 			if (!primaryKeys.contains(key)) {
 				JsonNode columnData = dataNode.get(key);
-				Where where = QueryBuilder.update(keyspaceName, tableName)
-						.with(QueryBuilder.set(key, GaindeUtil.getData(columnData))).where(clause);
+				Where where = QueryBuilder.update(addQuote(keyspaceName), addQuote(tableName))
+						.with(QueryBuilder.set(addQuote(key), GaindeUtil.getData(columnData))).where(clause);
 				if (primaryKeys.size() > 1) {
 					for (int i = 1; i < primaryKeys.size(); i++) {
-						where.and(QueryBuilder.eq(primaryKeys.get(i), primaryValues.get(i)));
+						where.and(QueryBuilder.eq(addQuote(primaryKeys.get(i)), primaryValues.get(i)));
 					}
 				}
 				LOGGER.info("updateData   " + where);
@@ -643,10 +595,10 @@ public class TableRepositoryImpl implements TableRepository {
 		}
 		List<Clause> clauses = new ArrayList<>();
 		map.keySet().forEach(key -> {
-			clauses.add(QueryBuilder.eq("\""+key+"\"", map.get(key)));
+			clauses.add(QueryBuilder.eq(addQuote(key), map.get(key)));
 		});
 
-		Delete.Where deleteWhere = QueryBuilder.delete().from("\""+keyspaceName+"\"", "\""+tableName+"\"").where(clauses.get(0));
+		Delete.Where deleteWhere = QueryBuilder.delete().from(addQuote(keyspaceName), addQuote(tableName)).where(clauses.get(0));
 		if (clauses.size() > 1) {
 			for (int i = 1; i < clauses.size(); i++) {
 				deleteWhere.and(clauses.get(i));
@@ -661,11 +613,68 @@ public class TableRepositoryImpl implements TableRepository {
 		if (session == null) {
 			throw new Exception("aucune session");
 		}
-		Truncate truncate = QueryBuilder.truncate("\""+keyspaceName+"\"", "\""+tableName+"\"");
+		Truncate truncate = QueryBuilder.truncate(addQuote(keyspaceName), addQuote(tableName));
 
 		LOGGER.info("removeAllData CQL " + truncate);
 		LOGGER.info("removeAllData   " + truncate);
 		session.execute(truncate);
 	}
+	/**
+	 * Pour la gestion des majuscule
+	 * 
+	 * @param element
+	 * @return
+	 */
+	private String addQuote(String element) {
+		return "\"" + element + "\"";
+	}
+	private String buildQueryAddKeyspace(String keyspaceName, String pQuery, Cluster cluster) {
+		String query;
+		String[] arrayQuery = pQuery.split(" ");
+		List<String> listQuery = new ArrayList<String>();
+		for (int i = 0; i < arrayQuery.length; i++) {
+			String item = arrayQuery[i].trim();
+			if (!item.isEmpty()) {
+				listQuery.add(item);
+			}
+		}
+		if (keyQueryData.contains(listQuery.get(0).toUpperCase())) {
+			Collection<TableMetadata> tables = cluster.getMetadata().getKeyspace(keyspaceName).getTables();
+			for (int i = 0; i < listQuery.size(); i++) {
+				String item = listQuery.get(i);
+				AtomicInteger atomicInteger = new AtomicInteger(i);
+				tables.forEach((table) -> {
+					if (item.startsWith(table.getName())) {
+						listQuery.set(atomicInteger.get(), keyspaceName + "." + item);
+					}
+				});
+			}
 
+		} else {
+
+			if ("CREATE".equalsIgnoreCase(listQuery.get(0))) {
+				if ("TABLE".equalsIgnoreCase(listQuery.get(1))) {
+					if (listQuery.size() >= 5) {
+						if ("IFNOTEXISTS".equalsIgnoreCase(listQuery.get(2) + listQuery.get(3) + listQuery.get(4))) {
+							if (!listQuery.get(5).contains(".")) {
+								listQuery.set(5, keyspaceName + "." + listQuery.get(5));
+							}
+						} else {
+							if (!listQuery.get(2).contains(".")) {
+								listQuery.set(2, keyspaceName + "." + listQuery.get(2));
+							}
+						}
+					}
+				} else {
+					if ("INDEX".equalsIgnoreCase(listQuery.get(1))) {
+
+					}
+				}
+
+			}
+		}
+
+		query = String.join(" ", listQuery);
+		return query;
+	}
 }

@@ -15,7 +15,7 @@ public class HistoryDTO {
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy HH:mm:ss")
 	private Date date;
 	private Integer count;
-
+	private String connectionName;
 	public String getQuery() {
 		return query;
 	}
@@ -58,5 +58,13 @@ public class HistoryDTO {
 
 	public void setCount(Integer count) {
 		this.count = count;
+	}
+
+	public String getConnectionName() {
+		return connectionName;
+	}
+
+	public void setConnectionName(String connectionName) {
+		this.connectionName = connectionName;
 	}
 }

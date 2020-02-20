@@ -87,6 +87,12 @@ onExecuteQuery(){
   }  
 
   private initObservable() {
+    this.notificationSelectKeyIndexSubs=this.notificationSelectKeyIndex.subscribe((pageIndex)=>{
+      /*setTimeout(()=>{    
+        this.selectedKeysPageIndex = pageIndex;
+      }, 1000);*/
+     this.selectedKeysPageIndex=pageIndex;
+    });
     this.allNotificationSubscription = this.gaindeService.mapTransfertViewKeyspaceSubject.subscribe((mapTransfert: Map<string, any>) => {
       let mapToString = '';
       mapTransfert.forEach((key, item) => {
@@ -237,7 +243,7 @@ onExecuteQuery(){
             }
             case ActionHttp.DELETE_HISTORY:
             { this.openSnackBar('La ligne a étée supprimée', '');
-              this.gaindeService.getAllHistories();
+              this.gaindeService.getAllHistories(this.allHistory,this.gaindeService.currentGainde.connectionName);
               break;
             }
           case ActionHttp.DELETE_HISTORY_ERROR:
@@ -249,6 +255,7 @@ onExecuteQuery(){
           break;
       }
     });
+    
   }
 
   onVerifyDisplay(columnName:string):boolean{   
@@ -268,6 +275,13 @@ onExecuteQuery(){
     //console.log('onApplyFilterTableKeyspace '+filterVal);
     this.tableKeyspaceInfoDataSource.filter = filterVal.trim().toLowerCase();     
   }
+  onApplyFilterHistory(filterVal: string){
+    this.historyDataSource.filter = filterVal.trim().toLowerCase();       
+  }
+  onApplyFilterResultQuery(filterVal: string){
+    this.tableResultQueryDataSource.filter = filterVal.trim().toLowerCase();       
+  }
+  
   onClickCloseConnection(){
     if(this.currentConnection){
       let name:string=this.currentConnection['name'];
@@ -419,8 +433,12 @@ onExecuteQuery(){
   }
   onClickNavigateKeyspace(){
    if(this.selectedKeysPageIndex==4){
-     this.gaindeService.getAllHistories();
+     this.gaindeService.getAllHistories(this.allHistory,this.gaindeService.currentGainde.connectionName);
    }
+  }
+  onClickFilterHistoryByConnection(){
+   // console.log('onClickFilterHistoryByConnection ='+this.allHistory);   
+    this.gaindeService.getAllHistories(!this.allHistory,this.gaindeService.currentGainde.connectionName);
   }
   onRefreshData(tableName:string){
     let connectionName=this.gaindeService.currentGainde.connectionName;
@@ -666,7 +684,7 @@ setColumns = new Set<string>();
         requestData['data']={};
         let mapTemp=new Map<string,string>();
         data['columns'].forEach(col=>{
-           if(col['partitionKey']){
+           if(col['partitionKey'] || col['clusteredColumn']){
              partitionKeys.push(col.name);
              requestData['data'][col.name]={'data':data['row'][col.name],'type':col.type};
            }else{

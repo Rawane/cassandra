@@ -16,22 +16,23 @@ import com.xoolibeut.gainde.cassandra.controller.dtos.KeyspaceDTO;
 @Repository
 public class KeyspaceRepositoryImp implements KeyspaceRepository {
 	private static final Logger LOGGER = LoggerFactory.getLogger(KeyspaceRepositoryImp.class);
+
 	@Override
-	public void createKeyspace(String connectionName,KeyspaceDTO keyspaceDTO) throws Exception {
+	public void createKeyspace(String connectionName, KeyspaceDTO keyspaceDTO) throws Exception {
 		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
 		if (session == null) {
 			throw new Exception("aucune session");
 		}
-		StringBuilder sb = new StringBuilder("CREATE KEYSPACE IF NOT EXISTS ").append(keyspaceDTO.getName())
+		StringBuilder sb = new StringBuilder("CREATE KEYSPACE IF NOT EXISTS ").append(addQuote(keyspaceDTO.getName()))
 				.append(" WITH replication = {").append("'class':'").append(keyspaceDTO.getStrategy());
-				if("SimpleStrategy".equals(keyspaceDTO.getStrategy())){
-					sb.append("','replication_factor':").append(keyspaceDTO.getReplication());
-				}else {
-					keyspaceDTO.getDataCenter().forEach((key,value)->{
-						sb.append("','"+key+"':").append(value);
-					});					
-				}				
-				sb.append("} AND DURABLE_WRITES = " + keyspaceDTO.isDurableWrite() + ";");
+		if ("SimpleStrategy".equals(keyspaceDTO.getStrategy())) {
+			sb.append("','replication_factor':").append(keyspaceDTO.getReplication());
+		} else {
+			keyspaceDTO.getDataCenter().forEach((key, value) -> {
+				sb.append("','" + key + "':").append(value);
+			});
+		}
+		sb.append("} AND DURABLE_WRITES = " + keyspaceDTO.isDurableWrite() + ";");
 
 		String query = sb.toString();
 		session.execute(query);
@@ -39,12 +40,12 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 	}
 
 	@Override
-	public void alterKeyspace(String connectionName,KeyspaceDTO keyspaceDTO ) throws Exception {
+	public void alterKeyspace(String connectionName, KeyspaceDTO keyspaceDTO) throws Exception {
 		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
 		if (session == null) {
 			throw new Exception("aucune session");
 		}
-		StringBuilder sb = new StringBuilder("ALTER KEYSPACE ").append(keyspaceDTO.getName())
+		StringBuilder sb = new StringBuilder("ALTER KEYSPACE ").append(addQuote(keyspaceDTO.getName()))
 				.append(" WITH replication = {").append("'class':'").append(keyspaceDTO.getStrategy())
 				.append("','replication_factor':").append(keyspaceDTO.getReplication())
 				.append("} AND DURABLE_WRITES = " + keyspaceDTO.isDurableWrite() + ";");
@@ -75,10 +76,10 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 
 	@Override
 	public KeyspaceDTO getKeyspace(String connectionName, String keyspaceName) throws Exception {
-		KeyspaceDTO keyspaceDTO=new KeyspaceDTO();
+		KeyspaceDTO keyspaceDTO = new KeyspaceDTO();
 		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
 		if (cluster != null) {
-			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(keyspaceName);
+			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
 			if (keyspaceMetadata != null) {
 				Map<String, String> map = keyspaceMetadata.getReplication();
 				LOGGER.info(map.toString());
@@ -86,10 +87,10 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 				keyspaceDTO.setReplication(map.get("replication_factor"));
 				keyspaceDTO.setStrategy(map.get("class"));
 				keyspaceDTO.setDurableWrite(keyspaceMetadata.isDurableWrites());
-				keyspaceMetadata.getTables().forEach(table->{
-					Map<String,String> mapTable=new HashMap<>();
-					LOGGER.info("exportAsString "+table.getName()+"   "+table.exportAsString());
-					LOGGER.info("asCQLQuery "+table.getName()+"   "+table.asCQLQuery());
+				keyspaceMetadata.getTables().forEach(table -> {
+					Map<String, String> mapTable = new HashMap<>();
+					LOGGER.info("exportAsString " + table.getName() + "   " + table.exportAsString());
+					LOGGER.info("asCQLQuery " + table.getName() + "   " + table.asCQLQuery());
 					mapTable.put("name", table.getName());
 					keyspaceDTO.getTables().add(mapTable);
 				});
@@ -98,4 +99,13 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 		return keyspaceDTO;
 	}
 
+	/**
+	 * Pour la gestion des majuscule
+	 * 
+	 * @param element
+	 * @return
+	 */
+	private String addQuote(String element) {
+		return "\"" + element + "\"";
+	}
 }

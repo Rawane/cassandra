@@ -72,8 +72,8 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 					Collection<TableMetadata> tables = metadata.getTables();
 					if (tables != null) {
 						tables.forEach(table -> {
-							//LOGGER.info("exportAsString "+table.getName()+"   "+table.exportAsString());
-							//LOGGER.info("asCQLQuery "+table.getName()+"   "+table.asCQLQuery());
+							// LOGGER.info("exportAsString "+table.getName()+" "+table.exportAsString());
+							// LOGGER.info("asCQLQuery "+table.getName()+" "+table.asCQLQuery());
 							gaindeFirstChild.addMeta(new GaindeMetadataDTO(table.getName(),
 									gaindeFirstChild.getId() + "#" + table.getName(), 2));
 						});
@@ -100,15 +100,15 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 		List<ColonneTableDTO> listColumDTO = new ArrayList<>();
 		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
 		if (cluster != null) {
-			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(keyspaceName);
+			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
 			if (keyspaceMetadata != null) {
-				TableMetadata tableMetadata = keyspaceMetadata.getTable(tableName);
+				TableMetadata tableMetadata = keyspaceMetadata.getTable(addQuote(tableName));
 				if (tableMetadata != null) {
 					List<ColumnMetadata> columnMetadatas = tableMetadata.getColumns();
 					Collection<IndexMetadata> indexMetadatas = tableMetadata.getIndexes();
 					List<String> listIndex = new ArrayList<>();
 					indexMetadatas.forEach(index -> {
-						listIndex.add(index.getTarget());
+						listIndex.add(removeQuote(index.getTarget()));
 					});
 					List<String> listPartionkey = new ArrayList<>();
 					List<String> listClusteredColumn = new ArrayList<>();
@@ -138,6 +138,11 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 						} else {
 							colonneDTO.setType(columMeta.getType().getName().name());
 						}
+						System.out.println("@@" + columMeta.getName() + "@@");
+						System.out.println("--------------------");
+						System.out.println("@@" + listIndex.get(0) + "@@");
+						System.out.println("TEST " + columMeta.getName().equalsIgnoreCase(listIndex.get(0))
+								+ "   test content " + listIndex.contains(columMeta.getName()));
 						colonneDTO.setIndexed(listIndex.contains(columMeta.getName()));
 						colonneDTO.setPartitionKey(listPartionkey.contains(columMeta.getName()));
 						colonneDTO.setClusteredColumn(listClusteredColumn.contains(columMeta.getName()));
@@ -156,19 +161,19 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 		TableDTO tableInfoDTO = new TableDTO();
 		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
 		if (cluster != null) {
-			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(keyspaceName);
+			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
 			if (keyspaceMetadata != null) {
-				TableMetadata tableMetadata = keyspaceMetadata.getTable("\""+tableName+"\"");
+				TableMetadata tableMetadata = keyspaceMetadata.getTable(addQuote(tableName));
 				if (tableMetadata != null) {
-					LOGGER.info("exportAsString "+tableMetadata.getName()+"   "+tableMetadata.exportAsString());
+					LOGGER.info("exportAsString " + tableMetadata.getName() + "   " + tableMetadata.exportAsString());
 					tableInfoDTO.setName(tableMetadata.getName());
 					Collection<IndexMetadata> indexMetadatas = tableMetadata.getIndexes();
 					List<IndexColumn> listIndexColumns = new ArrayList<>();
 					indexMetadatas.forEach(index -> {
-						String target= index.getTarget();
-						if(target.length()>1) {
-							if(target.startsWith("\"")) {
-								target=target.substring(1, target.length()-1);	
+						String target = index.getTarget();
+						if (target.length() > 1) {
+							if (target.startsWith("\"")) {
+								target = target.substring(1, target.length() - 1);
 							}
 						}
 						IndexColumn indexColumn = new IndexColumn(index.getName(), target);
@@ -192,7 +197,8 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 
 	public long countAllRows(String connectionName, String keyspaceName, String tableName) {
 		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		ResultSet resulset = session.execute(QueryBuilder.select().countAll().from(keyspaceName, "\""+tableName+"\""));
+		ResultSet resulset = session
+				.execute(QueryBuilder.select().countAll().from(addQuote(keyspaceName), addQuote(tableName)));
 		if (resulset != null) {
 			Row row = resulset.one();
 			if (row != null) {
@@ -217,5 +223,25 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 			}
 		}
 
+	}
+
+	/**
+	 * Pour la gestion des majuscule
+	 * 
+	 * @param element
+	 * @return
+	 */
+	private String addQuote(String element) {
+		return "\"" + element + "\"";
+	}
+
+	private String removeQuote(String element) {
+		if (element == null || element.length() < 2) {
+			return element;
+		}
+		if (element.startsWith("\"")) {
+			return element.substring(1, element.length() - 1);
+		}
+		return element;
 	}
 }
