@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.xoolibeut.gainde.cassandra.controller.dtos.CoupleTableDTO;
+import com.xoolibeut.gainde.cassandra.controller.dtos.Pagination;
 import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
 import com.xoolibeut.gainde.cassandra.repository.TableRepository;
 
@@ -37,7 +38,7 @@ public class TableController {
 			@PathVariable("kespace") String keyspaceName, @RequestBody String query) {
 		try {
 			JsonNode jsonNode = tableRepository.executeQuery(connectionName, keyspaceName, query);
-			ObjectMapper mapper = new ObjectMapper();			
+			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
@@ -95,14 +96,24 @@ public class TableController {
 		}
 	}
 
-	@GetMapping("/all/{connectionName}/{kespace}/{tableName}/{page}")
-	public ResponseEntity<String> getAllDataByPaginate1(@PathVariable("connectionName") String connectionName,
-			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName,
-			@PathVariable("tableName") int page) {
+	@GetMapping("/list/{connectionName}/{kespace}/{tableName}/{total}/{pageSate}/{pageNumSate}/{pageSize}/{pageNum}")
+	public ResponseEntity<String> getAllDataByPaginate(@PathVariable("connectionName") String connectionName,
+			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName,@PathVariable("total") Long total,
+			@PathVariable("pageSate") String pageSate, @PathVariable("pageNumSate") Integer pageNumSate,
+			@PathVariable("pageSize") Integer pageSize, @PathVariable("pageNum") Integer pageNum) {
 		try {
-			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage1(connectionName, keyspaceName, tableName,
-					page);
+			Pagination pagination = new Pagination();
+			pagination.setPageSate(pageSate);
+			pagination.setPageNum(pageNum);
+			pagination.setPageSize(pageSize);
+			pagination.setPageNumSate(pageNumSate);
+			pagination.setTotal(total);
+			
+			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage(connectionName, keyspaceName, tableName,
+					pagination);
 			ObjectMapper mapper = new ObjectMapper();
+			LOGGER.info(" Pagination "+mapper.writeValueAsString(pagination));
+			LOGGER.info(" Resultat  "+mapper.writeValueAsString(jsonNode));
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
@@ -110,13 +121,18 @@ public class TableController {
 		}
 	}
 
-	@PostMapping("/all/{connectionName}/{kespace}/{tableName}/{page}")
-	public ResponseEntity<String> getAllDataByPaginateX(@PathVariable("connectionName") String connectionName,
+	@GetMapping("/list/{connectionName}/{kespace}/{tableName}/{pageNumSate}/{pageSize}/{pageNum}")
+	public ResponseEntity<String> getAllDataByPaginateInitial(@PathVariable("connectionName") String connectionName,
 			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName,
-			@PathVariable("tableName") int page, @RequestBody Map<String, Object> mapPrimaryKey) {
+			@PathVariable("pageNumSate") Integer pageNumSate, @PathVariable("pageSize") Integer pageSize,
+			@PathVariable("pageNum") Integer pageNum) {
 		try {
-			JsonNode jsonNode = tableRepository.getAllDataPaginateByPageX(connectionName, keyspaceName, tableName, page,
-					mapPrimaryKey);
+			Pagination pagination = new Pagination();
+			pagination.setPageNum(pageNum);
+			pagination.setPageSize(pageSize);
+			pagination.setPageNumSate(pageNumSate);
+			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage(connectionName, keyspaceName, tableName,
+					pagination);
 			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
 		} catch (Exception ioException) {

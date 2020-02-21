@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import {HttpClient,HttpHeaders} from '@angular/common/http';
-import {Subject} from 'rxjs'
+import {Subject, Observable} from 'rxjs'
 import {environment} from '../../environments/environment';
 import {ConnectionDTO, KeyspaceDTO,ActionHttp,GaindeCommunication, TableDTO,HistoryDTO} from '../model/model-dto';
 
@@ -185,6 +185,16 @@ export class GaindeService {
           this.emitMapTransfertKeyspaceSubject(ActionHttp.ALL_DATA_TABLE_ERROR,error['error']['error']); 
         }
       );      
+  } 
+  getAllDataPaginate(connectionName:string,keyspace:string,table:string,total:number,pageSate:string,pageNumSate:number, pageSize:number,pageNum:number):Observable<JSON[]> {   
+   let ultServer=environment['basePathGainde']+'/table/list/'+connectionName+'/'+keyspace+'/'+table+'/'+total+'/'+pageSate+'/'+
+   pageNumSate+'/'+pageSize+'/'+pageNum;
+   if(pageSate.length==0){
+    ultServer=environment['basePathGainde']+'/table/list/'+connectionName+'/'+keyspace+'/'+table+'/'+
+    pageNumSate+'/'+pageSize+'/'+pageNum;
+   }
+    return this.httpClient
+      .get<JSON[]>(ultServer,this.httpOptions);
   } 
   saveKeyspace(connectionName:string,keyspaceDTO:KeyspaceDTO){
     this.httpClient

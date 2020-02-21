@@ -21,6 +21,7 @@ import org.springframework.stereotype.Repository;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.PagingState;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -43,6 +44,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ColonneTableDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.IndexColumn;
+import com.xoolibeut.gainde.cassandra.controller.dtos.Pagination;
 import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
 import com.xoolibeut.gainde.cassandra.util.GaindeUtil;
 
@@ -53,6 +55,7 @@ public class TableRepositoryImpl implements TableRepository {
 	private List<String> keyQueryStructure;
 	@Autowired
 	private ConnectionCassandraRepository cassandraRepository;
+
 	@PostConstruct
 	public void init() {
 		keyQueryData = new ArrayList<String>();
@@ -314,7 +317,7 @@ public class TableRepositoryImpl implements TableRepository {
 	public JsonNode getAllDataByTableName(String connectionName, String keyspaceName, String tableName)
 			throws Exception {
 		Session session = getSession(connectionName);
-		Cluster cluster = getCluster(connectionName);		
+		Cluster cluster = getCluster(connectionName);
 		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(addQuote(tableName));
 		LOGGER.info("exportAsString " + table.getName() + "   " + table.exportAsString());
 		LOGGER.info("asCQLQuery " + table.getName() + "   " + table.asCQLQuery());
@@ -347,8 +350,8 @@ public class TableRepositoryImpl implements TableRepository {
 
 	public JsonNode getAllDataPaginateByPage1(String connectionName, String keyspaceName, String tableName, int page)
 			throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		Cluster cluster = GaindeSessionConnection.getInstance().getCluster(connectionName);
+		Session session = getSession(connectionName);
+		Cluster cluster = getCluster(connectionName);
 		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(tableName);
 		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
 		List<String> partionKeys = new ArrayList<String>();
@@ -366,24 +369,95 @@ public class TableRepositoryImpl implements TableRepository {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
-
 		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys, mapper, rootNode);
-		Iterator<Row> iter = resulSet.iterator();
-		while (resulSet.getAvailableWithoutFetching() > 0) {
-			Row row = iter.next();
-			ObjectNode rowNode = buildRowNode(mapper, columns, row);
-			// LOGGER.debug("rowNode "+mapper.writeValueAsString(rowNode));
-			arrayNode.add(rowNode);
+		if (resulSet != null) {
+			Iterator<Row> iter = resulSet.iterator();
+			while (resulSet.getAvailableWithoutFetching() > 0) {
+				Row row = iter.next();
+				ObjectNode rowNode = buildRowNode(mapper, columns, row);
+				// LOGGER.debug("rowNode "+mapper.writeValueAsString(rowNode));
+				arrayNode.add(rowNode);
 
+			}
+			rootNode.set("data", arrayNode);
+			PagingState pagingState = resulSet.getExecutionInfo().getPagingState();
+			String pagingStateSt = pagingState.toString();
+			rootNode.put("pagingState", pagingStateSt);
 		}
+		return rootNode;
+	}
+
+	public JsonNode getAllDataPaginateByPage(String connectionName, String keyspaceName, String tableName,
+			Pagination pagination) throws Exception {
+		Session session =getSession(connectionName);
+		Cluster cluster = getCluster(connectionName);
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode rootNode = mapper.createObjectNode();
+		ArrayNode arrayNode = mapper.createArrayNode();
 		rootNode.set("data", arrayNode);
+		if (pagination.getPageSate() == null && pagination.getPageNum() != 1) {
+			return rootNode;
+		}
+		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(tableName);
+		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
+		List<String> partionKeys = new ArrayList<String>();
+		partionMetaKeys.forEach(columnMeta -> {
+			partionKeys.add(columnMeta.getName());
+		});
+		List<ColumnMetadata> clusteredColumnMetaKeys = table.getClusteringColumns();
+		List<String> clusteredColumKeys = new ArrayList<String>();
+		clusteredColumnMetaKeys.forEach(columnMeta -> {
+			clusteredColumKeys.add(columnMeta.getName());
+		});
+		if (pagination.getPageNum() == 1) {
+			long rows = this.cassandraRepository.countAllRows(connectionName, keyspaceName, tableName);
+			rootNode.put("rows", rows);
+			pagination.setTotal(rows);
+			pagination.setPageCount((int) (rows / pagination.getPageSize()));
+		} else {
+			rootNode.put("rows", pagination.getTotal());
+		}
+
+		Select statement = QueryBuilder.select().from(addQuote(keyspaceName), tableName);
+		statement.setFetchSize(pagination.getPageSize());
+		if (pagination.getPageSate() != null && !pagination.getPageSate().isEmpty()) {
+			statement.setPagingState(PagingState.fromString(pagination.getPageSate()));
+		}
+
+		ResultSet resulSet = session.execute(statement);
+		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys, mapper, rootNode);
+		int countSaut = pagination.getPageNum() - pagination.getPageNumSate();
+		LOGGER.info("getAllDataPaginateByPage  nombre de saut "+countSaut);
+		for (int i = 0; i < countSaut; i++) {
+			PagingState pagingState = resulSet.getExecutionInfo().getPagingState();
+			statement.setPagingState(pagingState);
+			resulSet = session.execute(statement);
+			
+		}
+		if (resulSet != null) {
+			Iterator<Row> iter = resulSet.iterator();
+			while (resulSet.getAvailableWithoutFetching() > 0) {
+				Row row = iter.next();
+				ObjectNode rowNode = buildRowNode(mapper, columns, row);
+				arrayNode.add(rowNode);
+
+			}
+			PagingState pagingState = resulSet.getExecutionInfo().getPagingState();
+			if (pagingState != null) {
+				String pagingStateSt = pagingState.toString();
+				pagination.setPageSate(pagingStateSt);
+				pagination.setPageNumSate(pagination.getPageNum()+1);
+
+			}
+		}
+		rootNode.set("pagination", mapper.convertValue(pagination, JsonNode.class));
 		return rootNode;
 	}
 
 	public JsonNode getAllDataPaginateByPageX(String connectionName, String keyspaceName, String tableName, int page,
 			Map<String, Object> mapPrimaryKey) throws Exception {
 		Session session = getSession(connectionName);
-		Cluster cluster = getCluster(connectionName);		
+		Cluster cluster = getCluster(connectionName);
 		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(addQuote(tableName));
 		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
 		List<String> partionKeys = new ArrayList<String>();
@@ -571,10 +645,7 @@ public class TableRepositoryImpl implements TableRepository {
 
 	public void removeRowData(String connectionName, String keyspaceName, String tableName, Map<String, Object> map)
 			throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
+		Session session = getSession(connectionName);
 		List<Clause> clauses = new ArrayList<>();
 		map.keySet().forEach(key -> {
 			clauses.add(QueryBuilder.eq(addQuote(key), map.get(key)));
@@ -592,10 +663,7 @@ public class TableRepositoryImpl implements TableRepository {
 	}
 
 	public void removeAllData(String connectionName, String keyspaceName, String tableName) throws Exception {
-		Session session = GaindeSessionConnection.getInstance().getSession(connectionName);
-		if (session == null) {
-			throw new Exception("aucune session");
-		}
+		Session session = getSession(connectionName);
 		Truncate truncate = QueryBuilder.truncate(addQuote(keyspaceName), addQuote(tableName));
 
 		LOGGER.info("removeAllData CQL " + truncate);
@@ -662,9 +730,11 @@ public class TableRepositoryImpl implements TableRepository {
 		query = String.join(" ", listQuery);
 		return query;
 	}
-	private Session getSession(String connectionName) throws Exception {		
+
+	private Session getSession(String connectionName) throws Exception {
 		return cassandraRepository.getSession(connectionName);
 	}
+
 	private Cluster getCluster(String connectionName) throws Exception {
 		return cassandraRepository.getCluster(connectionName);
 	}

@@ -47,7 +47,7 @@ export const FORMAT_GAINDE: MatDateFormats = {
     EditTableComponent,
     AutofocusDirective,
     AddTableComponent,
-    DialogAddInfoTableComponent
+    DialogAddInfoTableComponent,
     
   ],
   imports: [

@@ -4,15 +4,15 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.datastax.driver.core.DataType;
@@ -25,12 +25,16 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ColonneTableDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ConnectionDTO;
+import com.xoolibeut.gainde.cassandra.controller.dtos.Pagination;
 import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
 
 @RunWith(SpringRunner.class)
+@SpringBootTest
 public class TableRepositoryTest {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TableRepositoryTest.class);
-	private TableRepository tableRepository = new TableRepositoryImpl();
+	@Autowired
+	private TableRepository tableRepository;
+	@Autowired
 	private ConnectionCassandraRepository cassandraRepository;
 
 	// @Before
@@ -38,12 +42,10 @@ public class TableRepositoryTest {
 		String connectionName = "LOCAL";
 		ConnectionDTO connectionDTO = new ConnectionDTO(connectionName);
 		connectionDTO.setIp("127.0.0.1");
-		connectionDTO.setPort(9042);
-		cassandraRepository = new ConnectionCassandraRepositoryImpl();
+		connectionDTO.setPort(9042);		
 		try {
 			cassandraRepository.connnectTocassandra(connectionDTO);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
+		} catch (Exception e) {			
 			e.printStackTrace();
 		}
 	}
@@ -184,29 +186,94 @@ public class TableRepositoryTest {
 		}
 
 	}
+	@Test
+	public void testgetAllPaginateSaut() {
+		LOGGER.info("start testgetAllPaginate");
 
+		try {
+			setUp();
+			ObjectMapper mapper = new ObjectMapper();
+			Pagination pagination = new Pagination();
+			pagination.setPageNum(1);
+			pagination.setPageSize(3);
+			List<String> personnes=new ArrayList<String>();
+			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
+					"personne", pagination);
+			ArrayNode array=(ArrayNode) jsonNode.get("data");
+			array.forEach(node->{
+				personnes.add(node.get("name").asText());
+			});
+			LOGGER.info("----------------------------------------------------------------------------------------");
+			LOGGER.info(mapper.writeValueAsString(jsonNode));
+			pagination = mapper.treeToValue(jsonNode.get("pagination"), Pagination.class);			
+			pagination.setPageNum(8);
+			jsonNode = tableRepository.getAllDataPaginateByPage("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
+					"personne", pagination);
+			LOGGER.info(mapper.writeValueAsString(jsonNode));
+			 array=(ArrayNode) jsonNode.get("data");
+				array.forEach(node->{
+					personnes.add(node.get("name").asText());
+				});
+			LOGGER.info("----------------------------------------------------------------------------------------");
+			personnes.forEach(System.out::println);
+			LOGGER.info("----------------------------------------------------------------------------------------");
+			
+			closeConnection();
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		}
+
+	}
 	@Test
 	public void testgetAllPaginate() {
 		LOGGER.info("start testgetAllPaginate");
 
 		try {
+			setUp();
 			ObjectMapper mapper = new ObjectMapper();
-			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage1("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
-					"aa_personne", 10);
+			Pagination pagination = new Pagination();
+			pagination.setPageNum(1);
+			pagination.setPageSize(3);
+			List<String> personnes=new ArrayList<String>();
+			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
+					"personne", pagination);
+			ArrayNode array=(ArrayNode) jsonNode.get("data");
+			array.forEach(node->{
+				personnes.add(node.get("name").asText());
+			});
+			LOGGER.info("----------------------------------------------------------------------------------------");
 			LOGGER.info(mapper.writeValueAsString(jsonNode));
-			ArrayNode arrayData = (ArrayNode) jsonNode.get("data");
-			JsonNode rowNode = arrayData.get(arrayData.size() - 1);
-			String primaRyKey = rowNode.get("nom").asText();
-			Map<String, Object> map = new HashMap<>();
-			map.put("nom", primaRyKey);
-
-			jsonNode = tableRepository.getAllDataPaginateByPageX("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
-					"aa_personne", 10, map);
-			LOGGER.info("testgetAllPaginate " + primaRyKey);
-			LOGGER.info(
-					"---------------------------------------------------------------------------------------------");
+			pagination = mapper.treeToValue(jsonNode.get("pagination"), Pagination.class);
+			pagination.setPageNum(2);
+			jsonNode = tableRepository.getAllDataPaginateByPage("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
+					"personne", pagination);
 			LOGGER.info(mapper.writeValueAsString(jsonNode));
-
+			 array=(ArrayNode) jsonNode.get("data");
+			array.forEach(node->{
+				personnes.add(node.get("name").asText());
+			});
+			pagination.setPageNum(3);
+			jsonNode = tableRepository.getAllDataPaginateByPage("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
+					"personne", pagination);
+			LOGGER.info(mapper.writeValueAsString(jsonNode));
+			 array=(ArrayNode) jsonNode.get("data");
+			array.forEach(node->{
+				personnes.add(node.get("name").asText());
+			});
+			pagination.setPageNum(4);
+			jsonNode = tableRepository.getAllDataPaginateByPage("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
+					"personne", pagination);
+			LOGGER.info(mapper.writeValueAsString(jsonNode));
+			 array=(ArrayNode) jsonNode.get("data");
+				array.forEach(node->{
+					personnes.add(node.get("name").asText());
+				});
+			LOGGER.info("----------------------------------------------------------------------------------------");
+			personnes.forEach(System.out::println);
+			LOGGER.info("----------------------------------------------------------------------------------------");
+			
+			closeConnection();
 		} catch (Exception e) {
 
 			e.printStackTrace();

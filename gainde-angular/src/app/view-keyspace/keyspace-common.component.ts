@@ -1,4 +1,4 @@
-import { OnInit,OnDestroy,ViewChild } from '@angular/core';
+import { OnInit,OnDestroy,ViewChild,AfterViewInit } from '@angular/core';
 import {FormGroup,FormBuilder} from '@angular/forms'; 
 import {Router} from '@angular/router';
 import {Subscription,Subject} from 'rxjs';
@@ -11,14 +11,16 @@ import {MatDialog} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {GaindeService} from '../services/gainde.service';
 import {ConnectionDTO,VIEW_ECRAN,Meta,HistoryDTO} from '../model/model-dto';
+import{GaindeDataSource} from '../commons/server-side-datasource';
 
 
-export class KeyspaceComponent implements OnInit,OnDestroy {
+export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
     dataSource = new MatTreeNestedDataSource<Meta>();
     partVisible:VIEW_ECRAN; 
     allNotificationSubscription:Subscription;
     notifKeyspaceByDialog:Subscription;
     @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
+    @ViewChild('paginatorGainde', {static: false}) paginatorGainde: MatPaginator;
     @ViewChild(MatSort, {static: false}) sort: MatSort;
     currentConnection:ConnectionDTO;   
     notificationDialogSubject=new Subject<any>();
@@ -37,6 +39,8 @@ export class KeyspaceComponent implements OnInit,OnDestroy {
     dispColumnsHeadTableData;
     colonneDataSource=new MatTableDataSource<JSON>();
     tableDatasDataSource=new MatTableDataSource<JSON>();
+    tableDataPaginateDataSource:GaindeDataSource;
+    displayedColumnsPaginateData: string[];
     tableResultQueryDataSource=new MatTableDataSource<JSON>();
     displayedColumnsQueryData: string[];
     filterResultQueryData='';
@@ -70,6 +74,9 @@ export class KeyspaceComponent implements OnInit,OnDestroy {
          ngOnInit() {
            
           }  
+          ngAfterViewInit() {
+            
+        }
           ngOnDestroy() {
             if( this.allNotificationSubscription){
               this.allNotificationSubscription.unsubscribe();

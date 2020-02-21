@@ -106,6 +106,17 @@ export class TableDTO {
     }
    
 }
+export class Pagination{    
+    pageSate:string;
+    pageNumSate :number;
+    pageSize :number;
+    pageNum :number;
+    total :number;
+    constructor( ){
+
+    }
+        
+}
 export class ColumnDTO {
      name:string ;
      oldName:string;

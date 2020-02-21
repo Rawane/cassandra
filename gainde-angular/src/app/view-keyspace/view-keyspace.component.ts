@@ -3,7 +3,7 @@ import {FormBuilder,Validators} from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import {Router} from '@angular/router';
 import {Subscription} from 'rxjs';
-
+import { tap} from 'rxjs/operators';
 import {MatDialog, MatDialogRef,MAT_DIALOG_DATA} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {GaindeService} from '../services/gainde.service';
@@ -11,6 +11,7 @@ import {KeyspaceDTO,ActionHttp,VIEW_ECRAN,ActionDialog,Meta} from '../model/mode
 import {KeyspaceComponent} from './keyspace-common.component';
 import{DialogData} from '../view-connections/view-connections.component';
 import {CdkDragStart, CdkDropList,CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
+import { GaindeDataSource } from '../commons/server-side-datasource';
 
 @Component({
   selector: 'app-view-keyspace',
@@ -83,9 +84,21 @@ onExecuteQuery(){
     this.notifKeyspaceByDialog=this.gaindeService.notifParentDialogKeyspace.subscribe((dataSource:any)=>{
     this.setDisplayedColumnsByNotif(dataSource);
     });
-    this.initObservable();     
+    this.initObservable();    
+    this.tableDataPaginateDataSource=new GaindeDataSource(this.gaindeService); 
   }  
+  ngAfterViewInit() {
+   
+}
 
+loadDataRows() {
+  this.tableDataPaginateDataSource.loadDataRows(
+    this.currentTableKeys[2],
+      '',
+      'asc',this.tableDataPaginateDataSource.currentPagination.total,this.tableDataPaginateDataSource.currentPagination.pageSate,this.tableDataPaginateDataSource.currentPagination.pageNumSate,
+      this.paginatorGainde.pageSize,
+      this.paginatorGainde.pageIndex);
+}
   private initObservable() {
     this.notificationSelectKeyIndexSubs=this.notificationSelectKeyIndex.subscribe((pageIndex)=>{
       /*setTimeout(()=>{    
@@ -310,7 +323,7 @@ onExecuteQuery(){
           this.gaindeService.getAllDataTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
         }  
       }else{
-
+        
       }
     }
   }
@@ -321,6 +334,22 @@ onExecuteQuery(){
         this.isDataLoading=true;
         this.gaindeService.getAllDataTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
       }  
+    }else{
+      if(this.selectedPageIndex==2) 
+      {
+        //this.selectedPageIndex=0;
+        if(this.currentTableKeys){
+          //this.isDataLoading=true;   
+          this.paginatorGainde.page.pipe(
+            tap(() => this.loadDataRows())
+        )
+        .subscribe();      
+          this.tableDataPaginateDataSource.loadDataRows(this.currentTableKeys[2], '','asc',-1,'',1,  20,  1);         
+         
+         
+        }  
+      }
+
     }
     
   }
