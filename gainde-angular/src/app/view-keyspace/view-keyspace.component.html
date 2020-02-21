@@ -261,7 +261,7 @@
                                         </mat-table>                                             
                                         
                                     </div>
-                                    <mat-paginator    [length]="paginationResultQuerySize"   [pageSize]="10"  [showFirstLastButtons]="true" [hidden]="!tableResultQueryDataSource.data.length">
+                                    <mat-paginator    [length]="paginationResultQuerySize" [pageSizeOptions]="[5, 10, 20,50, 100]"   [pageSize]="10"  [showFirstLastButtons]="true" [hidden]="!tableResultQueryDataSource.data.length">
                                     </mat-paginator> 
                                 </div>
                             </mat-tab>
@@ -505,7 +505,7 @@
                                     <mat-row  *matRowDef="let row; columns: displayedColumnsTableData;"></mat-row>         
                                 </mat-table>                                                            
                              </div>
-                             <mat-paginator    [length]="paginationTableDataSize"   [pageSize]="10"  [showFirstLastButtons]="true" [hidden]="!tableDatasDataSource.data.length && !bigTable">
+                             <mat-paginator    [length]="paginationTableDataSize" [pageSizeOptions]="[5, 10, 20,50, 100]"  [pageSize]="10"  [showFirstLastButtons]="true" [hidden]="!tableDatasDataSource.data.length && !bigTable">
                             </mat-paginator>  
                         </mat-tab>
                         <mat-tab >
@@ -535,7 +535,7 @@
                                     <mat-row  *matRowDef="let row; columns: tableDataPaginateDataSource.columns;"></mat-row>         
                                 </mat-table>                                                                                       
                              </div>  
-                             <mat-paginator  #paginatorGainde  [length]="tableDataPaginateDataSource?.currentPagination?.total"   [pageSize]="20"  [showFirstLastButtons]="true" [hidden]="!tableDataPaginateDataSource?.columns" >
+                             <mat-paginator  #paginatorGainde [pageSizeOptions]="[5, 10, 20,50, 100]"  [length]="tableDataPaginateDataSource?.currentPagination?.total"   [pageSize]="20"  [showFirstLastButtons]="true" [hidden]="!tableDataPaginateDataSource?.columns" >
                             </mat-paginator>                              
                         </mat-tab>
                         <mat-tab >

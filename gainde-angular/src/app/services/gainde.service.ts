@@ -189,7 +189,7 @@ export class GaindeService {
   getAllDataPaginate(connectionName:string,keyspace:string,table:string,total:number,pageSate:string,pageNumSate:number, pageSize:number,pageNum:number):Observable<JSON[]> {   
    let ultServer=environment['basePathGainde']+'/table/list/'+connectionName+'/'+keyspace+'/'+table+'/'+total+'/'+pageSate+'/'+
    pageNumSate+'/'+pageSize+'/'+pageNum;
-   if(pageSate.length==0){
+   if(pageSate.length==0 || pageNum==1){
     ultServer=environment['basePathGainde']+'/table/list/'+connectionName+'/'+keyspace+'/'+table+'/'+
     pageNumSate+'/'+pageSize+'/'+pageNum;
    }

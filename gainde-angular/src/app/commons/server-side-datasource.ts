@@ -11,7 +11,14 @@ export class GaindeDataSource implements DataSource<JSON> {
     public loading = this.loadingSubject.asObservable();
     columns:string[];
     currentPagination:Pagination;
-    constructor(private gaindeService: GaindeService) {}
+    mapPageState=new Map<number,Pagination>();
+    constructor(private gaindeService: GaindeService) {
+        this.currentPagination=new Pagination();
+        this.currentPagination.pageSate='';
+        this.currentPagination.pageNumSate=1;       
+        this.currentPagination.total=-1;
+        this.currentPagination.pageNum=1;        
+    }
     connect(collectionViewer: CollectionViewer): Observable<JSON[]> {
         return this.dataRowsSubject.asObservable();
     }
@@ -22,9 +29,30 @@ export class GaindeDataSource implements DataSource<JSON> {
     }
     loadDataRows(tableName: string, filter = '',
             sortDirection = 'asc',total=-1,pageSate='',pageNumSate=1, pageSize = 20, pageIndex = 1) {
+      console.log('loadDataRows'+JSON.stringify(this.currentPagination));  
+      console.log('loadDataRows pagesate '+pageIndex+"  "+pageNumSate+"  "+this.currentPagination.pageNum);       
+      console.log('11 loadDataRows pageSate '+pageSate); 
     this.loadingSubject.next(true);
     let connecTionName=this.gaindeService.currentGainde.connectionName;
     let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
+    if(this.currentPagination.pageNum>pageIndex){
+        console.log('loadDataRows precedent '+this.currentPagination.pageNum+"  "+pageIndex); 
+        let paginate=this.mapPageState.get(pageIndex);
+        if(paginate){
+            pageSate=paginate.pageSate;
+            pageNumSate=paginate.pageNumSate;
+            console.log('loadDataRows pageSate '+pageSate); 
+        }else{
+            let keys = Array.from(this.mapPageState.keys() );
+            keys.sort((a, b) => a-b);
+            if(keys.length>0){
+                paginate=this.mapPageState.get(keys[keys.length-1]); 
+                pageSate=paginate.pageSate;
+                pageNumSate=paginate.pageNumSate;  
+            }
+            console.log('loadDataRows keys '+JSON.stringify(keys)); 
+        }
+    }
     this.gaindeService.getAllDataPaginate(connecTionName, keyspaceName,tableName,total,pageSate,pageNumSate,pageSize,pageIndex
         ).pipe(
         catchError(() => of([])),
@@ -33,17 +61,21 @@ export class GaindeDataSource implements DataSource<JSON> {
     )
     .subscribe(results => {
         this.columns=[];
-        results['columns'].forEach((column:any) => {
-            this.columns.push(column['name']);
-        });
+        if(results['columns']){
+            results['columns'].forEach((column:any) => {
+                this.columns.push(column['name']);
+            });
+        }
         console.log('loadDataRows columns '+JSON.stringify(this.columns));
-        if(results['pagination']){
+        if(results['pagination']){   
+            this.mapPageState.set(this.currentPagination.pageNumSate,this.currentPagination);        
             this.currentPagination=new Pagination();
             this.currentPagination.pageSate=results['pagination']['pageSate'];
             this.currentPagination.pageNumSate=results['pagination']['pageNumSate'];
             this.currentPagination.pageSize=results['pagination']['pageSize'];
             this.currentPagination.pageNum=results['pagination']['pageNum'];
             this.currentPagination.total=results['pagination']['total'];
+           
         }
         if(results['data']){
         this.dataRowsSubject.next(results['data']);
