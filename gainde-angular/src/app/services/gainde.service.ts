@@ -409,6 +409,21 @@ export class GaindeService {
       }
     );    
   }
+  executetableWhereQuery(connectionName:string,keyspaceName:string,query:string){
+   
+    this.httpClient
+    .post<JSON>(environment['basePathGainde']+'/table/query/'+connectionName+'/'+keyspaceName,query,this.httpOptions)
+    .subscribe(
+      (response) => {            
+        console.log('response  : ' + JSON.stringify(response));        
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.ALL_DATA_TABLE,response);
+      },
+      (error) => {     
+        console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.ALL_DATA_TABLE_ERROR,error['error']['error']);        
+      }
+    );    
+  }
   saveQuery(history:HistoryDTO){
     this.httpClient
     .post<JSON>(environment['basePathGainde']+'/history',history,this.httpOptions)

@@ -5,10 +5,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.PostConstruct;
@@ -87,17 +87,21 @@ public class TableRepositoryImpl implements TableRepository {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
-		ArrayNode arrayColumns = mapper.createArrayNode();
 		rootNode.set("data", arrayNode);
-		rootNode.set("columns", arrayColumns);
+
 		LOGGER.info("executeQuery " + query);
 		ResultSet resultSet = session.execute(query);
 		if (resultSet != null) {
-			AtomicBoolean atomicBoolean = new AtomicBoolean(false);
+
+			Map<String, String> mapMeta = new HashMap<>();
 			resultSet.all().forEach((row) -> {
 				ObjectNode jsonNode = mapper.createObjectNode();
 				row.getColumnDefinitions().asList().forEach((definition) -> {
 					LOGGER.info(definition.getName());
+					if (mapMeta.isEmpty()) {
+						mapMeta.put("table", definition.getTable());
+						mapMeta.put("keyspace", definition.getKeyspace());
+					}
 					Object object = row.getObject(addQuote(definition.getName()));
 					if (object != null) {
 						switch (definition.getType().getName()) {
@@ -130,14 +134,15 @@ public class TableRepositoryImpl implements TableRepository {
 					} else {
 						jsonNode.put(definition.getName(), "");
 					}
-					if (!atomicBoolean.get()) {
-						arrayColumns.add(definition.getName());
-					}
 
 				});
-				atomicBoolean.getAndSet(true);
 				arrayNode.add(jsonNode);
 			});
+			if (!mapMeta.isEmpty()) {
+				TableMetadata table = cluster.getMetadata().getKeyspace(mapMeta.get("keyspace"))
+						.getTable(mapMeta.get("table"));
+				rootNode.set("columns", buildColumnArrayNodes(table));
+			}
 
 		}
 
@@ -322,26 +327,12 @@ public class TableRepositoryImpl implements TableRepository {
 		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(addQuote(tableName));
 		LOGGER.info("exportAsString " + table.getName() + "   " + table.exportAsString());
 		LOGGER.info("asCQLQuery " + table.getName() + "   " + table.asCQLQuery());
-		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
-		List<String> partionKeys = new ArrayList<String>();
-		partionMetaKeys.forEach(columnMeta -> {
-			partionKeys.add(columnMeta.getName());
-		});
-		List<ColumnMetadata> clusteredColumnMetaKeys = table.getClusteringColumns();
-		List<String> clusteredColumKeys = new ArrayList<String>();
-		clusteredColumnMetaKeys.forEach(columnMeta -> {
-			clusteredColumKeys.add(columnMeta.getName());
-		});
-		Collection<IndexMetadata> indexes = table.getIndexes();
-		List<String> listIndexed = new ArrayList<String>();
-		indexes.forEach(columnMeta -> {
-			listIndexed.add(columnMeta.getName());
-		});
+
 		ResultSet resulSet = session.execute(QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableName)));
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
-		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys,listIndexed, mapper, rootNode);
+		List<ColumnMetadata> columns = buildColumns(table, rootNode);
 		Iterator<Row> iter = resulSet.iterator();
 		while (iter.hasNext()) {
 			Row row = iter.next();
@@ -358,28 +349,14 @@ public class TableRepositoryImpl implements TableRepository {
 		Session session = getSession(connectionName);
 		Cluster cluster = getCluster(connectionName);
 		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(tableName);
-		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
-		List<String> partionKeys = new ArrayList<String>();
-		partionMetaKeys.forEach(columnMeta -> {
-			partionKeys.add(columnMeta.getName());
-		});
-		List<ColumnMetadata> clusteredColumnMetaKeys = table.getClusteringColumns();
-		List<String> clusteredColumKeys = new ArrayList<String>();
-		clusteredColumnMetaKeys.forEach(columnMeta -> {
-			clusteredColumKeys.add(columnMeta.getName());
-		});
 		Select statement = QueryBuilder.select().from(addQuote(keyspaceName), tableName);
 		statement.setFetchSize(page);
 		ResultSet resulSet = session.execute(statement);
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
-		Collection<IndexMetadata> indexes = table.getIndexes();
-		List<String> listIndexed = new ArrayList<String>();
-		indexes.forEach(columnMeta -> {
-			listIndexed.add(columnMeta.getName());
-		});
-		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys,listIndexed, mapper, rootNode);
+
+		List<ColumnMetadata> columns = buildColumns(table, rootNode);
 		if (resulSet != null) {
 			Iterator<Row> iter = resulSet.iterator();
 			while (resulSet.getAvailableWithoutFetching() > 0) {
@@ -399,7 +376,7 @@ public class TableRepositoryImpl implements TableRepository {
 
 	public JsonNode getAllDataPaginateByPage(String connectionName, String keyspaceName, String tableName,
 			Pagination pagination) throws Exception {
-		Session session =getSession(connectionName);
+		Session session = getSession(connectionName);
 		Cluster cluster = getCluster(connectionName);
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
@@ -409,21 +386,6 @@ public class TableRepositoryImpl implements TableRepository {
 			return rootNode;
 		}
 		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(addQuote(tableName));
-		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
-		List<String> partionKeys = new ArrayList<String>();
-		partionMetaKeys.forEach(columnMeta -> {
-			partionKeys.add(columnMeta.getName());
-		});
-		List<ColumnMetadata> clusteredColumnMetaKeys = table.getClusteringColumns();
-		List<String> clusteredColumKeys = new ArrayList<String>();
-		clusteredColumnMetaKeys.forEach(columnMeta -> {
-			clusteredColumKeys.add(columnMeta.getName());
-		});
-		Collection<IndexMetadata> indexes = table.getIndexes();
-		List<String> listIndexed = new ArrayList<String>();
-		indexes.forEach(columnMeta -> {
-			listIndexed.add(columnMeta.getName());
-		});
 		if (pagination.getPageNum() == 1) {
 			long rows = this.cassandraRepository.countAllRows(connectionName, keyspaceName, tableName);
 			rootNode.put("rows", rows);
@@ -433,22 +395,21 @@ public class TableRepositoryImpl implements TableRepository {
 			rootNode.put("rows", pagination.getTotal());
 		}
 
-		Select statement = QueryBuilder.select().from(addQuote(keyspaceName),addQuote( tableName));
+		Select statement = QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableName));
 		statement.setFetchSize(pagination.getPageSize());
 		if (pagination.getPageSate() != null && !pagination.getPageSate().isEmpty()) {
 			statement.setPagingState(PagingState.fromString(pagination.getPageSate()));
 		}
-		LOGGER.info("getAllDataPaginateByPage Query "+statement);
-
-		ResultSet resulSet = session.execute(statement);		
-		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys,listIndexed, mapper, rootNode);
+		LOGGER.info("getAllDataPaginateByPage Query " + statement);
+		ResultSet resulSet = session.execute(statement);
+		List<ColumnMetadata> columns = buildColumns(table, rootNode);
 		int countSaut = pagination.getPageNum() - pagination.getPageNumSate();
-		LOGGER.info("getAllDataPaginateByPage  nombre de saut "+countSaut);
+		LOGGER.info("getAllDataPaginateByPage  nombre de saut " + countSaut);
 		for (int i = 0; i < countSaut; i++) {
 			PagingState pagingState = resulSet.getExecutionInfo().getPagingState();
 			statement.setPagingState(pagingState);
 			resulSet = session.execute(statement);
-			
+
 		}
 		if (resulSet != null) {
 			Iterator<Row> iter = resulSet.iterator();
@@ -462,9 +423,9 @@ public class TableRepositoryImpl implements TableRepository {
 			if (pagingState != null) {
 				String pagingStateSt = pagingState.toString();
 				pagination.setPageSate(pagingStateSt);
-				pagination.setPageNumSate(pagination.getPageNum()+1);
+				pagination.setPageNumSate(pagination.getPageNum() + 1);
 
-			}else {
+			} else {
 				pagination.setPageSate("");
 				pagination.setPageNumSate(pagination.getPageNum());
 			}
@@ -522,7 +483,7 @@ public class TableRepositoryImpl implements TableRepository {
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
 
-		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys,listIndexed, mapper, rootNode);
+		List<ColumnMetadata> columns = buildColumns(table, rootNode);
 		Iterator<Row> iter = resulSet.iterator();
 		while (resulSet.getAvailableWithoutFetching() > 0) {
 			Row row = iter.next();
@@ -633,10 +594,33 @@ public class TableRepositoryImpl implements TableRepository {
 		return rowNode;
 	}
 
-	private List<ColumnMetadata> buildColumns(TableMetadata table, List<String> partionKeys,
-			List<String> clusteredColumKeys,List<String>listIndexed, ObjectMapper mapper, ObjectNode rootNode) {
-		ArrayNode listColumnsName = mapper.createArrayNode();
+	private List<ColumnMetadata> buildColumns(TableMetadata table, ObjectNode rootNode) {
+		List<ColumnMetadata> columns = table.getColumns();
+		ArrayNode listColumnsName = buildColumnArrayNodes(table);
+		rootNode.set("columns", listColumnsName);
+		return columns;
+	}
+
+	private ArrayNode buildColumnArrayNodes(TableMetadata table) {
+
+		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
+		List<String> partionKeys = new ArrayList<String>();
+		partionMetaKeys.forEach(columnMeta -> {
+			partionKeys.add(columnMeta.getName());
+		});
+		List<ColumnMetadata> clusteredColumnMetaKeys = table.getClusteringColumns();
+		List<String> clusteredColumKeys = new ArrayList<String>();
+		clusteredColumnMetaKeys.forEach(columnMeta -> {
+			clusteredColumKeys.add(columnMeta.getName());
+		});
+		Collection<IndexMetadata> indexes = table.getIndexes();
+		List<String> listIndexed = new ArrayList<String>();
+		indexes.forEach(columnMeta -> {
+			listIndexed.add(columnMeta.getName());
+		});
+		ObjectMapper mapper = new ObjectMapper();
 		List<ObjectNode> columnsNodes = new ArrayList<ObjectNode>();
+		ArrayNode listColumnsName = mapper.createArrayNode();
 		List<ColumnMetadata> columns = table.getColumns();
 		columns.forEach(column -> {
 			ObjectNode jsonColumn = mapper.createObjectNode();
@@ -663,9 +647,7 @@ public class TableRepositoryImpl implements TableRepository {
 		columnsNodes.forEach(jsonCol -> {
 			listColumnsName.add(jsonCol);
 		});
-
-		rootNode.set("columns", listColumnsName);
-		return columns;
+		return listColumnsName;
 	}
 
 	public void removeRowData(String connectionName, String keyspaceName, String tableName, Map<String, Object> map)

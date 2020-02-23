@@ -491,6 +491,13 @@ loadDataRows() {
       this.gaindeService.getKeyspaceInfo(this.gaindeService.currentGainde.connectionName,this.gaindeService.currentGainde.keyspaceName);     
       this.selectedKeysPageIndex=2;
   }
+  onClickQueryWhere(tableName:string){
+    let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
+    let query='SELECT * from "'+keyspaceName+'"."'+tableName+'" WHERE "'+this.whereColumnName+'"=\''+this.whereColumnValue+'\'';
+    this.displayedColumnsTableData=[];
+    this.dispColumnsHeadTableData=[];
+    this.gaindeService.executetableWhereQuery(this.gaindeService.currentGainde.connectionName,keyspaceName,query);
+  }
   onClickAddKeyspace(){    
     this.initForm();
     this.partVisible=VIEW_ECRAN.KEYSPACE_NEW;

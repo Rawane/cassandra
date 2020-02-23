@@ -36,6 +36,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
     displayedColumnsTableKeys=['tableName','tableAction','actionremove'];
     displayedColumnsIndex=['name','indexName'];
     displayedColumnsTableData: string[];
+    columnsQuery:string[];
     dispColumnsHeadTableData;
     colonneDataSource=new MatTableDataSource<JSON>();
     tableDatasDataSource=new MatTableDataSource<JSON>();
@@ -43,6 +44,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
     displayedColumnsPaginateData: string[];
     tableResultQueryDataSource=new MatTableDataSource<JSON>();
     displayedColumnsQueryData: string[];
+    columnsQueryData: string[];
     filterResultQueryData='';
     filterTableData='';
     filterTableKeyspaceData='';
@@ -70,6 +72,8 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
     allHistory:boolean=true;
     whereColumnValue:string;
     whereColumnName:string;
+    whereColumnValueBigData:string;
+    whereColumnNameBigData:string;
     constructor(protected gaindeService:GaindeService,protected router:Router,protected formBuilder:FormBuilder,
         protected snackBar:MatSnackBar,protected dialog: MatDialog) {
            
@@ -231,9 +235,13 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
       this.isDataLoading=false;
         if (mapTransfert.get("content")['columns']) {
           this.displayedColumnsTableData = [];
+          this.columnsQuery=[];
           mapTransfert.get("content")['columns'].forEach(col => {
             //console.log('columns ' + JSON.stringify(col));
             this.displayedColumnsTableData.push(col['name']);
+            if(col['partitionKey']||col['clusteredColumn'] || col['indexed']){
+              this.columnsQuery.push(col['name']);
+           }
           });
           this.displayedColumnsTableData.push('action_gainde');
           this.displayedColumnsTableData.push('action_remove_gainde');
@@ -285,9 +293,13 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
       protected doAfterGetExecuteQuery(mapTransfert: Map<string, any>):void {
         this.isQueryLoading=false;      
         this.openSnackBar('Query exécuté avec succes', '');
-        this.displayedColumnsQueryData =mapTransfert.get("content")['columns'];   
-        if(this.displayedColumnsQueryData.length>0){
-                 
+        this.columnsQueryData =mapTransfert.get("content")['columns']; 
+        this.displayedColumnsQueryData=[];
+        console.log("doAfterGetExecuteQuery "+JSON.stringify( this.columnsQueryData)) ;
+        this.columnsQueryData.forEach((column)=>{
+          this.displayedColumnsQueryData.push(column['name']);
+        });
+        if(this.columnsQueryData.length>0){                 
             this.tableResultQueryDataSource.data = mapTransfert.get("content")['data'];
             this.paginationResultQuerySize = mapTransfert.get("content")['data'].length;
             this.tableResultQueryDataSource.paginator = this.paginator;
