@@ -194,9 +194,19 @@ loadDataRows() {
             this.emitNotificationDialogSubject({ 'errorDialog': true, 'data': mapTransfert.get("content") });
             break;
           }
+          case ActionHttp.INSERT_BIG_DATA_TABLE:
+            {
+              this.doAfterInsertBigDataToTable(mapTransfert);
+              break;
+            }
         case ActionHttp.UPDATE_DATA_TABLE:
           {
             this.doAfterUpdateDataToTable(mapTransfert);
+            break;
+          }
+          case ActionHttp.UPDATE_BIG_DATA_TABLE:
+          {
+            this.doAfterUpdateBigDataToTable(mapTransfert);
             break;
           }
         case ActionHttp.UPDATE_DATA_TABLE_ERROR:
@@ -209,6 +219,11 @@ loadDataRows() {
             this.doAfterRemoveOneRow(mapTransfert);
             break;
           }
+          case ActionHttp.REMOVE_ONE_ROW_BIG_DATA:
+          {
+            this.doAfterRemoveOneRowBigData(mapTransfert);
+            break;
+          }
         case ActionHttp.REMOVE_ONE_ROW_ERROR:
           {
             this.openDialog('Supression données ', mapTransfert.get("content"), false, '', ActionDialog.INFO);
@@ -219,6 +234,11 @@ loadDataRows() {
             this.doAfterRemoveAllRows(mapTransfert);
             break;
           }
+          case ActionHttp.REMOVE_ALL_ROWS_BIG_DATA:
+            {
+              this.doAfterRemoveAllRowsBigData(mapTransfert);
+              break;
+            }
         case ActionHttp.REMOVE_ALL_ROWS_ERROR:
           {
             this.openDialog('Supression données ', mapTransfert.get("content"), false, '', ActionDialog.INFO);
@@ -273,10 +293,18 @@ loadDataRows() {
 
   onVerifyDisplay(columnName:string):boolean{   
     //console.log(columnName)
-    return  this.setColumnInvisible.has(columnName);;
+    return  this.setColumnInvisible.has(columnName);
   }
+  onVerifyDisplayBigData(columnName:string):boolean{   
+    //console.log(columnName)
+    return  this.setColumnBigDataInvisible.has(columnName);
+  }
+  
   onShowSelectColumn(){
-    this.openDialogSelectColumn();
+    this.openDialogSelectColumn(this.dispColumnsHeadTableData,false);
+  }
+  onShowSelectColumnBigData(){
+    this.openDialogSelectColumn(this.tableDataPaginateDataSource.columns,true);
   }
   onApplyFilter(filterValue: string) {
     this.tableDatasDataSource.filter = filterValue.trim().toLowerCase();
@@ -323,7 +351,10 @@ loadDataRows() {
           this.gaindeService.getAllDataTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
         }  
       }else{
-        
+        if(this.selectedPageIndex==2) {
+          this.tableDataPaginateDataSource.loadDataRows(this.currentTableKeys[2], '','asc',-1,'',1,  this.paginator.pageSize,  1);         
+         
+        } 
       }
     }
   }
@@ -344,7 +375,7 @@ loadDataRows() {
             tap(() => this.loadDataRows())
         )
         .subscribe();      
-          this.tableDataPaginateDataSource.loadDataRows(this.currentTableKeys[2], '','asc',-1,'',1,  20,  1);         
+          this.tableDataPaginateDataSource.loadDataRows(this.currentTableKeys[2], '','asc',-1,'',1,  this.paginatorGainde.pageSize,  1);         
          
          
         }  
@@ -356,7 +387,14 @@ loadDataRows() {
 
   onClickEditRow(row,name){
     let data:any={'columns':this.dispColumnsHeadTableData,
-    'tableName':name,'row':row,'added':false};
+    'tableName':name,'row':row,'added':false,'bigData':false};
+   // console.log('onClickEditRow  : ' + JSON.stringify(data)); 
+    this.openDialogRow(data);
+    
+  }
+  onClickEditRowBigData(row,name){
+    let data:any={'columns':this.tableDataPaginateDataSource.columns,
+    'tableName':name,'row':row,'added':false,'bigData':true};
    // console.log('onClickEditRow  : ' + JSON.stringify(data)); 
     this.openDialogRow(data);
     
@@ -368,17 +406,50 @@ loadDataRows() {
       row[eltD.name]="";
     });
     let data:any={"columns":this.dispColumnsHeadTableData,
-    "tableName":name,'row':row,"added":true}; 
+    "tableName":name,'row':row,"added":true,'bigData':false}; 
+    this.openDialogRow(data);
+  }
+  onClickAddNewRowBigData(name){
+    //console.log('onClickEditRow  : ' + name); 
+    let row:any={};
+    this.tableDataPaginateDataSource.columns.forEach(eltD=>{
+      row[eltD['name']]="";
+    });
+    let data:any={"columns":this.tableDataPaginateDataSource.columns,
+    "tableName":name,'row':row,"added":true,'bigData':true}; 
     this.openDialogRow(data);
   }
   onClickRemoveAllRow(tableName:string){
     let map=new Map<string,string>();
     map.set('gainDeTableName',tableName);
+    map.set('bigDataGainde','false');
     this.openDialog('Confirmation de suppression',"Voulez-vous supprimer toutes lignes de la table  "+tableName+" du Keyspace "+this.currentTableKeys[1]+" ?",true,map,ActionDialog.ACTION_DELETE_ALL_RAWS); 
  }
+ onClickRemoveAllRowBigData(tableName:string){
+  let map=new Map<string,string>();
+  map.set('gainDeTableName',tableName);
+  map.set('bigDataGainde','true');
+  this.openDialog('Confirmation de suppression',"Voulez-vous supprimer toutes lignes de la table  "+tableName+" du Keyspace "+this.currentTableKeys[1]+" ?",true,map,ActionDialog.ACTION_DELETE_ALL_RAWS); 
+}
   onClickRemoveRow(row:any,tableName:string){
     let map=new Map<string,string>();
     map.set('gainDeTableName',tableName);
+    map.set('bigDataGainde','false');
+    let parTiTionKey='';
+    if(this.tableInfo['columns']){
+      this.tableInfo['columns'].forEach(element => {
+        if(element['partitionKey']){
+          parTiTionKey=parTiTionKey+' '+element['name']+':'+row[element['name']];
+          map.set(element['name'],row[element['name']]);
+        }
+      });
+  }
+    this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la ligne avec la clé de partition "+parTiTionKey+" de la table "+tableName+"?",true,map,ActionDialog.ACTION_DELETE_ONE_ROW); 
+  }
+  onClickRemoveRowBigData(row:any,tableName:string){
+    let map=new Map<string,string>();
+    map.set('gainDeTableName',tableName);
+    map.set('bigDataGainde','true');
     let parTiTionKey='';
     if(this.tableInfo['columns']){
       this.tableInfo['columns'].forEach(element => {
@@ -413,6 +484,12 @@ loadDataRows() {
     this.gaindeService.currentGainde.connectionName =connectionName;
     this.gaindeService.currentGainde.keyspaceName =keyspaceName; 
     this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la table "+tableName+" du keyspace "+keyspaceName+"?",true,key,ActionDialog.ACTION_DELETE_TABLE);
+  }
+  onClickShowQuery(tableName:string){  
+      this.partVisible=VIEW_ECRAN.KEYSPACE_INFO;  
+      this.queryContent='SELECT * from "'+this.gaindeService.currentGainde.keyspaceName+'"."'+tableName+'";';  
+      this.gaindeService.getKeyspaceInfo(this.gaindeService.currentGainde.connectionName,this.gaindeService.currentGainde.keyspaceName);     
+      this.selectedKeysPageIndex=2;
   }
   onClickAddKeyspace(){    
     this.initForm();
@@ -475,6 +552,9 @@ loadDataRows() {
     this.isDataLoading=true;             
     this.gaindeService.getAllDataTable(connectionName,keyspaceName,tableName);
   }
+  onRefreshBigData(tableName:string){         
+    this.tableDataPaginateDataSource.loadDataRows(tableName, '','asc',-1,'',1,  this.paginator.pageSize,  1);         
+  }
   onStrategyChange(){
     this.keyspaceForm.get('strategy').valueChanges.subscribe(val => {
       if(val==='SimpleStrategy'){
@@ -528,20 +608,23 @@ loadDataRows() {
           { 
             let map=result['data'] as Map<string,string>;
             let tableName=map.get('gainDeTableName');
+            let bigData=map.get('bigDataGainde')=='true';
             map.delete('gainDeTableName');
+            map.delete('bigDataGainde');
             let data={};
             map.forEach((value,key)=>{
               //console.log("key "+key+"  value "+value);
               data[key]=value;
             });
             //console.log("map data  "+JSON.stringify(data));
-            this.gaindeService.removeRowDataTable(data,this.currentTableKeys[0],this.currentTableKeys[1],tableName);
+            this.gaindeService.removeRowDataTable(data,this.currentTableKeys[0],this.currentTableKeys[1],tableName,bigData);
             break;
           }
           case ActionDialog.ACTION_DELETE_ALL_RAWS:
           { let map=result['data'] as Map<string,string>;
              let tableName=map.get('gainDeTableName');
-            this.gaindeService.removeAllRowDataTable(this.currentTableKeys[0],this.currentTableKeys[1],tableName);
+             let bigData=map.get('bigDataGainde')=='true';
+            this.gaindeService.removeAllRowDataTable(this.currentTableKeys[0],this.currentTableKeys[1],tableName,bigData);
             break;
           }
           default:
@@ -587,26 +670,44 @@ loadDataRows() {
 
     });
   }
-  private openDialogSelectColumn(): void {
+  private openDialogSelectColumn(columns:any,bigData:boolean): void {
     //let columnSource=[...this.colonneDataSource.data];
     let columnSource=[];
-    this.dispColumnsHeadTableData.forEach((column)=>{
-      columnSource.push({'name':column['name'],'check':!this.setColumnInvisible.has(column['name'])});
+   
+    columns.forEach((column)=>{
+      if(bigData){       
+      columnSource.push({'name':column['name'],'check':!this.setColumnBigDataInvisible.has(column['name'])}); 
+      }else{       
+        columnSource.push({'name':column['name'],'check':!this.setColumnInvisible.has(column['name'])});  
+      }
     });
-    
+    let dataSelect={'columns':columnSource,'bigData':bigData};
     let dialogRef = this.dialog.open(DialogSelectColumnComponent, {
       width: '500px',
-      data: {source:columnSource}
+      data: {source:dataSelect}
     });
   
-    dialogRef.afterClosed().subscribe(result => {     
-      if(result!=null && result.length>1){
-        this.setColumnInvisible.clear();
-        result.forEach((column)=>{
-          if(!column['check']){
-            this.setColumnInvisible.add(column['name']);
-          }
-        });
+    dialogRef.afterClosed().subscribe(result => {  
+      console.log('afterClosed '+JSON.stringify(result));   
+      if(result!=null){
+        if(result['bigData']){
+          console.log('afterClosed setColumnBigDataInvisible');
+          this.setColumnBigDataInvisible.clear();
+          result['columns'].forEach((column)=>{
+            if(!column['check']){
+              this.setColumnBigDataInvisible.add(column['name']);
+            }
+          });
+        }else{
+          console.log('afterClosed setColumnBigDataInvisible');
+          this.setColumnInvisible.clear();
+          result['columns'].forEach((column)=>{
+              if(!column['check']){
+                this.setColumnInvisible.add(column['name']);
+              }
+            });
+        }
+        
       }
       dialogRef=null;
     });
@@ -706,7 +807,7 @@ setColumns = new Set<string>();
             requestData['data'][col.name]={'data':data['row'][col.name],'type':col.type};
           }
           } );    
-         this.gaindeService.insertDataTable(requestData,connectionName,keyspaceName,data['tableName']);
+         this.gaindeService.insertDataTable(requestData,connectionName,keyspaceName,data['tableName'],data['bigData']);
       }else{
         let partitionKeys:string[]=[];
         let requestData:any={};
@@ -729,7 +830,7 @@ setColumns = new Set<string>();
           }
         });
         requestData['partitionKeys']=partitionKeys;
-       this.gaindeService.updateDataTable(requestData,connectionName,keyspaceName,data['tableName']);
+       this.gaindeService.updateDataTable(requestData,connectionName,keyspaceName,data['tableName'],data['bigData']);
       }
      }
   }
@@ -771,7 +872,7 @@ checked:boolean=true;
   ngOnInit() {
   }
   onToggleCheck(){
-    this.data['source'].forEach((column)=>{
+    this.data['source']['columns'].forEach((column)=>{
       column['check']=!this.checked;
     });
   }

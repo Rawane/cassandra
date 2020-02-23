@@ -6,7 +6,7 @@
         <div class="col"><input type="checkbox" class="checkAll"   [(ngModel)]="checked" (click)="onToggleCheck()" > </div>
     </div> 
     <div cdkDropList class="column-list" (cdkDropListDropped)="drop($event)">
-    <div class="row rowColumn row-box" cdkDrag  *ngFor="let column of data.source">
+    <div class="row rowColumn row-box" cdkDrag  *ngFor="let column of data.source['columns']">
         <div class="col">
             {{column.name}}
         </div>

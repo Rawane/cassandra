@@ -189,7 +189,7 @@ export class GaindeService {
   getAllDataPaginate(connectionName:string,keyspace:string,table:string,total:number,pageSate:string,pageNumSate:number, pageSize:number,pageNum:number):Observable<JSON[]> {   
    let ultServer=environment['basePathGainde']+'/table/list/'+connectionName+'/'+keyspace+'/'+table+'/'+total+'/'+pageSate+'/'+
    pageNumSate+'/'+pageSize+'/'+pageNum;
-   if(pageSate.length==0 || pageNum==1){
+   if(!pageSate || pageSate.length==0 || pageNum==1){
     ultServer=environment['basePathGainde']+'/table/list/'+connectionName+'/'+keyspace+'/'+table+'/'+
     pageNumSate+'/'+pageSize+'/'+pageNum;
    }
@@ -285,13 +285,18 @@ export class GaindeService {
       }
     );    
   }
-  insertDataTable(data:any,connectionName:string,keyspaceName:string,tableName:string){
+  insertDataTable(data:any,connectionName:string,keyspaceName:string,tableName:string,bigTable:boolean){
+    console.log('insertDataTable '+bigTable);
     this.httpClient
     .post<JSON>(environment['basePathGainde']+'/table/insert/'+connectionName+'/'+keyspaceName+'/'+tableName,data,this.httpOptions)
     .subscribe(
       (response) => {            
-        console.log('response  : ' + JSON.stringify(response));        
-        this.emitMapTransfertKeyspaceSubject(ActionHttp.INSERT_DATA_TABLE,tableName); 
+        console.log('response  : ' + JSON.stringify(response));       
+        if(bigTable) {
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.INSERT_BIG_DATA_TABLE,tableName); 
+        }else{
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.INSERT_DATA_TABLE,tableName); 
+        }
 
       },
       (error) => {     
@@ -301,14 +306,17 @@ export class GaindeService {
     );    
   }
   
-  updateDataTable(data:any,connectionName:string,keyspaceName:string,tableName:string){
+  updateDataTable(data:any,connectionName:string,keyspaceName:string,tableName:string,bigTable:boolean){
     this.httpClient
     .put<JSON>(environment['basePathGainde']+'/table/update/'+connectionName+'/'+keyspaceName+'/'+tableName,data,this.httpOptions)
     .subscribe(
       (response) => {            
-        console.log('response  : ' + JSON.stringify(response));        
-        this.emitMapTransfertKeyspaceSubject(ActionHttp.UPDATE_DATA_TABLE,tableName); 
-
+        console.log('response  : ' + JSON.stringify(response));    
+        if(bigTable) {
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.UPDATE_BIG_DATA_TABLE,tableName);
+        }else{
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.UPDATE_DATA_TABLE,tableName);
+        }
       },
       (error) => {     
         console.log('Erreur ! : ' + JSON.stringify(error['error']['error']));          
@@ -316,14 +324,18 @@ export class GaindeService {
       }
     );    
   }
-  removeRowDataTable(data:any,connectionName:string,keyspaceName:string,tableName:string){
+  removeRowDataTable(data:any,connectionName:string,keyspaceName:string,tableName:string,bigData:boolean){
     console.log('removeRowDataTable '+JSON.stringify(data));
     this.httpClient
     .post<JSON>(environment['basePathGainde']+'/table/delete/'+connectionName+'/'+keyspaceName+'/'+tableName,data,this.httpOptions)
     .subscribe(
       (response) => {            
-        console.log('response  : ' + JSON.stringify(response));        
-        this.emitMapTransfertKeyspaceSubject(ActionHttp.REMOVE_ONE_ROW,tableName); 
+        console.log('response  : ' + JSON.stringify(response));    
+        if(bigData){    
+        this.emitMapTransfertKeyspaceSubject(ActionHttp.REMOVE_ONE_ROW_BIG_DATA,tableName); 
+        }else{
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.REMOVE_ONE_ROW,tableName); 
+        }
 
       },
       (error) => {     
@@ -332,13 +344,17 @@ export class GaindeService {
       }
     );    
   }
-  removeAllRowDataTable(connectionName:string,keyspaceName:string,tableName:string){
+  removeAllRowDataTable(connectionName:string,keyspaceName:string,tableName:string,bigData:boolean){
     this.httpClient
     .delete<JSON>(environment['basePathGainde']+'/table/delete/all/'+connectionName+'/'+keyspaceName+'/'+tableName,this.httpOptions)
     .subscribe(
       (response) => {            
-        console.log('response  : ' + JSON.stringify(response));        
-        this.emitMapTransfertKeyspaceSubject(ActionHttp.REMOVE_ALL_ROWS,tableName); 
+        console.log('response  : ' + JSON.stringify(response)); 
+        if(bigData)       {
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.REMOVE_ALL_ROWS_BIG_DATA,tableName); 
+        }else{
+          this.emitMapTransfertKeyspaceSubject(ActionHttp.REMOVE_ALL_ROWS,tableName); 
+        }
 
       },
       (error) => {     

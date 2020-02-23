@@ -94,7 +94,11 @@ export enum ActionHttp{
     ALL_HISTORY,
     ALL_HISTORY_ERROR,
     DELETE_HISTORY,
-    DELETE_HISTORY_ERROR
+    DELETE_HISTORY_ERROR,
+    UPDATE_BIG_DATA_TABLE,
+    INSERT_BIG_DATA_TABLE,
+    REMOVE_ONE_ROW_BIG_DATA,
+    REMOVE_ALL_ROWS_BIG_DATA,
 }
 export class TableDTO {
     columns:Array<ColumnDTO>=new Array();

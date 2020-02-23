@@ -398,7 +398,7 @@ public class TableRepositoryImpl implements TableRepository {
 		if (pagination.getPageSate() == null && pagination.getPageNum() != 1) {
 			return rootNode;
 		}
-		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(tableName);
+		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(addQuote(tableName));
 		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
 		List<String> partionKeys = new ArrayList<String>();
 		partionMetaKeys.forEach(columnMeta -> {
@@ -418,11 +418,12 @@ public class TableRepositoryImpl implements TableRepository {
 			rootNode.put("rows", pagination.getTotal());
 		}
 
-		Select statement = QueryBuilder.select().from(addQuote(keyspaceName), tableName);
+		Select statement = QueryBuilder.select().from(addQuote(keyspaceName),addQuote( tableName));
 		statement.setFetchSize(pagination.getPageSize());
 		if (pagination.getPageSate() != null && !pagination.getPageSate().isEmpty()) {
 			statement.setPagingState(PagingState.fromString(pagination.getPageSate()));
 		}
+		LOGGER.info("getAllDataPaginateByPage Query "+statement);
 
 		ResultSet resulSet = session.execute(statement);
 		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys, mapper, rootNode);
@@ -448,6 +449,9 @@ public class TableRepositoryImpl implements TableRepository {
 				pagination.setPageSate(pagingStateSt);
 				pagination.setPageNumSate(pagination.getPageNum()+1);
 
+			}else {
+				pagination.setPageSate("");
+				pagination.setPageNumSate(pagination.getPageNum());
 			}
 		}
 		rootNode.set("pagination", mapper.convertValue(pagination, JsonNode.class));

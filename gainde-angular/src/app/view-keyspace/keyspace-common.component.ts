@@ -60,6 +60,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
     filterHistoryData='';
     zoomData=false;
     setColumnInvisible=new Set<string>();
+    setColumnBigDataInvisible=new Set<string>();
     historyDataSource=new MatTableDataSource<JSON>();
     displayedColumnsHistory=['query','date','count','action','actionSupp'];
     previousIndex: number;
@@ -67,6 +68,8 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
     isQueryLoading:boolean=false;
     isDataLoading:boolean=false;
     allHistory:boolean=true;
+    whereColumnValue:string;
+    whereColumnName:string;
     constructor(protected gaindeService:GaindeService,protected router:Router,protected formBuilder:FormBuilder,
         protected snackBar:MatSnackBar,protected dialog: MatDialog) {
            
@@ -111,7 +114,16 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
             this.isDataLoading=true;
             this.gaindeService.getAllDataTable(connectionName, keyspaceName, mapTransfert.get("content"));
           }
-        
+          protected doAfterRemoveOneRowBigData(mapTransfert: Map<string, any>) {
+            this.openSnackBar('La ligne a été supprimée', '');
+           
+            this.tableDataPaginateDataSource.loadDataRows(this.currentTableKeys[2], '','asc',-1,'',1,  this.paginator.pageSize,  1);         
+          }
+          protected doAfterRemoveAllRowsBigData(mapTransfert: Map<string, any>) {
+            this.openSnackBar('Toutes les lignes ont été supprimées', '');
+            this.tableDataPaginateDataSource.loadDataRows(this.currentTableKeys[2], '','asc',-1,'',1,  this.paginator.pageSize,  1);         
+         
+          }
           protected doAfterUpdateDataToTable(mapTransfert: Map<string, any>) {
             let connectionName = this.gaindeService.currentGainde.connectionName;
             let keyspaceName = this.gaindeService.currentGainde.keyspaceName;
@@ -129,6 +141,18 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
             this.emitNotificationDialogSubject({ 'errorDialog': false, 'data': mapTransfert.get("content") });
             this.isDataLoading=true;
             this.gaindeService.getAllDataTable(connectionName, keyspaceName, mapTransfert.get("content"));
+          }
+          protected doAfterInsertBigDataToTable(mapTransfert: Map<string, any>) {            
+            this.openSnackBar('Données insérées avec succès', '');
+            this.emitNotificationDialogSubject({ 'errorDialog': false, 'data': mapTransfert.get("content") });
+            this.tableDataPaginateDataSource.loadDataRows(this.currentTableKeys[2], '','asc',-1,'',1,  this.paginator.pageSize,  1);         
+          }
+          protected doAfterUpdateBigDataToTable(mapTransfert: Map<string, any>) {
+            this.openSnackBar('Données mis à jour avec succès', '');
+            //this.dialog.closeAll();
+            this.emitNotificationDialogSubject({ 'errorDialog': false, 'data': mapTransfert.get("content") });           
+            this.tableDataPaginateDataSource.loadDataRows(this.currentTableKeys[2], '','asc',-1,'',1,  this.paginator.pageSize,  1);         
+         
           }
           protected openSnackBar(message: string, action: string) {
             this.snackBar.open(message, action, {

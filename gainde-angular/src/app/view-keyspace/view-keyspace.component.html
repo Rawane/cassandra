@@ -213,7 +213,7 @@
                                     <div *ngIf="keyspaceInfo && !isQueryLoading">
                                         <div class="row rowContentArea">                                            
                                                 <mat-label>Saisissez votre query</mat-label>
-                                                <textarea matInput placeholder="Select * from tableName" class="form-control textArea"
+                                                <textarea matInput placeholder="Select * from keyspace.table" class="form-control textArea"
                                                 rows="8" appAutofocus  [(ngModel)]="queryContent" spellcheck="false" (keydown.enter)="onExecuteQuery()"></textarea>
                                            
                                         </div>
@@ -439,7 +439,10 @@
                                             </mat-icon> 
                                             <mat-icon  (click)="onRefreshData(tableInfo.name)" style="margin-left: 20px;" class="actionClick" matTooltip="Refresh">
                                                 refresh
-                                         </mat-icon> 
+                                            </mat-icon> 
+                                            <mat-icon (click)="onClickShowQuery(tableInfo.name)" style="margin-left: 20px;" class="actionClick" matTooltip="Exécution Query">
+                                                play_circle_outline
+                                            </mat-icon>
                                         </div>                                      
                                        
                                      </div>
@@ -510,8 +513,31 @@
                         </mat-tab>
                         <mat-tab >
                             <ng-template matTabLabel>
-                                <span  >Données Paginées</span>
+                                <span  >Données(Big table)</span>
                             </ng-template>
+                            <div class="row" style="margin-top: 20px;">  
+                                <div class="col-6"> 
+                                <select id="whereColumn" class="form-control"    *ngIf="tableDataPaginateDataSource.columnsQuery">
+                                 <option *ngFor="let colQuery of tableDataPaginateDataSource.columnsQuery" [value]="colQuery">{{colQuery}}</option>                        
+                                </select>
+                                <input   class="form-control"  [(ngModel)]="whereColumnValue"
+                                >  
+                                </div>                                     
+                                <div class="col-6">                                                                                
+                                        <mat-icon  (click)="onZoomTable()" style="margin-left: 20px;" class="actionClick" matTooltip="Agrandir">
+                                            {{zoomData?'zoom_out':'zoom_in'}}
+                                        </mat-icon> 
+                                     <mat-icon  (click)="onShowSelectColumnBigData()" style="margin-left: 20px;" class="actionClick" matTooltip="Affichage Simplifié">
+                                           grid_on
+                                    </mat-icon> 
+                                    <mat-icon  (click)="onRefreshBigData(tableInfo.name)" style="margin-left: 20px;" class="actionClick" matTooltip="Refresh">
+                                        refresh
+                                 </mat-icon> 
+                                 <mat-icon (click)="onClickShowQuery(tableInfo.name)" style="margin-left: 20px;" class="actionClick" matTooltip="Exécution Query">
+                                    play_circle_outline
+                                </mat-icon>
+                                </div> 
+                            </div>     
                             <div class="row" *ngIf="tableDataPaginateDataSource.loading | async">   
                                 <div class="col"> </div>                                 
                                 <div class="col" style="text-align: center;"> <mat-spinner> </mat-spinner></div>
@@ -520,19 +546,53 @@
                             <div *ngIf="tableDataPaginateDataSource?.columns">                                                            
                                     
                                 <mat-table  #table [dataSource]="tableDataPaginateDataSource" matSort >
-                                    <ng-container  *ngFor="let colName of tableDataPaginateDataSource.columns ; let i = index" [matColumnDef]="colName">
-                                        <mat-header-cell *matHeaderCellDef >
-                                            {{colName}}                                            
+                                    <ng-container  *ngFor="let col of tableDataPaginateDataSource.columns ; let i = index" [matColumnDef]="col['name']">
+                                        <mat-header-cell *matHeaderCellDef  [ngClass]="{'columnDisplay':onVerifyDisplayBigData(col['name'])}" >
+                                            {{col['name']}}                                            
                                         </mat-header-cell>
                                         <mat-cell *matCellDef="let element"                                    
-                                                 >
-                                           <span > {{element[colName]}} </span>
+                                        [ngClass]="{'actionClick':true,'columnDisplay':onVerifyDisplayBigData(col['name'])}"  >
+                                           <span > {{element[col['name']]}} </span>
                                            
                                         </mat-cell>
                                     </ng-container>                                     
-                                                                                          
-                                    <mat-header-row  *matHeaderRowDef="tableDataPaginateDataSource.columns"></mat-header-row>
-                                    <mat-row  *matRowDef="let row; columns: tableDataPaginateDataSource.columns;"></mat-row>         
+                                        
+                                    <ng-container   matColumnDef="action_gainde">
+                                        <mat-header-cell *matHeaderCellDef class="actionHeadGainde" >
+                                            <mat-icon class="actionAddTable" 
+                                                                    (click)="onClickAddNewRowBigData(tableInfo.name)"
+                                                                    matTooltip="Ajouter une Ligne">
+                                                                add
+                                                        </mat-icon> 
+                                        </mat-header-cell>
+                                        <mat-cell *matCellDef="let element" class="actionHeadGainde"                                       
+                                                  >
+                                        <mat-icon class="actionAddTable"  matTooltip="Editer la Ligne"
+                                                  (click)="onClickEditRowBigData(element,tableInfo.name)" >
+                                              create
+                                          </mat-icon> 
+                                        </mat-cell>
+                                    </ng-container>
+                                    <ng-container   matColumnDef="action_remove_gainde">
+                                        <mat-header-cell *matHeaderCellDef class="actionHeadGainde">
+                                            <mat-icon class="actionAddTable" 
+                                                                    (click)="onClickRemoveAllRowBigData(tableInfo.name)"
+                                                                    matTooltip="Supprimer toutes les lignes">
+                                                                delete
+                                                        </mat-icon> 
+                                        </mat-header-cell>
+                                        <mat-cell *matCellDef="let element" class="actionHeadGainde"                                       
+                                                   >
+                                        <mat-icon class="actionAddTable"  matTooltip="Supprimer la Ligne"
+                                                  (click)="onClickRemoveRowBigData(element,tableInfo.name)" >
+                                              clear
+                                          </mat-icon> 
+                                         
+                                        </mat-cell>
+                                    </ng-container>
+
+                                    <mat-header-row  *matHeaderRowDef="tableDataPaginateDataSource.columnsDisplayed"></mat-header-row>
+                                    <mat-row  *matRowDef="let row; columns: tableDataPaginateDataSource.columnsDisplayed;"></mat-row>         
                                 </mat-table>                                                                                       
                              </div>  
                              <mat-paginator  #paginatorGainde [pageSizeOptions]="[5, 10, 20,50, 100]"  [length]="tableDataPaginateDataSource?.currentPagination?.total"   [pageSize]="20"  [showFirstLastButtons]="true" [hidden]="!tableDataPaginateDataSource?.columns" >

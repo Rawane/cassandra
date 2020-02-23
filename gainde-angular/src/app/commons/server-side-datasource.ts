@@ -10,6 +10,8 @@ export class GaindeDataSource implements DataSource<JSON> {
     private loadingSubject = new BehaviorSubject<boolean>(false);
     public loading = this.loadingSubject.asObservable();
     columns:string[];
+    columnsDisplayed:string[];
+    columnsQuery:string[];
     currentPagination:Pagination;
     mapPageState=new Map<number,Pagination>();
     constructor(private gaindeService: GaindeService) {
@@ -60,11 +62,18 @@ export class GaindeDataSource implements DataSource<JSON> {
         this.loadingSubject.next(false);})
     )
     .subscribe(results => {
-        this.columns=[];
+        this.columns=results['columns'];
+        this.columnsDisplayed=[];
+        this.columnsQuery=[];
         if(results['columns']){
-            results['columns'].forEach((column:any) => {
-                this.columns.push(column['name']);
+            results['columns'].forEach((column:any) => {                
+                this.columnsDisplayed.push(column['name']);
+                if(column['partitionKey']||column['clusteredKey'] || column['index']){
+                   this.columnsQuery.push(column['name']);
+                }
             });
+            this.columnsDisplayed.push('action_gainde');
+            this.columnsDisplayed.push('action_remove_gainde');
         }
         console.log('loadDataRows columns '+JSON.stringify(this.columns));
         if(results['pagination']){   
