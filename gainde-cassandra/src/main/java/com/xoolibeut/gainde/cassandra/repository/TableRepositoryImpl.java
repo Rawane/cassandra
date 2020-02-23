@@ -21,6 +21,7 @@ import org.springframework.stereotype.Repository;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.DataType;
+import com.datastax.driver.core.IndexMetadata;
 import com.datastax.driver.core.PagingState;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
@@ -331,12 +332,16 @@ public class TableRepositoryImpl implements TableRepository {
 		clusteredColumnMetaKeys.forEach(columnMeta -> {
 			clusteredColumKeys.add(columnMeta.getName());
 		});
+		Collection<IndexMetadata> indexes = table.getIndexes();
+		List<String> listIndexed = new ArrayList<String>();
+		indexes.forEach(columnMeta -> {
+			listIndexed.add(columnMeta.getName());
+		});
 		ResultSet resulSet = session.execute(QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableName)));
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
-
-		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys, mapper, rootNode);
+		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys,listIndexed, mapper, rootNode);
 		Iterator<Row> iter = resulSet.iterator();
 		while (iter.hasNext()) {
 			Row row = iter.next();
@@ -369,7 +374,12 @@ public class TableRepositoryImpl implements TableRepository {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
-		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys, mapper, rootNode);
+		Collection<IndexMetadata> indexes = table.getIndexes();
+		List<String> listIndexed = new ArrayList<String>();
+		indexes.forEach(columnMeta -> {
+			listIndexed.add(columnMeta.getName());
+		});
+		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys,listIndexed, mapper, rootNode);
 		if (resulSet != null) {
 			Iterator<Row> iter = resulSet.iterator();
 			while (resulSet.getAvailableWithoutFetching() > 0) {
@@ -409,6 +419,11 @@ public class TableRepositoryImpl implements TableRepository {
 		clusteredColumnMetaKeys.forEach(columnMeta -> {
 			clusteredColumKeys.add(columnMeta.getName());
 		});
+		Collection<IndexMetadata> indexes = table.getIndexes();
+		List<String> listIndexed = new ArrayList<String>();
+		indexes.forEach(columnMeta -> {
+			listIndexed.add(columnMeta.getName());
+		});
 		if (pagination.getPageNum() == 1) {
 			long rows = this.cassandraRepository.countAllRows(connectionName, keyspaceName, tableName);
 			rootNode.put("rows", rows);
@@ -425,8 +440,8 @@ public class TableRepositoryImpl implements TableRepository {
 		}
 		LOGGER.info("getAllDataPaginateByPage Query "+statement);
 
-		ResultSet resulSet = session.execute(statement);
-		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys, mapper, rootNode);
+		ResultSet resulSet = session.execute(statement);		
+		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys,listIndexed, mapper, rootNode);
 		int countSaut = pagination.getPageNum() - pagination.getPageNumSate();
 		LOGGER.info("getAllDataPaginateByPage  nombre de saut "+countSaut);
 		for (int i = 0; i < countSaut; i++) {
@@ -473,6 +488,11 @@ public class TableRepositoryImpl implements TableRepository {
 		clusteredColumnMetaKeys.forEach(columnMeta -> {
 			clusteredColumKeys.add(columnMeta.getName());
 		});
+		Collection<IndexMetadata> indexes = table.getIndexes();
+		List<String> listIndexed = new ArrayList<String>();
+		indexes.forEach(columnMeta -> {
+			listIndexed.add(columnMeta.getName());
+		});
 		AtomicInteger atomicInt = new AtomicInteger(0);
 		List<Clause> clauses = new ArrayList<>();
 		List<String> clauseWhere = new ArrayList<>();
@@ -502,7 +522,7 @@ public class TableRepositoryImpl implements TableRepository {
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
 
-		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys, mapper, rootNode);
+		List<ColumnMetadata> columns = buildColumns(table, partionKeys, clusteredColumKeys,listIndexed, mapper, rootNode);
 		Iterator<Row> iter = resulSet.iterator();
 		while (resulSet.getAvailableWithoutFetching() > 0) {
 			Row row = iter.next();
@@ -614,7 +634,7 @@ public class TableRepositoryImpl implements TableRepository {
 	}
 
 	private List<ColumnMetadata> buildColumns(TableMetadata table, List<String> partionKeys,
-			List<String> clusteredColumKeys, ObjectMapper mapper, ObjectNode rootNode) {
+			List<String> clusteredColumKeys,List<String>listIndexed, ObjectMapper mapper, ObjectNode rootNode) {
 		ArrayNode listColumnsName = mapper.createArrayNode();
 		List<ObjectNode> columnsNodes = new ArrayList<ObjectNode>();
 		List<ColumnMetadata> columns = table.getColumns();
@@ -623,6 +643,7 @@ public class TableRepositoryImpl implements TableRepository {
 			jsonColumn.put("name", column.getName());
 			jsonColumn.put("partitionKey", partionKeys.contains(column.getName()));
 			jsonColumn.put("clusteredColumn", clusteredColumKeys.contains(column.getName()));
+			jsonColumn.put("indexed", listIndexed.contains(column.getName()));
 			jsonColumn.put("type", column.getType().getName().name());
 			columnsNodes.add(jsonColumn);
 		});

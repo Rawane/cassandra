@@ -68,7 +68,7 @@ export class GaindeDataSource implements DataSource<JSON> {
         if(results['columns']){
             results['columns'].forEach((column:any) => {                
                 this.columnsDisplayed.push(column['name']);
-                if(column['partitionKey']||column['clusteredKey'] || column['index']){
+                if(column['partitionKey']||column['clusteredColumn'] || column['indexed']){
                    this.columnsQuery.push(column['name']);
                 }
             });
