@@ -88,20 +88,22 @@ public class TableRepositoryImpl implements TableRepository {
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
 		rootNode.set("data", arrayNode);
-
 		LOGGER.info("executeQuery " + query);
 		ResultSet resultSet = session.execute(query);
 		if (resultSet != null) {
-
+			Map<String, String> columsQuery = new HashMap<>();
 			Map<String, String> mapMeta = new HashMap<>();
+			resultSet.getColumnDefinitions().asList().forEach((definition) -> {
+				columsQuery.put(definition.getName(), definition.getType().getName().name());
+				if (mapMeta.isEmpty()) {
+					mapMeta.put("table", definition.getTable());
+					mapMeta.put("keyspace", definition.getKeyspace());
+				}
+			});
 			resultSet.all().forEach((row) -> {
 				ObjectNode jsonNode = mapper.createObjectNode();
 				row.getColumnDefinitions().asList().forEach((definition) -> {
 					LOGGER.info(definition.getName());
-					if (mapMeta.isEmpty()) {
-						mapMeta.put("table", definition.getTable());
-						mapMeta.put("keyspace", definition.getKeyspace());
-					}
 					Object object = row.getObject(addQuote(definition.getName()));
 					if (object != null) {
 						switch (definition.getType().getName()) {
@@ -134,14 +136,14 @@ public class TableRepositoryImpl implements TableRepository {
 					} else {
 						jsonNode.put(definition.getName(), "");
 					}
-
 				});
 				arrayNode.add(jsonNode);
 			});
+
 			if (!mapMeta.isEmpty()) {
-				TableMetadata table = cluster.getMetadata().getKeyspace(mapMeta.get("keyspace"))
-						.getTable(mapMeta.get("table"));
-				rootNode.set("columns", buildColumnArrayNodes(table));
+				TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(mapMeta.get("keyspace")))
+						.getTable(addQuote(mapMeta.get("table")));
+				rootNode.set("columns", buildColumnArrayNodes(table, columsQuery));
 			}
 
 		}
@@ -344,38 +346,8 @@ public class TableRepositoryImpl implements TableRepository {
 		return rootNode;
 	}
 
-	public JsonNode getAllDataPaginateByPage1(String connectionName, String keyspaceName, String tableName, int page)
-			throws Exception {
-		Session session = getSession(connectionName);
-		Cluster cluster = getCluster(connectionName);
-		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(tableName);
-		Select statement = QueryBuilder.select().from(addQuote(keyspaceName), tableName);
-		statement.setFetchSize(page);
-		ResultSet resulSet = session.execute(statement);
-		ObjectMapper mapper = new ObjectMapper();
-		ObjectNode rootNode = mapper.createObjectNode();
-		ArrayNode arrayNode = mapper.createArrayNode();
-
-		List<ColumnMetadata> columns = buildColumns(table, rootNode);
-		if (resulSet != null) {
-			Iterator<Row> iter = resulSet.iterator();
-			while (resulSet.getAvailableWithoutFetching() > 0) {
-				Row row = iter.next();
-				ObjectNode rowNode = buildRowNode(mapper, columns, row);
-				// LOGGER.debug("rowNode "+mapper.writeValueAsString(rowNode));
-				arrayNode.add(rowNode);
-
-			}
-			rootNode.set("data", arrayNode);
-			PagingState pagingState = resulSet.getExecutionInfo().getPagingState();
-			String pagingStateSt = pagingState.toString();
-			rootNode.put("pagingState", pagingStateSt);
-		}
-		return rootNode;
-	}
-
 	public JsonNode getAllDataPaginateByPage(String connectionName, String keyspaceName, String tableName,
-			Pagination pagination) throws Exception {
+			Map<String, String> mapWhereClause, Pagination pagination) throws Exception {
 		Session session = getSession(connectionName);
 		Cluster cluster = getCluster(connectionName);
 		ObjectMapper mapper = new ObjectMapper();
@@ -385,9 +357,32 @@ public class TableRepositoryImpl implements TableRepository {
 		if (pagination.getPageSate() == null && pagination.getPageNum() != 1) {
 			return rootNode;
 		}
-		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(addQuote(tableName));
+		
+		
+		Statement statement = QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableName));
+		List<Clause> clauses = new ArrayList<>();		
+		if (mapWhereClause != null && !mapWhereClause.isEmpty()) {
+			mapWhereClause.forEach((key, value) -> {				
+				clauses.add(QueryBuilder.eq(addQuote(key), value));
+
+			});
+			Select.Where whereClause = QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableName))
+					.where(clauses.get(0));
+			if (clauses.size() > 1) {
+				for (int i = 1; i < clauses.size(); i++) {
+					whereClause=whereClause.and(clauses.get(i));					
+				}
+			}
+			statement=whereClause;
+		}
+	
 		if (pagination.getPageNum() == 1) {
-			long rows = this.cassandraRepository.countAllRows(connectionName, keyspaceName, tableName);
+			long rows ;
+			if(statement instanceof Select) {
+			 rows = this.cassandraRepository.countAllRows(connectionName, keyspaceName, tableName);			
+			}else {
+				 rows = this.cassandraRepository.countAllRows(connectionName, keyspaceName, tableName,clauses);		
+			}
 			rootNode.put("rows", rows);
 			pagination.setTotal(rows);
 			pagination.setPageCount((int) (rows / pagination.getPageSize()));
@@ -395,13 +390,15 @@ public class TableRepositoryImpl implements TableRepository {
 			rootNode.put("rows", pagination.getTotal());
 		}
 
-		Select statement = QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableName));
+		
+
 		statement.setFetchSize(pagination.getPageSize());
 		if (pagination.getPageSate() != null && !pagination.getPageSate().isEmpty()) {
 			statement.setPagingState(PagingState.fromString(pagination.getPageSate()));
 		}
 		LOGGER.info("getAllDataPaginateByPage Query " + statement);
 		ResultSet resulSet = session.execute(statement);
+		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(addQuote(tableName));
 		List<ColumnMetadata> columns = buildColumns(table, rootNode);
 		int countSaut = pagination.getPageNum() - pagination.getPageNumSate();
 		LOGGER.info("getAllDataPaginateByPage  nombre de saut " + countSaut);
@@ -431,68 +428,6 @@ public class TableRepositoryImpl implements TableRepository {
 			}
 		}
 		rootNode.set("pagination", mapper.convertValue(pagination, JsonNode.class));
-		return rootNode;
-	}
-
-	public JsonNode getAllDataPaginateByPageX(String connectionName, String keyspaceName, String tableName, int page,
-			Map<String, Object> mapPrimaryKey) throws Exception {
-		Session session = getSession(connectionName);
-		Cluster cluster = getCluster(connectionName);
-		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(addQuote(tableName));
-		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
-		List<String> partionKeys = new ArrayList<String>();
-		partionMetaKeys.forEach(columnMeta -> {
-			partionKeys.add(columnMeta.getName());
-		});
-		List<ColumnMetadata> clusteredColumnMetaKeys = table.getClusteringColumns();
-		List<String> clusteredColumKeys = new ArrayList<String>();
-		clusteredColumnMetaKeys.forEach(columnMeta -> {
-			clusteredColumKeys.add(columnMeta.getName());
-		});
-		Collection<IndexMetadata> indexes = table.getIndexes();
-		List<String> listIndexed = new ArrayList<String>();
-		indexes.forEach(columnMeta -> {
-			listIndexed.add(columnMeta.getName());
-		});
-		AtomicInteger atomicInt = new AtomicInteger(0);
-		List<Clause> clauses = new ArrayList<>();
-		List<String> clauseWhere = new ArrayList<>();
-		mapPrimaryKey.forEach((key, value) -> {
-			if (atomicInt.get() == 0) {
-				clauses.add(QueryBuilder.gt("token(" + key + ")", "token(" + value + ")"));
-				clauseWhere.add(" WHERE token(" + key + ") > token('" + value + "')");
-			} else {
-				clauses.add(QueryBuilder.gt("token(" + key + ")", "token('" + value + "')"));
-				clauseWhere.add(" and token(" + key + ") > token('" + value + "')");
-			}
-			atomicInt.incrementAndGet();
-		});
-		Select.Where where = QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableName))
-				.where(clauses.get(0));
-		String query = "SELECT * FROM " + addQuote(keyspaceName) + "." + addQuote(tableName) + clauseWhere.get(0);
-		if (clauses.size() > 1) {
-			for (int i = 1; i < clauses.size(); i++) {
-				where.and(clauses.get(i));
-				query = query + clauseWhere.get(i);
-			}
-		}
-		where.setFetchSize(page);
-		LOGGER.info("query  " + query);
-		ResultSet resulSet = session.execute(query);
-		ObjectMapper mapper = new ObjectMapper();
-		ObjectNode rootNode = mapper.createObjectNode();
-		ArrayNode arrayNode = mapper.createArrayNode();
-
-		List<ColumnMetadata> columns = buildColumns(table, rootNode);
-		Iterator<Row> iter = resulSet.iterator();
-		while (resulSet.getAvailableWithoutFetching() > 0) {
-			Row row = iter.next();
-			ObjectNode rowNode = buildRowNode(mapper, columns, row);
-			// LOGGER.info("rowNode "+mapper.writeValueAsString(rowNode));
-			arrayNode.add(rowNode);
-
-		}
-		rootNode.set("data", arrayNode);
 		return rootNode;
 	}
 
@@ -616,7 +551,7 @@ public class TableRepositoryImpl implements TableRepository {
 		Collection<IndexMetadata> indexes = table.getIndexes();
 		List<String> listIndexed = new ArrayList<String>();
 		indexes.forEach(columnMeta -> {
-			listIndexed.add(columnMeta.getName());
+			listIndexed.add(removeQuote(columnMeta.getTarget()));
 		});
 		ObjectMapper mapper = new ObjectMapper();
 		List<ObjectNode> columnsNodes = new ArrayList<ObjectNode>();
@@ -629,6 +564,55 @@ public class TableRepositoryImpl implements TableRepository {
 			jsonColumn.put("clusteredColumn", clusteredColumKeys.contains(column.getName()));
 			jsonColumn.put("indexed", listIndexed.contains(column.getName()));
 			jsonColumn.put("type", column.getType().getName().name());
+			columnsNodes.add(jsonColumn);
+		});
+		columnsNodes.sort((col1, col2) -> {
+			if (col1.get("partitionKey").asBoolean()) {
+				if (col2.get("partitionKey").asBoolean()) {
+					return 0;
+				}
+				return -1;
+			} else {
+				if (col2.get("partitionKey").asBoolean()) {
+					return 1;
+				}
+				return 2;
+			}
+		});
+		columnsNodes.forEach(jsonCol -> {
+			listColumnsName.add(jsonCol);
+		});
+		return listColumnsName;
+	}
+
+	private ArrayNode buildColumnArrayNodes(TableMetadata table, Map<String, String> columsQuery) {
+
+		List<ColumnMetadata> partionMetaKeys = table.getPartitionKey();
+		List<String> partionKeys = new ArrayList<String>();
+		partionMetaKeys.forEach(columnMeta -> {
+			partionKeys.add(columnMeta.getName());
+		});
+		List<ColumnMetadata> clusteredColumnMetaKeys = table.getClusteringColumns();
+		List<String> clusteredColumKeys = new ArrayList<String>();
+		clusteredColumnMetaKeys.forEach(columnMeta -> {
+			clusteredColumKeys.add(columnMeta.getName());
+		});
+		Collection<IndexMetadata> indexes = table.getIndexes();
+		List<String> listIndexed = new ArrayList<String>();
+		indexes.forEach(columnMeta -> {
+			listIndexed.add(removeQuote(columnMeta.getTarget()));
+		});
+		ObjectMapper mapper = new ObjectMapper();
+		List<ObjectNode> columnsNodes = new ArrayList<ObjectNode>();
+		ArrayNode listColumnsName = mapper.createArrayNode();
+
+		columsQuery.forEach((columnName, type) -> {
+			ObjectNode jsonColumn = mapper.createObjectNode();
+			jsonColumn.put("name", columnName);
+			jsonColumn.put("partitionKey", partionKeys.contains(columnName));
+			jsonColumn.put("clusteredColumn", clusteredColumKeys.contains(columnName));
+			jsonColumn.put("indexed", listIndexed.contains(columnName));
+			jsonColumn.put("type", type);
 			columnsNodes.add(jsonColumn);
 		});
 		columnsNodes.sort((col1, col2) -> {
@@ -686,6 +670,15 @@ public class TableRepositoryImpl implements TableRepository {
 	 */
 	private String addQuote(String element) {
 		return "\"" + element + "\"";
+	}
+	private String removeQuote(String element) {
+		if (element == null || element.length() < 2) {
+			return element;
+		}
+		if (element.startsWith("\"")) {
+			return element.substring(1, element.length() - 1);
+		}
+		return element;
 	}
 
 	private String buildQueryAddKeyspace(String keyspaceName, String pQuery, Cluster cluster) {

@@ -346,12 +346,17 @@ loadDataRows() {
       if(this.selectedPageIndex==1) 
       {
         //this.selectedPageIndex=0;
+        this.whereColumnName='';
+        this.whereColumnValue='';
         if(this.currentTableKeys){
           this.isDataLoading=true;
           this.gaindeService.getAllDataTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
         }  
       }else{
         if(this.selectedPageIndex==2) {
+          this.tableDataPaginateDataSource.whereColumnName='';
+          this.tableDataPaginateDataSource.whereColumnValue='';
+          this.tableDataPaginateDataSource.isQuery=false;
           this.tableDataPaginateDataSource.loadDataRows(this.currentTableKeys[2], '','asc',-1,'',1,  this.paginator.pageSize,  1);         
          
         } 
@@ -361,6 +366,8 @@ loadDataRows() {
   onClickNavigateTab(){
     //console.log('onClickNavigateTab  : ' + this.selectedPageIndex);
     if(this.selectedPageIndex==1){
+      this.whereColumnName='';
+      this.whereColumnValue='';
       if(this.currentTableKeys && this.tableDatasDataSource.data.length==0){
         this.isDataLoading=true;
         this.gaindeService.getAllDataTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
@@ -368,7 +375,8 @@ loadDataRows() {
     }else{
       if(this.selectedPageIndex==2) 
       {
-        //this.selectedPageIndex=0;
+        this.tableDataPaginateDataSource.whereColumnName='';
+        this.tableDataPaginateDataSource.whereColumnValue='';
         if(this.currentTableKeys){
           //this.isDataLoading=true;   
           this.paginatorGainde.page.pipe(
@@ -496,7 +504,13 @@ loadDataRows() {
     let query='SELECT * from "'+keyspaceName+'"."'+tableName+'" WHERE "'+this.whereColumnName+'"=\''+this.whereColumnValue+'\'';
     this.displayedColumnsTableData=[];
     this.dispColumnsHeadTableData=[];
-    this.gaindeService.executetableWhereQuery(this.gaindeService.currentGainde.connectionName,keyspaceName,query);
+    this.gaindeService.executeTableWhereQuery(this.gaindeService.currentGainde.connectionName,keyspaceName,query);
+  }
+  onClickQueryWhereBigData(tableName:string){ 
+    this.tableDataPaginateDataSource.isQuery=true;
+    this.tableDataPaginateDataSource.mapWhereClause=new Map<string,string>();
+    this.tableDataPaginateDataSource.mapWhereClause.set(this.tableDataPaginateDataSource.whereColumnName,this.tableDataPaginateDataSource.whereColumnValue);
+    this.tableDataPaginateDataSource.loadDataRows(tableName, '','asc',-1,'',1,  this.paginator.pageSize,  1);  
   }
   onClickAddKeyspace(){    
     this.initForm();
@@ -556,10 +570,12 @@ loadDataRows() {
   onRefreshData(tableName:string){
     let connectionName=this.gaindeService.currentGainde.connectionName;
     let keyspaceName=this.gaindeService.currentGainde.keyspaceName; 
-    this.isDataLoading=true;             
+    this.isDataLoading=true;   
+
     this.gaindeService.getAllDataTable(connectionName,keyspaceName,tableName);
   }
-  onRefreshBigData(tableName:string){         
+  onRefreshBigData(tableName:string){     
+    this.tableDataPaginateDataSource.isQuery=false;    
     this.tableDataPaginateDataSource.loadDataRows(tableName, '','asc',-1,'',1,  this.paginator.pageSize,  1);         
   }
   onStrategyChange(){
@@ -680,7 +696,7 @@ loadDataRows() {
   private openDialogSelectColumn(columns:any,bigData:boolean): void {
     //let columnSource=[...this.colonneDataSource.data];
     let columnSource=[];
-   
+   if(columns){
     columns.forEach((column)=>{
       if(bigData){       
       columnSource.push({'name':column['name'],'check':!this.setColumnBigDataInvisible.has(column['name'])}); 
@@ -688,6 +704,7 @@ loadDataRows() {
         columnSource.push({'name':column['name'],'check':!this.setColumnInvisible.has(column['name'])});  
       }
     });
+  }
     let dataSelect={'columns':columnSource,'bigData':bigData};
     let dialogRef = this.dialog.open(DialogSelectColumnComponent, {
       width: '500px',

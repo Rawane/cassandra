@@ -23,7 +23,9 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.TypeCodec;
+import com.datastax.driver.core.querybuilder.Clause;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.core.querybuilder.Select;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ColonneTableDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ConnectionDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.GaindeMetadataDTO;
@@ -195,10 +197,36 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 		return tableInfoDTO;
 	}
 
+	@Override
 	public long countAllRows(String connectionName, String keyspaceName, String tableName) throws Exception {
 		Session session = getSession(connectionName);
 		ResultSet resulset = session
 				.execute(QueryBuilder.select().countAll().from(addQuote(keyspaceName), addQuote(tableName)));
+		if (resulset != null) {
+			Row row = resulset.one();
+			if (row != null) {
+				return row.getLong(0);
+
+			}
+		}
+		return 0;
+	}
+
+	public long countAllRows(String connectionName, String keyspaceName, String tableName, List<Clause> clauses)
+			throws Exception {
+		Session session = getSession(connectionName);
+		if (clauses == null || clauses.isEmpty()) {
+		return countAllRows(connectionName, keyspaceName, tableName);
+		}
+		Select.Where whereClause = QueryBuilder.select().countAll().from(addQuote(keyspaceName), addQuote(tableName))
+				.where(clauses.get(0));
+		if (clauses.size() > 1) {
+			for (int i = 1; i < clauses.size(); i++) {
+				whereClause = whereClause.and(clauses.get(i));
+			}
+		}
+		LOGGER.info("countAllRows "+whereClause);
+		ResultSet resulset = session.execute(whereClause);
 		if (resulset != null) {
 			Row row = resulset.one();
 			if (row != null) {

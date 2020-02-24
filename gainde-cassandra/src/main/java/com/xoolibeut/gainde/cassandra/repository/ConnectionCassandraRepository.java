@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.querybuilder.Clause;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ColonneTableDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.ConnectionDTO;
 import com.xoolibeut.gainde.cassandra.controller.dtos.GaindeMetadataDTO;
@@ -22,6 +23,9 @@ public interface ConnectionCassandraRepository {
 	TableDTO getTableInfo(String connectionName, String keyspaceName, String tableName) throws Exception;
 
 	long countAllRows(String connectionName, String keyspaceName, String tableName) throws Exception;
+
+	long countAllRows(String connectionName, String keyspaceName, String tableName, List<Clause> clauses)
+			throws Exception;
 
 	void closeConnectioncassandra(String connectionName) throws Exception;
 

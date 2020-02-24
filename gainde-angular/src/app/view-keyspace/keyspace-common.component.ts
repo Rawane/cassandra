@@ -71,9 +71,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
     isDataLoading:boolean=false;
     allHistory:boolean=true;
     whereColumnValue:string;
-    whereColumnName:string;
-    whereColumnValueBigData:string;
-    whereColumnNameBigData:string;
+    whereColumnName:string;    
     constructor(protected gaindeService:GaindeService,protected router:Router,protected formBuilder:FormBuilder,
         protected snackBar:MatSnackBar,protected dialog: MatDialog) {
            
@@ -94,7 +92,9 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
             if(this.notificationSelectKeyIndexSubs){
               this.notificationSelectKeyIndexSubs.unsubscribe();
             }
-            
+            if(this.tableDataPaginateDataSource){
+              this.tableDataPaginateDataSource.disconnect(null);
+            }
           }
             
  

@@ -186,15 +186,27 @@ export class GaindeService {
         }
       );      
   } 
-  getAllDataPaginate(connectionName:string,keyspace:string,table:string,total:number,pageSate:string,pageNumSate:number, pageSize:number,pageNum:number):Observable<JSON[]> {   
+  getAllDataPaginate(connectionName:string,keyspace:string,table:string,total:number,pageSate:string,pageNumSate:number, pageSize:number,pageNum:number,isQuery:boolean=false,map:Map<string,string>=null):Observable<JSON[]> {   
    let ultServer=environment['basePathGainde']+'/table/list/'+connectionName+'/'+keyspace+'/'+table+'/'+total+'/'+pageSate+'/'+
    pageNumSate+'/'+pageSize+'/'+pageNum;
    if(!pageSate || pageSate.length==0 || pageNum==1){
     ultServer=environment['basePathGainde']+'/table/list/'+connectionName+'/'+keyspace+'/'+table+'/'+
     pageNumSate+'/'+pageSize+'/'+pageNum;
    }
+   if(isQuery){
+    let data={};
+    if(map){
+      map.forEach((value,key)=>{       
+        data[key]=value;
+      });
+      
+    }
+    return this.httpClient
+    .post<JSON[]>(ultServer,data,this.httpOptions);
+   }else{
     return this.httpClient
       .get<JSON[]>(ultServer,this.httpOptions);
+   }
   } 
   saveKeyspace(connectionName:string,keyspaceDTO:KeyspaceDTO){
     this.httpClient
@@ -409,8 +421,7 @@ export class GaindeService {
       }
     );    
   }
-  executetableWhereQuery(connectionName:string,keyspaceName:string,query:string){
-   
+  executeTableWhereQuery(connectionName:string,keyspaceName:string,query:string){
     this.httpClient
     .post<JSON>(environment['basePathGainde']+'/table/query/'+connectionName+'/'+keyspaceName,query,this.httpOptions)
     .subscribe(

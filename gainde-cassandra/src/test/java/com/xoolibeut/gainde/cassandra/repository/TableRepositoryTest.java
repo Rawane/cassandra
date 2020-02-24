@@ -198,7 +198,7 @@ public class TableRepositoryTest {
 			pagination.setPageSize(3);
 			List<String> personnes=new ArrayList<String>();
 			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
-					"personne", pagination);
+					"personne",null, pagination);
 			ArrayNode array=(ArrayNode) jsonNode.get("data");
 			array.forEach(node->{
 				personnes.add(node.get("name").asText());
@@ -208,7 +208,7 @@ public class TableRepositoryTest {
 			pagination = mapper.treeToValue(jsonNode.get("pagination"), Pagination.class);			
 			pagination.setPageNum(8);
 			jsonNode = tableRepository.getAllDataPaginateByPage("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
-					"personne", pagination);
+					"personne",null, pagination);
 			LOGGER.info(mapper.writeValueAsString(jsonNode));
 			 array=(ArrayNode) jsonNode.get("data");
 				array.forEach(node->{
@@ -237,7 +237,7 @@ public class TableRepositoryTest {
 			pagination.setPageSize(3);
 			List<String> personnes=new ArrayList<String>();
 			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
-					"personne", pagination);
+					"personne",null, pagination);
 			ArrayNode array=(ArrayNode) jsonNode.get("data");
 			array.forEach(node->{
 				personnes.add(node.get("name").asText());
@@ -247,7 +247,7 @@ public class TableRepositoryTest {
 			pagination = mapper.treeToValue(jsonNode.get("pagination"), Pagination.class);
 			pagination.setPageNum(2);
 			jsonNode = tableRepository.getAllDataPaginateByPage("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
-					"personne", pagination);
+					"personne",null, pagination);
 			LOGGER.info(mapper.writeValueAsString(jsonNode));
 			 array=(ArrayNode) jsonNode.get("data");
 			array.forEach(node->{
@@ -255,7 +255,7 @@ public class TableRepositoryTest {
 			});
 			pagination.setPageNum(3);
 			jsonNode = tableRepository.getAllDataPaginateByPage("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
-					"personne", pagination);
+					"personne",null, pagination);
 			LOGGER.info(mapper.writeValueAsString(jsonNode));
 			 array=(ArrayNode) jsonNode.get("data");
 			array.forEach(node->{
@@ -263,7 +263,7 @@ public class TableRepositoryTest {
 			});
 			pagination.setPageNum(4);
 			jsonNode = tableRepository.getAllDataPaginateByPage("LOCAL", "x48c95551_20c5_4c4e_kps_rawanex",
-					"personne", pagination);
+					"personne",null, pagination);
 			LOGGER.info(mapper.writeValueAsString(jsonNode));
 			 array=(ArrayNode) jsonNode.get("data");
 				array.forEach(node->{

@@ -45,7 +45,7 @@ public class TableController {
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
-
+	
 	@PostMapping("/{connectionName}/{kespace}")
 	public ResponseEntity<String> createTable(@PathVariable("connectionName") String connectionName,
 			@PathVariable("kespace") String keyspaceName, @RequestBody TableDTO tableDTO) {
@@ -109,7 +109,7 @@ public class TableController {
 			pagination.setPageNumSate(pageNumSate);
 			pagination.setTotal(total);
 			
-			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage(connectionName, keyspaceName, tableName,
+			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage(connectionName, keyspaceName, tableName,null,
 					pagination);
 			ObjectMapper mapper = new ObjectMapper();
 			LOGGER.info(" Pagination "+mapper.writeValueAsString(pagination));
@@ -131,7 +131,7 @@ public class TableController {
 			pagination.setPageNum(pageNum);
 			pagination.setPageSize(pageSize);
 			pagination.setPageNumSate(pageNumSate);
-			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage(connectionName, keyspaceName, tableName,
+			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage(connectionName, keyspaceName, tableName,null,
 					pagination);
 			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
@@ -140,7 +140,50 @@ public class TableController {
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
+	@PostMapping("/list/{connectionName}/{kespace}/{tableName}/{total}/{pageSate}/{pageNumSate}/{pageSize}/{pageNum}")
+	public ResponseEntity<String> getAllDataByPaginateWhereQuery(@PathVariable("connectionName") String connectionName,
+			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName,@PathVariable("total") Long total,
+			@PathVariable("pageSate") String pageSate, @PathVariable("pageNumSate") Integer pageNumSate,
+			@PathVariable("pageSize") Integer pageSize, @PathVariable("pageNum") Integer pageNum,@RequestBody Map<String,String> map) {
+		try {
+			Pagination pagination = new Pagination();
+			pagination.setPageSate(pageSate);
+			pagination.setPageNum(pageNum);
+			pagination.setPageSize(pageSize);
+			pagination.setPageNumSate(pageNumSate);
+			pagination.setTotal(total);
+			
+			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage(connectionName, keyspaceName, tableName,map,
+					pagination);
+			ObjectMapper mapper = new ObjectMapper();
+			LOGGER.info(" Pagination "+mapper.writeValueAsString(pagination));
+			LOGGER.info(" Resultat  "+mapper.writeValueAsString(jsonNode));
+			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
+		}
+	}
 
+	@PostMapping("/list/{connectionName}/{kespace}/{tableName}/{pageNumSate}/{pageSize}/{pageNum}")
+	public ResponseEntity<String> getAllDataByPaginateInitialWhereQuery(@PathVariable("connectionName") String connectionName,
+			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName,
+			@PathVariable("pageNumSate") Integer pageNumSate, @PathVariable("pageSize") Integer pageSize,
+			@PathVariable("pageNum") Integer pageNum,@RequestBody Map<String,String> map) {
+		try {
+			Pagination pagination = new Pagination();
+			pagination.setPageNum(pageNum);
+			pagination.setPageSize(pageSize);
+			pagination.setPageNumSate(pageNumSate);
+			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage(connectionName, keyspaceName, tableName,map,
+					pagination);
+			ObjectMapper mapper = new ObjectMapper();
+			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
+		}
+	}
 	@PostMapping("/insert/{connectionName}/{kespace}/{tableName}")
 	public ResponseEntity<String> insertDataTable(@PathVariable("connectionName") String connectionName,
 			@PathVariable("kespace") String keyspaceName, @PathVariable("tableName") String tableName,

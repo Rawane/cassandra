@@ -425,7 +425,7 @@
                             </ng-template>
                             <div *ngIf="displayedColumnsTableData && !bigTable">   
                                                             
-                                    <div class="row">                                       
+                                    <div class="row" style="margin-top: 10px;">                                       
                                         <div class="col-6">
                                             <mat-form-field style="margin-left:20px;">
                                                 <input matInput (keyup)="onApplyFilter($event.target.value)" placeholder="Filter"
@@ -444,12 +444,17 @@
                                                 play_circle_outline
                                             </mat-icon>
                                         </div>                                      
-                                        <div class="col-6" style="text-align: center;"> 
-                                            <select id="whereColumn" class="form-control" [(ngModel)]="whereColumnName">
+                                        <div class="col-2" > 
+
+                                            <select  class="form-control" [(ngModel)]="whereColumnName">
                                              <option *ngFor="let colQuery of columnsQuery" [value]="colQuery">{{colQuery}}</option>                        
                                             </select>
-                                            <input   class="form-control"  [(ngModel)]="whereColumnValue" >  
-                                            <button type="button" class="btn btn-gainde" (click)="onClickQueryWhere(tableInfo.name)"> <mat-icon>play_arrow</mat-icon></button>
+                                        </div>
+                                        <div class="col-3"> 
+                                            <input   class="form-control"  [(ngModel)]="whereColumnValue" > 
+                                        </div>
+                                        <div class="col-1">  
+                                            <button type="button" [disabled]="!whereColumnName || whereColumnName=='' || !whereColumnValue || whereColumnValue==''" class="btn btn-gainde" (click)="onClickQueryWhere(tableInfo.name)"  matTooltip="Executer"> <mat-icon>play_arrow</mat-icon></button>
                                             </div>
                                      </div>
                                      <div class="row">    
@@ -521,14 +526,7 @@
                             <ng-template matTabLabel>
                                 <span  >Données(Big table)</span>
                             </ng-template>
-                            <div class="row" style="margin-top: 20px;text-align: center;">  
-                                <div class="col-6"> 
-                                <select id="whereColumnBigData" class="form-control"    *ngIf="tableDataPaginateDataSource.columnsQuery">
-                                 <option *ngFor="let colQuery of tableDataPaginateDataSource.columnsQuery" [value]="colQuery">{{colQuery}}</option>                        
-                                </select>
-                                <input   class="form-control"  [(ngModel)]="whereColumnValueBigData" >  
-                                <button type="button" class="btn btn-gainde" (click)="onClickQueryWhereBigData(tableInfo.name)"> <mat-icon>play_arrow</mat-icon></button>
-                                </div>                                     
+                            <div class="row" style="margin-top: 10px;">                                                                   
                                 <div class="col-6" >                                                                                
                                         <mat-icon  (click)="onZoomTable()" style="margin-left: 20px;" class="actionClick" matTooltip="Agrandir">
                                             {{zoomData?'zoom_out':'zoom_in'}}
@@ -543,6 +541,20 @@
                                     play_circle_outline
                                 </mat-icon>
                                 </div> 
+                                <div class="col-2"> 
+                                    <select class="form-control"   [(ngModel)]="tableDataPaginateDataSource.whereColumnName"    *ngIf="tableDataPaginateDataSource.columnsQuery">
+                                    <option value=""></option>
+                                     <option *ngFor="let colQuery of tableDataPaginateDataSource.columnsQuery" [value]="colQuery">{{colQuery}}</option>                        
+                                    </select>
+                                    </div>
+                                    <div class="col-3"> 
+                                     <input   class="form-control"  [(ngModel)]="tableDataPaginateDataSource.whereColumnValue" > 
+                                    </div>
+                                    <div class="col-1">  
+                                        <button 
+                                        [disabled]="!tableDataPaginateDataSource.whereColumnName || tableDataPaginateDataSource.whereColumnName=='' || !tableDataPaginateDataSource.whereColumnValue || tableDataPaginateDataSource.whereColumnValue==''"
+                                         type="button" class="btn btn-gainde" (click)="onClickQueryWhereBigData(tableInfo.name)"  matTooltip="Executer"> <mat-icon>play_arrow</mat-icon></button>
+                                    </div>   
                             </div>     
                             <div class="row" *ngIf="tableDataPaginateDataSource.loading | async">   
                                 <div class="col"> </div>                                 

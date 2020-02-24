@@ -14,6 +14,10 @@ export class GaindeDataSource implements DataSource<JSON> {
     columnsQuery:string[];
     currentPagination:Pagination;
     mapPageState=new Map<number,Pagination>();
+    isQuery:boolean=false;
+    mapWhereClause=new Map<string,string>();
+    whereColumnValue:string;
+    whereColumnName:string;
     constructor(private gaindeService: GaindeService) {
         this.currentPagination=new Pagination();
         this.currentPagination.pageSate='';
@@ -55,7 +59,7 @@ export class GaindeDataSource implements DataSource<JSON> {
             console.log('loadDataRows keys '+JSON.stringify(keys)); 
         }
     }
-    this.gaindeService.getAllDataPaginate(connecTionName, keyspaceName,tableName,total,pageSate,pageNumSate,pageSize,pageIndex
+    this.gaindeService.getAllDataPaginate(connecTionName, keyspaceName,tableName,total,pageSate,pageNumSate,pageSize,pageIndex,this.isQuery,this.mapWhereClause
         ).pipe(
         catchError(() => of([])),
         finalize(() => {console.log("loadDataRows fini");
@@ -87,7 +91,7 @@ export class GaindeDataSource implements DataSource<JSON> {
            
         }
         if(results['data']){
-        this.dataRowsSubject.next(results['data']);
+            this.dataRowsSubject.next(results['data']);
         }
     });
     }    
