@@ -21,6 +21,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
     notifKeyspaceByDialog:Subscription;
     @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
     @ViewChild('paginatorGainde', {static: false}) paginatorGainde: MatPaginator;
+    @ViewChild('paginatorResultQuery', {static: false}) paginatorResultQuery: MatPaginator;
     @ViewChild(MatSort, {static: false}) sort: MatSort;
     currentConnection:ConnectionDTO;   
     notificationDialogSubject=new Subject<any>();
@@ -302,7 +303,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
         if(this.columnsQueryData.length>0){                 
             this.tableResultQueryDataSource.data = mapTransfert.get("content")['data'];
             this.paginationResultQuerySize = mapTransfert.get("content")['data'].length;
-            this.tableResultQueryDataSource.paginator = this.paginator;
+            this.tableResultQueryDataSource.paginator = this.paginatorResultQuery;
             this.tableResultQueryDataSource.sort = this.sort;
             this.tableResultQueryDataSource.filter = '';
             this.filterResultQueryData = '';

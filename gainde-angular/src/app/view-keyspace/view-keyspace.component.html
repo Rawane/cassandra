@@ -261,7 +261,7 @@
                                         </mat-table>                                             
                                         
                                     </div>
-                                    <mat-paginator    [length]="paginationResultQuerySize" [pageSizeOptions]="[5, 10, 20,50, 100]"   [pageSize]="10"  [showFirstLastButtons]="true" [hidden]="!tableResultQueryDataSource.data.length">
+                                    <mat-paginator #paginatorResultQuery   [length]="paginationResultQuerySize" [pageSizeOptions]="[5, 10, 20,50, 100]"   [pageSize]="10"  [showFirstLastButtons]="true" [hidden]="!tableResultQueryDataSource.data.length">
                                     </mat-paginator> 
                                 </div>
                             </mat-tab>
@@ -447,6 +447,7 @@
                                         <div class="col-2" > 
 
                                             <select  class="form-control" [(ngModel)]="whereColumnName">
+                                                <option value=""></option>
                                              <option *ngFor="let colQuery of columnsQuery" [value]="colQuery">{{colQuery}}</option>                        
                                             </select>
                                         </div>
