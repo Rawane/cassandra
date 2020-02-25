@@ -834,13 +834,13 @@ setColumns = new Set<string>();
   
   }
   onShowViewCell(type:string){
-    if(type=='TEXT'){
+    if(type=='TEXT' || type=='BLOB'){
       return true;
     }
     return false;
   }
-  onClickViewCell(type:string,name:string,data:string){
-    if(type=='TEXT'){
+  onClickViewCell(added:boolean,type:string,name:string,data:string){
+    if(!added && (type=='TEXT' || type=='BLOB')){
      this.viewParent.onClickViewCell(name,data);
     }
   
