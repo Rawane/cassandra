@@ -1,7 +1,15 @@
-<div class="divTitleDialog"><h1 mat-dialog-title>Affichage{{data.title}}</h1>
+<div class="divTitleDialog">
+  <div class="row">   
+  <div class="col" style="text-align: center;">
+    <h1 mat-dialog-title>{{data.name}}</h1>
+ </div>
+  </div>
 </div>
 <div mat-dialog-content>
-  <p>{{data.text}}</p>  
+  
+  <div class="row">   
+  <textarea name="content"  [rows]="data.rows" [(ngModel)]="data.text"  class="form-control textArea"></textarea>
+  </div>
 </div>
 <div mat-dialog-actions class="row" >
   <div class="col" style="text-align: center;">

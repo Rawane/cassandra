@@ -591,6 +591,13 @@ loadDataRows() {
     this.queryContent=query;
     this.selectedKeysPageIndex=2;
   }
+  onClickViewCell(name:string,data:string){
+    let rows:number=1;
+    if(data){
+      rows=1+ data.length/68;
+    }
+    this.openDialogViewCell(name,data,rows);
+  }
   onClickRemoveHistoryQuery(id:string){
     this.gaindeService.deleteHistory(id);
   }
@@ -738,7 +745,20 @@ loadDataRows() {
     
   }
   
+  public openDialogViewCell(name:string,dataCell:any,rows:number): void {
+    let dialogRefTableInfo = this.dialog.open(DialogViewCellComponent, {
+      width: '700px',     
+      data: {name:name,text: dataCell,rows:rows}
+    });
+  
+    dialogRefTableInfo.afterClosed().subscribe(result => { 
+      
+      if(result!=null){
+      
+      }
 
+    });
+  }
 
   private initForm(){
     this.keyspaceForm = this.formBuilder.group({    
@@ -811,6 +831,18 @@ setColumns = new Set<string>();
            this.dialogRef.close();
       }
     });
+  
+  }
+  onShowViewCell(type:string){
+    if(type=='TEXT'){
+      return true;
+    }
+    return false;
+  }
+  onClickViewCell(type:string,name:string,data:string){
+    if(type=='TEXT'){
+     this.viewParent.onClickViewCell(name,data);
+    }
   
   }
   onClickSaveData(data:any){  
@@ -908,3 +940,17 @@ checked:boolean=true;
   
 }
 
+
+@Component({
+  selector: 'app-dialog-view-cell',
+  templateUrl: './dialog-view-cell.component.html' ,
+  styleUrls: ['./view-keyspace.component.scss']
+})
+export class DialogViewCellComponent implements OnInit {
+
+  constructor( public dialogRef: MatDialogRef<ViewKeyspaceComponent>,@Inject(MAT_DIALOG_DATA) public data: DialogData) { }
+
+  ngOnInit() {
+  }
+
+}

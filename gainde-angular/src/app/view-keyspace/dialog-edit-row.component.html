@@ -29,7 +29,8 @@
         <span *ngIf="(col['partitionKey'] || col['clusteredColumn']) && !data['added']">{{data['row'][col['name']]}}</span>
     </div>
     <div class="col-1">
-        <span >{{col['type']}}</span>
+        <span  [ngClass]="{'actionClick':onShowViewCell(col['type'])}"   (click)="onClickViewCell(col['type'],col['name'],data['row'][col['name']]);">{{col['type']}}</span>
+       
     </div>
   </div>
 </div>

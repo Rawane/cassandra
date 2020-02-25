@@ -477,7 +477,7 @@
                                             {{colElement['name']}}                                            
                                         </mat-header-cell>
                                         <mat-cell *matCellDef="let element"                                    
-                                                  [ngClass]="{'actionClick':true,'columnDisplay':onVerifyDisplay(colElement['name'])}" >
+                                                  [ngClass]="{'actionClick':true,'columnDisplay':onVerifyDisplay(colElement['name'])}"    (click)="onClickViewCell(colElement['name'],element[colElement['name']])">
                                            <span > {{element[colElement['name']]}} </span>
                                            
                                         </mat-cell>
