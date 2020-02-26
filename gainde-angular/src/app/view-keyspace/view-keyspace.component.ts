@@ -37,8 +37,16 @@ export class ViewKeyspaceComponent extends KeyspaceComponent {
       this.displayedColumnsTableData.push('action_gainde');
       this.displayedColumnsTableData.push('action_remove_gainde');
     }
+    setDisplayedColumnsBigData() {      
+      this.tableDataPaginateDataSource.columnsDisplayed=[];
+      this.tableDataPaginateDataSource.columns.forEach(( colunm, index) => {
+       // colunm[index] = index;
+        this.tableDataPaginateDataSource.columnsDisplayed[index] = colunm['name'];
+      });
+      this.tableDataPaginateDataSource.columnsDisplayed.push('action_gainde');
+      this.tableDataPaginateDataSource.columnsDisplayed.push('action_remove_gainde');
+    }
     setDisplayedColumnsByNotif(columns:any) {      
-     
       let arrayTemp=[...this.dispColumnsHeadTableData];
       this.displayedColumnsTableData=[];
       this.dispColumnsHeadTableData=[];
@@ -56,7 +64,24 @@ export class ViewKeyspaceComponent extends KeyspaceComponent {
       this.displayedColumnsTableData.push('action_gainde');
       this.displayedColumnsTableData.push('action_remove_gainde');
     }
-  
+  setDisplayedColumnsBigDataByNotif(columns:any) {      
+      let arrayTemp=[...this.tableDataPaginateDataSource.columns];
+      this.tableDataPaginateDataSource.columnsDisplayed=[];
+      this.tableDataPaginateDataSource.columns=[];
+      columns.forEach(( colunm, index) => {        
+        this.tableDataPaginateDataSource.columnsDisplayed[index] = colunm.name;
+        let indexCol:number;
+        for(let i=0;i<arrayTemp.length;i++){
+         if(arrayTemp[i]['name']==colunm.name){
+          indexCol=i;
+          break;
+         }
+        }
+        this.tableDataPaginateDataSource.columns[index]=arrayTemp[indexCol];
+      });
+      this.tableDataPaginateDataSource.columnsDisplayed.push('action_gainde');
+      this.tableDataPaginateDataSource.columnsDisplayed.push('action_remove_gainde');
+    }
     dragStarted(event: CdkDragStart, index: number ) {
       this.previousIndex = index;
       //console.log('dragStarted prev '+this.previousIndex);
@@ -68,6 +93,19 @@ export class ViewKeyspaceComponent extends KeyspaceComponent {
         moveItemInArray(this.dispColumnsHeadTableData, this.previousIndex, index);
         //console.log('dropListDropped '+JSON.stringify(this.dispColumnsHeadTableData));
         this.setDisplayedColumns();
+      }
+    }
+    dragStartedBigData(event: CdkDragStart, index: number ) {
+      this.previousIndex = index;
+      //console.log('dragStarted prev '+this.previousIndex);
+    }
+  
+    dropListDroppedBigData(event: CdkDropList, index: number) {
+      if (event) {
+        //console.log('dropListDropped prev '+this.previousIndex+'   new '+index);
+        moveItemInArray(this.tableDataPaginateDataSource.columns, this.previousIndex, index);
+        //console.log('dropListDropped '+JSON.stringify(this.dispColumnsHeadTableData));
+        this.setDisplayedColumnsBigData();
       }
     }
 onExecuteQuery(){
@@ -82,9 +120,9 @@ onExecuteQuery(){
   ngOnInit() {
     this.currentConnection=this.gaindeService.currentGainde.connection;
     this.initEcranWithCurrentData();
-    this.notifKeyspaceByDialog=this.gaindeService.notifParentDialogKeyspace.subscribe((dataSource:any)=>{
+    /*this.notifKeyspaceByDialog=this.gaindeService.notifParentDialogKeyspace.subscribe((dataSource:any)=>{
     this.setDisplayedColumnsByNotif(dataSource);
-    });
+    });*/
     this.initObservable();    
     this.tableDataPaginateDataSource=new GaindeDataSource(this.gaindeService); 
   }  
@@ -734,6 +772,7 @@ loadDataRows() {
       if(result!=null){
         if(result['bigData']){
           console.log('afterClosed setColumnBigDataInvisible');
+          this.setDisplayedColumnsBigDataByNotif(result['columns']);
           this.setColumnBigDataInvisible.clear();
           result['columns'].forEach((column)=>{
             if(!column['check']){
@@ -742,6 +781,7 @@ loadDataRows() {
           });
         }else{
           console.log('afterClosed setColumnBigDataInvisible');
+          this.setDisplayedColumnsByNotif(result['columns']);
           this.setColumnInvisible.clear();
           result['columns'].forEach((column)=>{
               if(!column['check']){
@@ -963,9 +1003,9 @@ checked:boolean=true;
   }
   drop(event: CdkDragDrop<string[]>) {
     //console.log("event "+event+'   '+JSON.stringify(this.data['source']));       
-    moveItemInArray( this.data['source']['columns'], event.previousIndex, event.currentIndex);
+    moveItemInArray(this.data['source']['columns'], event.previousIndex, event.currentIndex);
     //console.log("after moved "+JSON.stringify(this.data['source']['columns']));    
-    this.gaindeService.emitNotifParentDialogKeyspace(this.data['source']['columns']);   
+    //this.gaindeService.emitNotifParentDialogKeyspace(this.data['source']['columns']);   
   }
   
 }

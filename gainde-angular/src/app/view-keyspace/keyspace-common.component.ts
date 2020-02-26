@@ -18,7 +18,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
     dataSource = new MatTreeNestedDataSource<Meta>();
     partVisible:VIEW_ECRAN; 
     allNotificationSubscription:Subscription;
-    notifKeyspaceByDialog:Subscription;
+    //notifKeyspaceByDialog:Subscription;
     @ViewChild(MatPaginator, {static: false}) paginator: MatPaginator;
     @ViewChild('paginatorGainde', {static: false}) paginatorGainde: MatPaginator;
     @ViewChild('paginatorResultQuery', {static: false}) paginatorResultQuery: MatPaginator;
@@ -87,9 +87,9 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
             if( this.allNotificationSubscription){
               this.allNotificationSubscription.unsubscribe();
             }
-            if( this.notifKeyspaceByDialog){
+            /*if( this.notifKeyspaceByDialog){
               this.notifKeyspaceByDialog.unsubscribe();
-            }
+            }*/
             if(this.notificationSelectKeyIndexSubs){
               this.notificationSelectKeyIndexSubs.unsubscribe();
             }

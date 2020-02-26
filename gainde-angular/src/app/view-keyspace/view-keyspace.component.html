@@ -465,7 +465,7 @@
                                      </div>
                                 <mat-table  #table [dataSource]="tableDatasDataSource" matSort cdkDropListGroup *ngIf="!isDataLoading">
                                     <ng-container  *ngFor="let colElement of dispColumnsHeadTableData ; let i = index" [matColumnDef]="colElement['name']">
-                                        <mat-header-cell *matHeaderCellDef mat-sort-header [ngClass]="{'columnDisplay':onVerifyDisplay(colElement['name'])}" 
+                                        <mat-header-cell *matHeaderCellDef mat-sort-header [ngClass]="{'headColumnMove':true,'columnDisplay':onVerifyDisplay(colElement['name'])}" 
                                         cdkDropList
                                         cdkDropListLockAxis="x"
                                         cdkDropListOrientation="horizontal"
@@ -564,9 +564,16 @@
                              </div>
                             <div *ngIf="tableDataPaginateDataSource?.columns">                                                            
                                     
-                                <mat-table  #table [dataSource]="tableDataPaginateDataSource" matSort >
+                                <mat-table  #table [dataSource]="tableDataPaginateDataSource" matSort  cdkDropListGroup>
                                     <ng-container  *ngFor="let col of tableDataPaginateDataSource.columns ; let i = index" [matColumnDef]="col['name']">
-                                        <mat-header-cell *matHeaderCellDef  [ngClass]="{'columnDisplay':onVerifyDisplayBigData(col['name'])}" >
+                                        <mat-header-cell *matHeaderCellDef  [ngClass]="{'headColumnMove':true,'columnDisplay':onVerifyDisplayBigData(col['name'])}"                                        
+                                        cdkDropList
+                                        cdkDropListLockAxis="x"
+                                        cdkDropListOrientation="horizontal"
+                                        (cdkDropListDropped)="dropListDroppedBigData($event, i)"
+                                        cdkDrag
+                                        (cdkDragStarted)="dragStartedBigData($event, i)"
+                                        [cdkDragData]="{name: col.name, columIndex: i}">
                                             {{col['name']}}                                            
                                         </mat-header-cell>
                                         <mat-cell *matCellDef="let element"                                    

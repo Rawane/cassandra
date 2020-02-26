@@ -11,7 +11,7 @@ export class GaindeService {
   mapTransfertViewKeyspaceSubject=new Subject<Map<String,any>>();  
   mapTransfertViewAddTableSubject=new Subject<Map<String,any>>();  
   mapTransfertViewEditTableSubject=new Subject<Map<String,any>>();
-  notifParentDialogKeyspace=new Subject<any>();
+ // notifParentDialogKeyspace=new Subject<any>();
   //currentMetaConnection:any;
   //currentConnection:ConnectionDTO;
   currentGainde:GaindeCommunication=new GaindeCommunication();
@@ -21,9 +21,9 @@ export class GaindeService {
     })
   };
   constructor(private httpClient:HttpClient) { }
-  emitNotifParentDialogKeyspace(content:any) {    
+  /*emitNotifParentDialogKeyspace(content:any) {    
     this.notifParentDialogKeyspace.next(content);
-  }
+  }*/
   emitMapTransfertConnectionsSubject(action:ActionHttp,content:any) {
     this.mapTransfert.set("content",content);
     this.mapTransfert.set("type",action);

@@ -9,7 +9,7 @@ export class GaindeDataSource implements DataSource<JSON> {
     private dataRowsSubject = new BehaviorSubject<JSON[]>([]);
     private loadingSubject = new BehaviorSubject<boolean>(false);
     public loading = this.loadingSubject.asObservable();
-    columns:string[];
+    columns:[];
     columnsDisplayed:string[];
     columnsQuery:string[];
     currentPagination:Pagination;
