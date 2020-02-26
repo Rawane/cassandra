@@ -960,9 +960,10 @@ checked:boolean=true;
     });
   }
   drop(event: CdkDragDrop<string[]>) {
-    moveItemInArray( this.data['source'], event.previousIndex, event.currentIndex);
-   // console.log("after moved "+JSON.stringify(this.data['source']));    
-    this.gaindeService.emitNotifParentDialogKeyspace(this.data['source']);   
+    //console.log("event "+event+'   '+JSON.stringify(this.data['source']));       
+    moveItemInArray( this.data['source']['columns'], event.previousIndex, event.currentIndex);
+    //console.log("after moved "+JSON.stringify(this.data['source']['columns']));    
+    this.gaindeService.emitNotifParentDialogKeyspace(this.data['source']['columns']);   
   }
   
 }

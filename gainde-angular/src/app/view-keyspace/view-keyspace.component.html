@@ -252,8 +252,8 @@
                                                 <mat-header-cell *matHeaderCellDef mat-sort-header>   
                                                     {{col['name']}}                                            
                                                 </mat-header-cell>
-                                                <mat-cell *matCellDef="let element">
-                                                   <span > {{element[col['name']]}} </span>                                                   
+                                                <mat-cell *matCellDef="let element"  class="actionClick" (click)="onClickViewCell(col['name'],element[col['name']])">                                                  
+                                                   <span >  {{ (element[col['name']]?.length>50)? (element[col['name']] | slice:0:50)+'...':(element[col['name']]) }} </span>                                                
                                                 </mat-cell>
                                             </ng-container>                                     
                                             <mat-header-row  *matHeaderRowDef="displayedColumnsQueryData"></mat-header-row>
@@ -478,7 +478,7 @@
                                         </mat-header-cell>
                                         <mat-cell *matCellDef="let element"                                    
                                                   [ngClass]="{'actionClick':true,'columnDisplay':onVerifyDisplay(colElement['name'])}"    (click)="onClickViewCell(colElement['name'],element[colElement['name']])">
-                                           <span > {{element[colElement['name']]}} </span>
+                                           <span >  {{ (element[colElement['name']]?.length>50)? (element[colElement['name']] | slice:0:50)+'...':(element[colElement['name']]) }} </span>
                                            
                                         </mat-cell>
                                     </ng-container>  
@@ -570,9 +570,8 @@
                                             {{col['name']}}                                            
                                         </mat-header-cell>
                                         <mat-cell *matCellDef="let element"                                    
-                                        [ngClass]="{'actionClick':true,'columnDisplay':onVerifyDisplayBigData(col['name'])}"  >
-                                           <span > {{element[col['name']]}} </span>
-                                           
+                                        [ngClass]="{'actionClick':true,'columnDisplay':onVerifyDisplayBigData(col['name'])}"   (click)="onClickViewCell(col['name'],element[col['name']])" >                                          
+                                           <span >  {{ (element[col['name']]?.length>50)? (element[col['name']] | slice:0:50)+'...':(element[col['name']]) }} </span>
                                         </mat-cell>
                                     </ng-container>                                     
                                         
