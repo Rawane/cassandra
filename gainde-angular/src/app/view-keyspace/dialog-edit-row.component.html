@@ -29,8 +29,10 @@
         <span *ngIf="(col['partitionKey'] || col['clusteredColumn']) && !data['added']">{{data['row'][col['name']]}}</span>
     </div>
     <div class="col-1">
+      <div class="row">
         <span  [ngClass]="{'actionClick':!(col['partitionKey'] || col['clusteredColumn']) && onShowViewCell(col['type'])}"   (click)="onClickViewCell((col['partitionKey'] || col['clusteredColumn']),col['type'],col['name'],data['row'][col['name']]);">{{col['type']}}</span>
-       
+        <mat-icon *ngIf="!(col['partitionKey'] || col['clusteredColumn']) && onShowViewCell(col['type'])"  [ngClass]="{'actionClick':!(col['partitionKey'] || col['clusteredColumn']) && onShowViewCell(col['type'])}"   (click)="onClickViewCell((col['partitionKey'] || col['clusteredColumn']),col['type'],col['name'],data['row'][col['name']]);">view_headline</mat-icon>
+      </div>
     </div>
   </div>
 </div>

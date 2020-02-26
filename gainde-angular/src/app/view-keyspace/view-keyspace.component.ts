@@ -700,6 +700,7 @@ loadDataRows() {
     let dialogRefRow = this.dialog.open(DialogEditRowComponent, {
       width: 'auto',     
       data: row,
+      disableClose:true,
       panelClass: 'customDialogEdit'
     });  
     dialogRefRow.componentInstance.setGaindeService(this.gaindeService);  
