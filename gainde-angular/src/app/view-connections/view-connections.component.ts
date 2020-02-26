@@ -13,6 +13,8 @@ export interface DialogData {
   title:string;
   btnCancel:boolean;
   id:string;
+  rows:number;
+  readOnly:boolean;
   
 }
 

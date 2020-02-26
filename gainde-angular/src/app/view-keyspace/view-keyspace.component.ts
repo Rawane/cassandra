@@ -594,9 +594,18 @@ loadDataRows() {
   onClickViewCell(name:string,data:string){
     let rows:number=1;
     if(data){
-      rows=1+ data.length/68;
-    }
-    this.openDialogViewCell(name,data,rows);
+      rows=1+ Math.trunc(data.length/68);
+    }    
+    
+    this.openDialogViewCell(name,data,rows,true);
+  }
+  onClickViewEditCell(name:string,data:string,readOnly:boolean){
+    let rows:number=1;
+    if(data){
+      rows=1+ Math.trunc(data.length/68);
+    }    
+    
+    this.openDialogViewCell(name,data,rows,readOnly);
   }
   onClickRemoveHistoryQuery(id:string){
     this.gaindeService.deleteHistory(id);
@@ -745,10 +754,12 @@ loadDataRows() {
     
   }
   
-  public openDialogViewCell(name:string,dataCell:any,rows:number): void {
+  public openDialogViewCell(name:string,dataCell:any,rows:number,readOnly:boolean): void {
     let dialogRefTableInfo = this.dialog.open(DialogViewCellComponent, {
-      width: '700px',     
-      data: {name:name,text: dataCell,rows:rows}
+      width: '700px', 
+      minHeight:'100px', 
+      height : 'auto',   
+      data: {name:name,text: dataCell,rows:rows,readOnly:readOnly}
     });
   
     dialogRefTableInfo.afterClosed().subscribe(result => { 
@@ -839,9 +850,9 @@ setColumns = new Set<string>();
     }
     return false;
   }
-  onClickViewCell(added:boolean,type:string,name:string,data:string){
-    if(!added && (type=='TEXT' || type=='BLOB')){
-     this.viewParent.onClickViewCell(name,data);
+  onClickViewCell(primaryKey:boolean,type:string,name:string,data:string){
+    if(!primaryKey && (type=='TEXT' || type=='BLOB')){
+     this.viewParent.onClickViewEditCell(name,data,false);
     }
   
   }
@@ -952,5 +963,77 @@ export class DialogViewCellComponent implements OnInit {
 
   ngOnInit() {
   }
-
+  onClickEncode(){
+    if(this.data.text){
+        try {
+            this.data.text=btoa(this.data.text);      
+          if(this.data.text){
+            this.data.rows=Math.trunc(1+ this.data.text.length/68);
+          } 
+        }
+        catch(error) {
+            //console.error(error);      
+        }
+    }
+  }
+  onClickDecode(){
+    if(this.data.text){
+    let dataToDecode:string=this.data.text.split('\\n').join('');  
+    //dataToDecode=dataToDecode.replace(new RegExp('\n', 'g'), '');    
+    //console.log(dataToDecode);   
+    
+    try {
+      this.data.text=atob(dataToDecode).split('\\n').join('');
+      if(this.data.text){
+        this.data.rows=1+ Math.trunc(this.data.text.length/68);
+      } 
+    }
+    catch(error) {
+      //console.error(error);      
+    }
+    //console.log(this.data.text);
+    }
+  }
+  onClickFormat(){
+   
+    /*if(this.data.text && this.data.text.length>60){
+    let nbLine=Math.trunc(this.data.text.length/60);
+    let sBuilder='';
+    console.log('onClickFormat nbLine'+nbLine);
+    for(let index=0;index<=nbLine;index++){
+      let startIndex=60*index;
+      let endIndex=startIndex+60;
+      if(endIndex>this.data.text.length){
+        endIndex=this.data.text.length;
+      }
+      sBuilder=sBuilder+this.data.text.substring(startIndex,endIndex)+"\n";
+    }
+    //this.data.text=sBuilder;
+    //this.data.rows=nbLine+1;
+    this.data.text=JSON.stringify(JSON.parse(this.data.text), null, 2) ;
+    this.data.rows=Math.trunc(this.data.text.split('"').length/2);
+    console.log('onClickFormat rows'+this.data.rows);
+    }
+ */
+  try {
+    this.data.text=JSON.stringify(JSON.parse(this.data.text), null, 2) ;
+    let rows=Math.trunc(this.data.text.split('"').length/2);
+    if(rows<10){
+      this.data.rows=rows+2;
+    }else{
+      if(rows<20){
+        this.data.rows=rows+5;
+      } else{
+        if(rows<30){
+          this.data.rows=rows+7;
+        } else{
+          this.data.rows=rows+10;
+        }
+      }
+    }
+    console.log('onClickFormat rows'+this.data.rows);
+  } catch (error) {
+    //console.error(error);     
+  }
+}
 }
