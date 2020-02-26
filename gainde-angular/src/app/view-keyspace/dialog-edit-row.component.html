@@ -19,10 +19,10 @@
     <label class="col-3 labelRow" for="name">{{col['name']}}</label>
     <div class="col-7">
         <input   class="form-control"  [(ngModel)]="data['row'][col['name']]"
-         *ngIf="(!(col['partitionKey'] || col['clusteredColumn']) || data['added']) && col['type']!='DATE'" (change)="onValueChange(col['name'],data['row'][col['name']])"> 
+         *ngIf="(!(col['partitionKey'] || col['clusteredColumn']) || data['added']) && col['type']!='DATE'" (change)="onValueChange(col['name'])"> 
 
         <input matInput [matDatepicker]="picker"  class="gaindeFormControl"  [(ngModel)]="data['row'][col['name']]" 
-        *ngIf="(!(col['partitionKey'] || col['clusteredColumn']) || data['added']) && col['type']=='DATE'" (dateChange)="onValueChangeDate(col['name'],data['row'][col['name']])">
+        *ngIf="(!(col['partitionKey'] || col['clusteredColumn']) || data['added']) && col['type']=='DATE'" (dateChange)="onValueChangeDate(col['name'])">
         <mat-datepicker-toggle [ngClass]="{'elementNotVisible':((!(col['partitionKey'] || col['clusteredColumn']) || data['added']) && col['type']!='DATE') || ((col['partitionKey'] || col['clusteredColumn']) && !data['added'])}" matSuffix [for]="picker"  ></mat-datepicker-toggle>
         <mat-datepicker #picker [ngClass]="{'elementNotVisible':((!(col['partitionKey'] || col['clusteredColumn']) || data['added']) && col['type']!='DATE') || ((col['partitionKey'] || col['clusteredColumn']) && !data['added'])}"  ></mat-datepicker>
      

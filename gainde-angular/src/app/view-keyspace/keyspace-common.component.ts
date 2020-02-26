@@ -134,7 +134,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
             let keyspaceName = this.gaindeService.currentGainde.keyspaceName;
             this.openSnackBar('Données mis à jour avec succès', '');
             //this.dialog.closeAll();
-            this.emitNotificationDialogSubject({ 'errorDialog': false, 'data': mapTransfert.get("content") });
+            this.emitNotificationDialogSubject({'type':1, 'errorDialog': false, 'data': mapTransfert.get("content") });
             this.isDataLoading=true;
             this.gaindeService.getAllDataTable(connectionName, keyspaceName, mapTransfert.get("content"));
           }
@@ -143,19 +143,19 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
             let connectionName = this.gaindeService.currentGainde.connectionName;
             let keyspaceName = this.gaindeService.currentGainde.keyspaceName;
             this.openSnackBar('Données insérées avec succès', '');
-            this.emitNotificationDialogSubject({ 'errorDialog': false, 'data': mapTransfert.get("content") });
+            this.emitNotificationDialogSubject({ 'type':1,'errorDialog': false, 'data': mapTransfert.get("content") });
             this.isDataLoading=true;
             this.gaindeService.getAllDataTable(connectionName, keyspaceName, mapTransfert.get("content"));
           }
           protected doAfterInsertBigDataToTable(mapTransfert: Map<string, any>) {            
             this.openSnackBar('Données insérées avec succès', '');
-            this.emitNotificationDialogSubject({ 'errorDialog': false, 'data': mapTransfert.get("content") });
+            this.emitNotificationDialogSubject({'type':1, 'errorDialog': false, 'data': mapTransfert.get("content") });
             this.tableDataPaginateDataSource.loadDataRows(this.currentTableKeys[2], '','asc',-1,'',1,  this.paginator.pageSize,  1);         
           }
           protected doAfterUpdateBigDataToTable(mapTransfert: Map<string, any>) {
             this.openSnackBar('Données mis à jour avec succès', '');
             //this.dialog.closeAll();
-            this.emitNotificationDialogSubject({ 'errorDialog': false, 'data': mapTransfert.get("content") });           
+            this.emitNotificationDialogSubject({ 'type':1,'errorDialog': false, 'data': mapTransfert.get("content") });           
             this.tableDataPaginateDataSource.loadDataRows(this.currentTableKeys[2], '','asc',-1,'',1,  this.paginator.pageSize,  1);         
          
           }

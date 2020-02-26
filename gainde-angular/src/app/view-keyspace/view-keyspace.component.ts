@@ -1,4 +1,4 @@
-import { Component, OnInit,Inject } from '@angular/core';
+import { Component, OnInit,Inject, OnDestroy } from '@angular/core';
 import {FormBuilder,Validators} from '@angular/forms'; 
 import { DatePipe } from '@angular/common';
 import {Router} from '@angular/router';
@@ -191,7 +191,7 @@ loadDataRows() {
           }
         case ActionHttp.INSERT_DATA_TABLE_ERROR:
           {
-            this.emitNotificationDialogSubject({ 'errorDialog': true, 'data': mapTransfert.get("content") });
+            this.emitNotificationDialogSubject({'type':1, 'errorDialog': true, 'data': mapTransfert.get("content") });
             break;
           }
           case ActionHttp.INSERT_BIG_DATA_TABLE:
@@ -211,7 +211,7 @@ loadDataRows() {
           }
         case ActionHttp.UPDATE_DATA_TABLE_ERROR:
           {
-            this.emitNotificationDialogSubject({ 'errorDialog': true, 'data': mapTransfert.get("content") });
+            this.emitNotificationDialogSubject({'type':1, 'errorDialog': true, 'data': mapTransfert.get("content") });
             break;
           }
         case ActionHttp.REMOVE_ONE_ROW:
@@ -765,7 +765,7 @@ loadDataRows() {
     dialogRefTableInfo.afterClosed().subscribe(result => { 
       
       if(result!=null){
-      
+        this.emitNotificationDialogSubject({'type':2, 'errorDialog': true, 'data': result});
       }
 
     });
@@ -818,7 +818,7 @@ export class DialogTableColumnInfoComponent implements OnInit {
   providers: [DatePipe
     ]
 })
-export class DialogEditRowComponent implements OnInit {
+export class DialogEditRowComponent implements OnInit,OnDestroy {
 private gaindeService:GaindeService;
 private viewParent:ViewKeyspaceComponent;
 messageError:string='';
@@ -832,17 +832,34 @@ setColumns = new Set<string>();
   ngOnInit() {
     this.notificationSubscription=this.viewParent.notificationDialogSubject.subscribe((content:any) => {
       //console.log("notificationSubscription "+JSON.stringify(content));
-      if(content['errorDialog']){
-        this.messageError="Une erreur non spécifié s'est produite";
-        if(content['data'] && content['data']){
-           this.messageError=content['data'] ; 
-        }  
-        this.error=true;  
+      if(content['type']==1)
+      {
+          if(content['errorDialog']){
+            this.messageError="Une erreur non spécifié s'est produite";
+            if(content['data'] && content['data']){
+              this.messageError=content['data'] ; 
+            }  
+            this.error=true;  
+          }else{
+              this.dialogRef.close();
+          }
       }else{
-           this.dialogRef.close();
+        if(content['type']==2)
+          {
+            if(content['data'] && content['data']){
+              let name=content['data']['name'];
+              let text=content['data']['text'];
+              this.data['row'][name]=text;              
+            }
+          }          
       }
     });
   
+  }
+  ngOnDestroy(){
+    if(this.notificationSubscription){
+      this.notificationSubscription.unsubscribe();
+    }
   }
   onShowViewCell(type:string){
     if(type=='TEXT' || type=='BLOB'){
@@ -910,11 +927,10 @@ setColumns = new Set<string>();
   closeDialog(){
     this.dialogRef.close();
   }
-  onValueChange(name:any,value:any){    
-    this.setColumns.add(name);
-    //console.log("onValueChange "+name+" value "+value);
+  onValueChange(name:string){    
+    this.setColumns.add(name);    
   }
-  onValueChangeDate(name:any,value:Date){    
+  onValueChangeDate(name:string){    
     this.setColumns.add(name);
     //console.log("onValueChange "+name+" value "+value);
   }
@@ -978,10 +994,7 @@ export class DialogViewCellComponent implements OnInit {
   }
   onClickDecode(){
     if(this.data.text){
-    let dataToDecode:string=this.data.text.split('\\n').join('');  
-    //dataToDecode=dataToDecode.replace(new RegExp('\n', 'g'), '');    
-    //console.log(dataToDecode);   
-    
+    let dataToDecode:string=this.data.text.split('\\n').join('');   
     try {
       this.data.text=atob(dataToDecode).split('\\n').join('');
       if(this.data.text){
@@ -991,30 +1004,10 @@ export class DialogViewCellComponent implements OnInit {
     catch(error) {
       //console.error(error);      
     }
-    //console.log(this.data.text);
+    
     }
   }
   onClickFormat(){
-   
-    /*if(this.data.text && this.data.text.length>60){
-    let nbLine=Math.trunc(this.data.text.length/60);
-    let sBuilder='';
-    console.log('onClickFormat nbLine'+nbLine);
-    for(let index=0;index<=nbLine;index++){
-      let startIndex=60*index;
-      let endIndex=startIndex+60;
-      if(endIndex>this.data.text.length){
-        endIndex=this.data.text.length;
-      }
-      sBuilder=sBuilder+this.data.text.substring(startIndex,endIndex)+"\n";
-    }
-    //this.data.text=sBuilder;
-    //this.data.rows=nbLine+1;
-    this.data.text=JSON.stringify(JSON.parse(this.data.text), null, 2) ;
-    this.data.rows=Math.trunc(this.data.text.split('"').length/2);
-    console.log('onClickFormat rows'+this.data.rows);
-    }
- */
   try {
     this.data.text=JSON.stringify(JSON.parse(this.data.text), null, 2) ;
     let rows=Math.trunc(this.data.text.split('"').length/2);

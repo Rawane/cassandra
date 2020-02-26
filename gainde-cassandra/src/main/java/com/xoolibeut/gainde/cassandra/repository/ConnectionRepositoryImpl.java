@@ -98,19 +98,16 @@ public class ConnectionRepositoryImpl implements ConnectionRepository {
 			ObjectMapper mapper = new ObjectMapper();
 			ObjectNode rootNode = (ObjectNode) mapper.readTree(contentGainde);
 			if (rootNode != null) {
-				ArrayNode arrayNode = (ArrayNode) rootNode.get("connections");
-				if (arrayNode != null && !arrayNode.isEmpty()) {
-					for (int i = 0; i < arrayNode.size(); i++) {
-						ConnectionDTO connTemp = mapper.convertValue(arrayNode.get(i), ConnectionDTO.class);
-						int indexOf = listConnections.indexOf(connTemp);
-						if (indexOf >= 0) {
-							arrayNode.remove(i);
-							arrayNode.add(mapper.valueToTree(listConnections.get(indexOf)));
-						}
-					}
-					rootNode.set("connections", arrayNode);
-					GaindeFileUtil.writeGaindeAndClose(folderConnection, mapper.writeValueAsString(rootNode));
+				ArrayNode arrayNode = mapper.createArrayNode();
+				for (int i = 0; i < listConnections.size(); i++) {
+					ConnectionDTO connUpdate = listConnections.get(i);
+					connUpdate.setOrdered(i);
+					arrayNode.add(mapper.valueToTree(connUpdate));
+
 				}
+				rootNode.set("connections", arrayNode);
+				GaindeFileUtil.writeGaindeAndClose(folderConnection, mapper.writeValueAsString(rootNode));
+
 			}
 		}
 
