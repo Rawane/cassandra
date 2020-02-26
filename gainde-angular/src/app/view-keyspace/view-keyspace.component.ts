@@ -6,6 +6,7 @@ import {Subscription} from 'rxjs';
 import { tap} from 'rxjs/operators';
 import {MatDialog, MatDialogRef,MAT_DIALOG_DATA} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
+import beautify from 'xml-beautifier';
 import {GaindeService} from '../services/gainde.service';
 import {KeyspaceDTO,ActionHttp,VIEW_ECRAN,ActionDialog,Meta} from '../model/model-dto';
 import {KeyspaceComponent} from './keyspace-common.component';
@@ -995,11 +996,12 @@ export class DialogViewCellComponent implements OnInit {
   }
   onClickDecode(){
     if(this.data.text){
-    let dataToDecode:string=this.data.text.split('\\n').join('');   
-    try {
-      this.data.text=atob(dataToDecode).split('\\n').join('');
+      let splitDecode=this.data.text.split('\\n');
+      let dataToDecode:string=splitDecode.join('');   
+    try {      
+      this.data.text=atob(dataToDecode);
       if(this.data.text){
-        this.data.rows=1+ Math.trunc(this.data.text.length/68);
+        this.data.rows=1+ Math.max(splitDecode.length,Math.trunc(this.data.text.length/68));
       } 
     }
     catch(error) {
@@ -1027,7 +1029,10 @@ export class DialogViewCellComponent implements OnInit {
     }
     console.log('onClickFormat rows'+this.data.rows);
   } catch (error) {
-    //console.error(error);     
+    this.data.text=beautify(this.data.text);    
+    let sizeText=this.data.text.split('\n').length;
+    this.data.rows=sizeText+3;
+    console.log('format XML sizeText'+sizeText);
   }
 }
 }
