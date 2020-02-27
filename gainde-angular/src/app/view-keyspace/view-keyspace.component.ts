@@ -1,5 +1,5 @@
 import { Component, OnInit,Inject, OnDestroy } from '@angular/core';
-import {FormBuilder,Validators} from '@angular/forms'; 
+import {FormGroup,FormBuilder,Validators} from '@angular/forms'; 
 import { DatePipe } from '@angular/common';
 import {Router} from '@angular/router';
 import {Subscription} from 'rxjs';
@@ -13,7 +13,6 @@ import {KeyspaceComponent} from './keyspace-common.component';
 import{DialogData} from '../view-connections/view-connections.component';
 import {CdkDragStart, CdkDropList,CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
 import { GaindeDataSource } from '../commons/server-side-datasource';
-
 @Component({
   selector: 'app-view-keyspace',
   templateUrl: './view-keyspace.component.html',
@@ -633,6 +632,9 @@ loadDataRows() {
     this.queryContent=query;
     this.selectedKeysPageIndex=2;
   }
+  onClickImportDump(connectionName){
+    this.openDialogImportKeyspace(connectionName);
+  }
   onClickViewCell(name:string,data:string){
     let rows:number=1;
     if(data){
@@ -815,7 +817,27 @@ loadDataRows() {
 
     });
   }
+  private openDialogImportKeyspace(text:string): void {
+    let dialogRefTableInfo = this.dialog.open(DialogImportKeyspaceComponent, {
+      width: '400px', 
+      minHeight:'120px', 
+      height : 'auto', 
+      disableClose:true,
+      position: {
+        top: '50px',
+        left: '250px'
+      } , 
+      data: {text:text}
+    });
+  
+    dialogRefTableInfo.afterClosed().subscribe(result => { 
+      
+      if(result!=null){
+        
+      }
 
+    });
+  }
   private initForm(){
     this.keyspaceForm = this.formBuilder.group({    
       name: ['',Validators.required],
@@ -1080,3 +1102,39 @@ export class DialogViewCellComponent implements OnInit {
   }
 }
 }
+
+
+@Component({
+  selector: 'app-dialog-import-keyspcae',
+  templateUrl: './dialog-import-keyspace.component.html' ,
+  styleUrls: ['./view-keyspace.component.scss']
+})
+export class DialogImportKeyspaceComponent implements OnInit {
+  formImport:FormGroup; 
+  fileData: File = null;
+  constructor( public dialogRef: MatDialogRef<ViewKeyspaceComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: DialogData,private formBuilder:FormBuilder,private gaindeService:GaindeService) { }
+
+  ngOnInit() {
+    this.initForm();
+  }
+  fileProgress(fileInput: any) {
+    this.fileData = <File>fileInput.target.files[0];
+    
+}
+  
+  onSubmitForm(){
+    let formData = new FormData();
+      formData.append('file', this.fileData);
+      this.dialogRef.close();
+      this.gaindeService.importKeyspace(this.data.text,formData);
+    }
+    private initForm(){
+      this.formImport = this.formBuilder.group({    
+        file: ['',Validators.required]
+       
+      });
+      
+    }
+}
+

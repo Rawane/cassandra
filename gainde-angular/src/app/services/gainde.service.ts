@@ -516,6 +516,20 @@ export class GaindeService {
          }
        );
    }  
+   importKeyspace(connectionName:string,formdata:FormData){
+    this.httpClient
+    .post(environment['basePathGainde']+'/keyspace/import/file/'+connectionName,formdata,this.httpOptions)
+    .subscribe(
+      (response) => {            
+        console.log('response  : ' + JSON.stringify(response));   
+       
+      },
+      (error) => {
+       console.log('Erreur ! : ' + JSON.stringify(error));            
+        
+      }
+    );   
+   }
   testCSPGateway(){   
     this.httpOptions.headers=this.httpOptions.headers.set('Accept','*/*');
     //this.httpOptions.headers=this.httpOptions.headers.set('Authorization','azazazazazazaza');

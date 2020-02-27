@@ -15,7 +15,7 @@ import { MenuComponent } from './menu/menu.component';
 import { ViewConnectionsComponent,DialogInfoConnectionComponent } from './view-connections/view-connections.component';
 
 import{ GaindeService} from './services/gainde.service';
-import { ViewKeyspaceComponent,DialogInfoKeyspaceComponent ,DialogTableColumnInfoComponent,DialogEditRowComponent,DialogSelectColumnComponent,DialogViewCellComponent} from './view-keyspace/view-keyspace.component';
+import { ViewKeyspaceComponent,DialogInfoKeyspaceComponent ,DialogTableColumnInfoComponent,DialogEditRowComponent,DialogSelectColumnComponent,DialogViewCellComponent,DialogImportKeyspaceComponent} from './view-keyspace/view-keyspace.component';
 import { EditTableComponent ,DialogInfoTableComponent} from './edit-table/edit-table.component';
 import { AutofocusDirective } from './directive/autofocus.directive';
 import { AddTableComponent,DialogAddInfoTableComponent } from './add-table/add-table.component';
@@ -48,7 +48,8 @@ export const FORMAT_GAINDE: MatDateFormats = {
     AutofocusDirective,
     AddTableComponent,
     DialogAddInfoTableComponent,
-    DialogViewCellComponent
+    DialogViewCellComponent,
+    DialogImportKeyspaceComponent
   ],
   imports: [
     BrowserModule,
@@ -87,7 +88,8 @@ export const FORMAT_GAINDE: MatDateFormats = {
   DialogAddInfoTableComponent,
   DialogEditRowComponent,
   DialogSelectColumnComponent,
-  DialogViewCellComponent
+  DialogViewCellComponent,
+  DialogImportKeyspaceComponent
   ],
   providers: [GaindeService,
     { provide: MAT_DATE_LOCALE, useValue: 'fr-FR' },

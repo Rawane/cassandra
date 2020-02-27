@@ -1,6 +1,8 @@
 package com.xoolibeut.gainde.cassandra.repository;
 
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -13,7 +15,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ColumnMetadata;
@@ -24,12 +29,17 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.xoolibeut.gainde.cassandra.controller.dtos.KeyspaceDTO;
+import com.xoolibeut.gainde.cassandra.util.GaindeFileUtil;
 
 @Repository
+@PropertySource("classpath:gainde.properties")
 public class KeyspaceRepositoryImp implements KeyspaceRepository {
 	private static final Logger LOGGER = LoggerFactory.getLogger(KeyspaceRepositoryImp.class);
 	@Autowired
 	private ConnectionCassandraRepository cassandraRepository;
+	@Value("${xoolibeut.gainde.connection.folder}")
+	private String folderConnection;
+
 
 	@Override
 	public void createKeyspace(String connectionName, KeyspaceDTO keyspaceDTO) throws Exception {
@@ -143,7 +153,18 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 		}
 		return builder.toString();
 	}
+	@Override
+	public String importKeyspace(String connectionName, MultipartFile file) throws Exception {
+		if (file != null) {
+			String fileName="_temp_"+file.getName();
+			LOGGER.info("importKeyspace file "+file.getName());
+			Files.copy(file.getInputStream(), GaindeFileUtil.createFileTempIfNotExist(folderConnection, fileName),
+					StandardCopyOption.REPLACE_EXISTING);
+			
+		}
 
+		return "";
+	}
 	private String buildRowValue(String keyspaceName, TableMetadata tableMetadata, Row row) {
 		StringBuilder builderHead = new StringBuilder("\nINSERT INTO ");
 		builderHead.append("\"").append(keyspaceName).append("\".").append("\"").append(tableMetadata.getName())

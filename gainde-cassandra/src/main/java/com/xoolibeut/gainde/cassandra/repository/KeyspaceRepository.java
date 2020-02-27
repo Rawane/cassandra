@@ -1,5 +1,7 @@
 package com.xoolibeut.gainde.cassandra.repository;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.xoolibeut.gainde.cassandra.controller.dtos.KeyspaceDTO;
 
 public interface KeyspaceRepository {
@@ -15,7 +17,9 @@ public interface KeyspaceRepository {
 	KeyspaceDTO getKeyspace(String connectioName, String keyspaceName) throws Exception;
 
 	String dumpKeyspace(String connectionName, String keyspaceName) throws Exception;
-	
+
 	String dumpKeyspaceWithData(String connectionName, String keyspaceName) throws Exception;
+
+	String importKeyspace(String connectionName, MultipartFile file) throws Exception;
 
 }

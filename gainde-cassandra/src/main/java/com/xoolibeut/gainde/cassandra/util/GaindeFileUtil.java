@@ -40,6 +40,21 @@ public class GaindeFileUtil {
 		}
 		return path;
 	}
+	public static Path createFileTempIfNotExist(String folder,String fileName) throws IOException {
+		String baseRep = folder;
+		if (folder == null || folder.isEmpty()) {
+			baseRep = System.getProperty("user.home");
+		}
+		Path path = Paths.get(baseRep + File.separator + GaindeConstante.DEFAULT_FOLDER_CONNECTION
+				+ File.separator + fileName);
+		if (!Files.exists(path.getParent())) {
+			Files.createDirectories(path.getParent());
+		}
+		if (!Files.exists(path)) {
+			Files.createFile(path);
+		}
+		return path;
+	}
 	public static BufferedWriter writeGainde(String folder, String content) throws IOException {
 		BufferedWriter writer = Files.newBufferedWriter(createFileIfNotExist(folder));
 		writer.write(content);

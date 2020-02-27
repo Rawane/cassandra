@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,7 +74,7 @@ public class KeyspaceController {
 			@PathVariable("keyspaceName") String keyspaceName) {
 		try {
 			KeyspaceDTO keyspaceDTO = keyspaceRepository.getKeyspace(connectionName, keyspaceName);
-			ObjectMapper mapper = new ObjectMapper();			
+			ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(keyspaceDTO));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
@@ -101,12 +103,25 @@ public class KeyspaceController {
 		try {
 			String exportSchema = keyspaceRepository.dumpKeyspaceWithData(connectionName, keyspaceName);
 			LOGGER.info("exportSchema " + exportSchema);
-			ByteArrayResource resource = new ByteArrayResource(exportSchema.getBytes());			
+			ByteArrayResource resource = new ByteArrayResource(exportSchema.getBytes());
 			return ResponseEntity.status(200).contentLength(exportSchema.length())
 					.contentType(MediaType.parseMediaType("application/octet-stream")).body(resource);
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).build();
+		}
+	}
+
+	@PostMapping("/import/file/{connectionName}")
+	public ResponseEntity<String> uploadFile(@PathVariable("connectionName") String connectionName,
+			@RequestParam("file") MultipartFile file) {
+		try {
+			keyspaceRepository.importKeyspace(connectionName, file);
+
+			return ResponseEntity.status(200).body(buildMessage("message", "maj kesypace ok"));
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
