@@ -602,6 +602,9 @@ loadDataRows() {
      this.gaindeService.getAllHistories(this.allHistory,this.gaindeService.currentGainde.connectionName);
    }
   }
+  onClickDumpKeyspace(connectionName:string,keyspaceName:string){
+    this.gaindeService.dumpKeyspace(true,connectionName,keyspaceName);
+  }
   onClickFilterHistoryByConnection(){
    // console.log('onClickFilterHistoryByConnection ='+this.allHistory);   
     this.gaindeService.getAllHistories(!this.allHistory,this.gaindeService.currentGainde.connectionName);

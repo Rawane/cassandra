@@ -1,7 +1,14 @@
 package com.xoolibeut.gainde.cassandra.repository;
 
+import java.nio.ByteBuffer;
+import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,8 +16,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ColumnMetadata;
 import com.datastax.driver.core.KeyspaceMetadata;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.TableMetadata;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.xoolibeut.gainde.cassandra.controller.dtos.KeyspaceDTO;
 
 @Repository
@@ -18,6 +30,7 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 	private static final Logger LOGGER = LoggerFactory.getLogger(KeyspaceRepositoryImp.class);
 	@Autowired
 	private ConnectionCassandraRepository cassandraRepository;
+
 	@Override
 	public void createKeyspace(String connectionName, KeyspaceDTO keyspaceDTO) throws Exception {
 		Session session = getSession(connectionName);
@@ -56,8 +69,6 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 
 	}
 
-	
-
 	@Override
 	public KeyspaceDTO getKeyspace(String connectionName, String keyspaceName) throws Exception {
 		KeyspaceDTO keyspaceDTO = new KeyspaceDTO();
@@ -82,12 +93,125 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 		}
 		return keyspaceDTO;
 	}
-	private Session getSession(String connectionName) throws Exception {		
+
+	@Override
+	public String dumpKeyspace(String connectionName, String keyspaceName) throws Exception {
+		StringBuilder builder = new StringBuilder();
+		Cluster cluster = getCluster(connectionName);
+		if (cluster != null) {
+			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
+			if (keyspaceMetadata != null) {
+				builder.append(keyspaceMetadata.exportAsString());
+				Collection<TableMetadata> tables = keyspaceMetadata.getTables();
+				tables.forEach(tableMeta -> {
+					builder.append("\n").append(tableMeta.exportAsString());
+				});
+			}
+		}
+		return builder.toString();
+	}
+
+	@Override
+	public String dumpKeyspaceWithData(String connectionName, String keyspaceName) throws Exception {
+		StringBuilder builder = new StringBuilder();
+		Session session = getSession(connectionName);
+		Cluster cluster = getCluster(connectionName);
+		if (cluster != null) {
+			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
+			if (keyspaceMetadata != null) {
+				builder.append(keyspaceMetadata.exportAsString());
+				Collection<TableMetadata> tables = keyspaceMetadata.getTables();
+				tables.forEach(tableMeta -> {
+					builder.append("\n").append(tableMeta.exportAsString());
+
+				});
+				builder.append(
+						"\n-----------------------------------------------------------DATA--------------------------------------------------------");
+				tables.forEach(tableMeta -> {
+
+					ResultSet resulSet = session
+							.execute(QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableMeta.getName())));
+					Iterator<Row> iter = resulSet.iterator();
+					while (iter.hasNext()) {
+						Row row = iter.next();
+						builder.append(buildRowValue(keyspaceName, tableMeta, row));
+
+					}
+
+				});
+			}
+		}
+		return builder.toString();
+	}
+
+	private String buildRowValue(String keyspaceName, TableMetadata tableMetadata, Row row) {
+		StringBuilder builderHead = new StringBuilder("\nINSERT INTO ");
+		builderHead.append("\"").append(keyspaceName).append("\".").append("\"").append(tableMetadata.getName())
+				.append("\"");
+		Map<String, String> columnsInsert = new HashMap<>();
+		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		columns.forEach(column -> {
+			Object object = row.getObject(addQuote(column.getName()));
+			if (object != null) {
+				switch (column.getType().getName()) {
+				case TIMESTAMP: {
+					if (object instanceof Date) {
+						Date date = (Date) object;
+						SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+						columnsInsert.put(column.getName(), dateFormat.format(date));
+					}
+					break;
+				}
+				case BLOB: {
+					if (object instanceof ByteBuffer) {
+						ByteBuffer byteBuffer = (ByteBuffer) object;
+						String value = new String(byteBuffer.array());
+						LOGGER.info(column.getName() + "   BLOB BLOB  " + value);
+						columnsInsert.put(column.getName(), value);
+					}
+					break;
+				}
+				default:
+					if (object != null) {
+						String rowValue = object.toString();
+						if (rowValue.length() > 1 && rowValue.startsWith("\"")) {
+							// rowValue = rowValue.substring(1, rowValue.length() - 1);
+						}
+						columnsInsert.put(column.getName(), rowValue);
+					}
+					break;
+				}
+
+			}
+		});
+		StringBuilder builderInsert = new StringBuilder(" (");
+		StringBuilder builderValue = new StringBuilder(" (");
+		AtomicBoolean firstInsert = new AtomicBoolean(true);
+		columnsInsert.forEach((key, value) -> {
+			if (firstInsert.get()) {
+				builderInsert.append("\"").append(key).append("\"");
+				builderValue.append("'").append(value.replaceAll("'", "''")).append("'");
+
+			} else {
+				builderInsert.append(",\"").append(key).append("\"");
+				builderValue.append(",'").append(value.replaceAll("'", "''")).append("'");
+			}
+			firstInsert.set(false);
+		});
+		builderInsert.append(")");
+		builderValue.append(");");
+		builderHead.append(builderInsert).append(" VALUES").append(builderValue);
+		return builderHead.toString();
+	}
+
+	private Session getSession(String connectionName) throws Exception {
 		return cassandraRepository.getSession(connectionName);
 	}
+
 	private Cluster getCluster(String connectionName) throws Exception {
 		return cassandraRepository.getCluster(connectionName);
 	}
+
 	/**
 	 * Pour la gestion des majuscule
 	 * 

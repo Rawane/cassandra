@@ -3,6 +3,9 @@ package com.xoolibeut.gainde.cassandra.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -32,11 +35,11 @@ public class KeyspaceController {
 	public ResponseEntity<String> createKeyspace(@PathVariable("connectionName") String connectionName,
 			@RequestBody KeyspaceDTO keyspaceDTO) {
 		try {
-			keyspaceRepository.createKeyspace(connectionName, keyspaceDTO);			
-			return ResponseEntity.status(201).body(buildMessage("message","création kesypace ok"));
+			keyspaceRepository.createKeyspace(connectionName, keyspaceDTO);
+			return ResponseEntity.status(201).body(buildMessage("message", "création kesypace ok"));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
@@ -44,11 +47,11 @@ public class KeyspaceController {
 	public ResponseEntity<String> alterKeyspace(@PathVariable("connectionName") String connectionName,
 			@RequestBody KeyspaceDTO keyspaceDTO) {
 		try {
-			keyspaceRepository.alterKeyspace(connectionName, keyspaceDTO);			
-			return ResponseEntity.status(200).body(buildMessage("message","maj kesypace ok"));
+			keyspaceRepository.alterKeyspace(connectionName, keyspaceDTO);
+			return ResponseEntity.status(200).body(buildMessage("message", "maj kesypace ok"));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
 
@@ -60,27 +63,60 @@ public class KeyspaceController {
 			return ResponseEntity.status(204).build();
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
+
 	@GetMapping("/{connectionName}/{keyspaceName}")
 	public ResponseEntity<String> getKeyspace(@PathVariable("connectionName") String connectionName,
 			@PathVariable("keyspaceName") String keyspaceName) {
 		try {
 			KeyspaceDTO keyspaceDTO = keyspaceRepository.getKeyspace(connectionName, keyspaceName);
-			ObjectMapper mapper=new ObjectMapper();
+			ObjectMapper mapper = new ObjectMapper();			
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(keyspaceDTO));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
-			return ResponseEntity.status(400).body(buildMessage("error",ioException.getMessage()));
+			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
-	private String buildMessage(String code,String message) {
-		ObjectMapper mapper=new ObjectMapper();
-		ObjectNode node=mapper.createObjectNode();
-		try {node.put(code, message);
+
+	@GetMapping("/dump/schema/{connectionName}/{keyspaceName}")
+	public ResponseEntity<Resource> dumpKeyspaceSchema(@PathVariable("connectionName") String connectionName,
+			@PathVariable("keyspaceName") String keyspaceName) {
+		try {
+			String exportSchema = keyspaceRepository.dumpKeyspace(connectionName, keyspaceName);
+			ByteArrayResource resource = new ByteArrayResource(exportSchema.getBytes());
+			LOGGER.info("exportSchema " + exportSchema);
+			return ResponseEntity.status(200).contentLength(exportSchema.length())
+					.contentType(MediaType.parseMediaType("application/octet-stream")).body(resource);
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).build();
+		}
+	}
+
+	@GetMapping("/dump/all/{connectionName}/{keyspaceName}")
+	public ResponseEntity<Resource> dumpKeyspaceWithData(@PathVariable("connectionName") String connectionName,
+			@PathVariable("keyspaceName") String keyspaceName) {
+		try {
+			String exportSchema = keyspaceRepository.dumpKeyspaceWithData(connectionName, keyspaceName);
+			LOGGER.info("exportSchema " + exportSchema);
+			ByteArrayResource resource = new ByteArrayResource(exportSchema.getBytes());			
+			return ResponseEntity.status(200).contentLength(exportSchema.length())
+					.contentType(MediaType.parseMediaType("application/octet-stream")).body(resource);
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).build();
+		}
+	}
+
+	private String buildMessage(String code, String message) {
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode node = mapper.createObjectNode();
+		try {
+			node.put(code, message);
 			return mapper.writeValueAsString(node);
-		} catch (JsonProcessingException e) {			
+		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
 		return "";

@@ -1,7 +1,8 @@
 <div class="divConentKeyspace" *ngIf="homeKeyspaceVisible">
         <div class="row">            
             <div class="col-xs-6 col-md-4 col-lg-2"> 
-                <h4>{{currentConnection.name}}</h4>    
+                <h4>{{currentConnection.name}}</h4>  
+                <mat-icon class="actionClick" style="margin-left:8px ;" (click)="onClickImportDump(currentConnection.name)" matTooltip="Import Keyspace">import_export</mat-icon>  
             </div>
             <div class="col-xs-3 col-md-2 col-lg-1"> 
                 <button type="button" class="btn btn-gainde" (click)="onClickAddKeyspace()" matTooltip="Ajouter Keyspace">
@@ -14,7 +15,7 @@
                 </button>
             </div>
             <div class="col-md-2 col-lg-2">                
-                
+                  
             </div>
             <div class="col-md-4 col-lg-6">                
                 <p mat-line *ngIf="currentConnection.ip" style="font-weight: 14px;"> {{currentConnection.ip}}:{{currentConnection.port}}</p>   
@@ -100,6 +101,13 @@
                                                     <mat-icon >add</mat-icon> 
                                                 </button>
                                         </div>
+                                        <div class="col">                                                                     
+                                            <button type="button" class="btn btn-gainde" 
+                                                (click)="onClickDumpKeyspace(currentConnection.name,keyspaceInfo['name'])"
+                                                matTooltip="Dump Keyspace">
+                                                    <mat-icon >import_export</mat-icon> 
+                                                </button>
+                                        </div>                                          
                                 </div>
                                 
                             </div>

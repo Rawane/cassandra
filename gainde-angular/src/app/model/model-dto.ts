@@ -99,6 +99,7 @@ export enum ActionHttp{
     INSERT_BIG_DATA_TABLE,
     REMOVE_ONE_ROW_BIG_DATA,
     REMOVE_ALL_ROWS_BIG_DATA,
+    DUMP_KEYSPACE_ERROR
 }
 export class TableDTO {
     columns:Array<ColumnDTO>=new Array();

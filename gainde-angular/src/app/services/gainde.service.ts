@@ -484,6 +484,38 @@ export class GaindeService {
       }
     );    
   }
+  dumpKeyspace(all:boolean,connectionName:string,keyspaceName) { 
+    // console.log('getAllHistories  : ' + all);        
+     let url= environment['basePathGainde']+'/keyspace/dump'; 
+     let filename;
+     if(all){
+       url=url+'/all/'+connectionName+'/'+keyspaceName;
+       filename=keyspaceName+'_schema_with_data.cql';
+       }else{
+         url=url+'/schema/'+connectionName+'/'+keyspaceName;         
+         filename=keyspaceName+'_schema.cql';
+       } 
+       this.httpClient
+       .get(url,{headers:this.httpOptions.headers, responseType: 'blob' as 'text'})
+       .subscribe(
+         (response:any) => {               
+          let dataType = response.type;
+          let binaryData = [];
+          binaryData.push(response);
+          let downloadLink = document.createElement('a');
+          downloadLink.href = window.URL.createObjectURL(new Blob(binaryData, {type: dataType}));
+          if (filename){
+              downloadLink.setAttribute('download', filename);
+          }
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+         },
+         (error) => {
+          // console.log('Erreur ! : ' + error);         
+            this.emitMapTransfertKeyspaceSubject(ActionHttp.DUMP_KEYSPACE_ERROR,error['error']['error']);
+         }
+       );
+   }  
   testCSPGateway(){   
     this.httpOptions.headers=this.httpOptions.headers.set('Accept','*/*');
     //this.httpOptions.headers=this.httpOptions.headers.set('Authorization','azazazazazazaza');
