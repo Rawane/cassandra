@@ -646,9 +646,9 @@ loadDataRows() {
     this.queryContent=query;
     this.selectedKeysPageIndex=2;
   }
-  onClickImportDump(connectionName,event: MouseEvent){
+  onClickImportDump(connectionName:string,event: MouseEvent,isLeft:boolean){
     const target = new ElementRef(event.currentTarget);
-    this.openDialogImportKeyspace(connectionName,target);
+    this.openDialogImportKeyspace(connectionName,target,isLeft);
   }
   onClickViewCell(name:string,data:string){
     let rows:number=1;
@@ -832,7 +832,7 @@ loadDataRows() {
 
     });
   }
-  private openDialogImportKeyspace(text:string,target:ElementRef): void {
+  private openDialogImportKeyspace(text:string,target:ElementRef,isLeft:boolean): void {
     let dialogRefImport = this.dialog.open(DialogImportKeyspaceComponent, {
       width: '400px', 
       minHeight:'120px', 
@@ -842,7 +842,7 @@ loadDataRows() {
         top: '50px',
         left: '250px'
       } , 
-      data: {text:text,isLoading:false,trigger:target}
+      data: {text:text,isLoading:false,trigger:target,isLeft}
     });
     dialogRefImport.componentInstance.setComponent(this);
     dialogRefImport.afterClosed().subscribe(result => { 
@@ -1157,7 +1157,11 @@ export class DialogImportKeyspaceComponent implements OnInit {
       if(content['error']){
         let matDialogConfig: MatDialogConfig = new MatDialogConfig();
         let rect = this.data.trigger.nativeElement.getBoundingClientRect();
-        matDialogConfig.position = { left: `${rect.left+24}px`, top: `${rect.bottom}px` };
+        if(this.data.isLeft){
+          matDialogConfig.position = { left: `${rect.left+24}px`, top: `${rect.bottom}px` };
+        }else{
+          matDialogConfig.position = { left: `${rect.left-300}px`, top: `${rect.bottom+5}px` };   
+        }
         this.dialogRef.updatePosition(matDialogConfig.position);
         this.data.isLoading=false;
         this.error=true;
@@ -1177,7 +1181,11 @@ export class DialogImportKeyspaceComponent implements OnInit {
 
     let matDialogConfig: MatDialogConfig = new MatDialogConfig();
     let rect = this.data.trigger.nativeElement.getBoundingClientRect();
-    matDialogConfig.position = { left: `${rect.left+24}px`, top: `${rect.bottom}px` };
+    if(this.data.isLeft){
+      matDialogConfig.position = { left: `${rect.left+24}px`, top: `${rect.bottom}px` };
+    }else{
+      matDialogConfig.position = { left: `${rect.left-300}px`, top: `${rect.bottom+5}px` };   
+    }
     this.dialogRef.updatePosition(matDialogConfig.position);
     this.initForm();
 

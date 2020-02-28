@@ -2,7 +2,7 @@
         <div class="row">            
             <div class="col-xs-6 col-md-4 col-lg-2"> 
                 <h4>{{currentConnection.name}}</h4>  
-                <mat-icon class="actionClick" style="margin-left:8px ;" (click)="onClickImportDump(currentConnection.name,$event)" matTooltip="Import Keyspace">import_export</mat-icon>  
+                <mat-icon class="actionClick" style="margin-left:8px ;" (click)="onClickImportDump(currentConnection.name,$event,true)" matTooltip="Import Keyspace">import_export</mat-icon>  
             </div>
             <div class="col-xs-3 col-md-2 col-lg-1"> 
                 <button type="button" class="btn btn-gainde" (click)="onClickAddKeyspace()" matTooltip="Ajouter Keyspace">
@@ -17,9 +17,12 @@
             <div class="col-md-2 col-lg-2">                
                   
             </div>
-            <div class="col-md-4 col-lg-6">                
+            <div class="col-md-1 col-lg-5">                
                 <p mat-line *ngIf="currentConnection.ip" style="font-weight: 14px;"> {{currentConnection.ip}}:{{currentConnection.port}}</p>   
             </div>
+                <div class="col-md-1 col-lg-1">
+                    <mat-icon class="actionClick" style="margin-left:8px ;" (click)="onClickImportDump(currentConnection.name,$event,false)" matTooltip="Import Keyspace">import_export</mat-icon> 
+                 </div>
         </div>
         <div class="row rowContent">    
             <div   [ngClass]="{'col-xs-5 col-md-6 col-lg-4':!zoomData,'tableDataNotZomm':zoomData}">            

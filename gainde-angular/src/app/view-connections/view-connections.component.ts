@@ -18,6 +18,7 @@ export interface DialogData {
   isLoading:boolean;
   trigger:ElementRef ;
   isKeyspace:boolean;
+  isLeft:boolean;
 }
 
 @Component({
