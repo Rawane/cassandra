@@ -112,8 +112,8 @@ public class TableController {
 			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage(connectionName, keyspaceName, tableName,null,
 					pagination);
 			ObjectMapper mapper = new ObjectMapper();
-			LOGGER.info(" Pagination "+mapper.writeValueAsString(pagination));
-			LOGGER.info(" Resultat  "+mapper.writeValueAsString(jsonNode));
+			LOGGER.debug(" Pagination "+mapper.writeValueAsString(pagination));
+			LOGGER.debug(" Resultat  "+mapper.writeValueAsString(jsonNode));
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
@@ -156,8 +156,8 @@ public class TableController {
 			JsonNode jsonNode = tableRepository.getAllDataPaginateByPage(connectionName, keyspaceName, tableName,map,
 					pagination);
 			ObjectMapper mapper = new ObjectMapper();
-			LOGGER.info(" Pagination "+mapper.writeValueAsString(pagination));
-			LOGGER.info(" Resultat  "+mapper.writeValueAsString(jsonNode));
+			LOGGER.debug(" Pagination "+mapper.writeValueAsString(pagination));
+			LOGGER.debug(" Resultat  "+mapper.writeValueAsString(jsonNode));
 			return ResponseEntity.status(200).body(mapper.writeValueAsString(jsonNode));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);

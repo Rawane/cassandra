@@ -88,7 +88,7 @@ public class KeyspaceController {
 		try {
 			String exportSchema = keyspaceRepository.dumpKeyspace(connectionName, keyspaceName);
 			ByteArrayResource resource = new ByteArrayResource(exportSchema.getBytes());
-			LOGGER.info("exportSchema " + exportSchema);
+			LOGGER.debug("exportSchema " + exportSchema);
 			return ResponseEntity.status(200).contentLength(exportSchema.length())
 					.contentType(MediaType.parseMediaType("application/octet-stream")).body(resource);
 		} catch (Exception ioException) {
@@ -102,7 +102,7 @@ public class KeyspaceController {
 			@PathVariable("keyspaceName") String keyspaceName) {
 		try {
 			String exportSchema = keyspaceRepository.dumpKeyspaceWithData(connectionName, keyspaceName);
-			LOGGER.info("exportSchema " + exportSchema);
+			LOGGER.debug("exportSchema " + exportSchema);
 			ByteArrayResource resource = new ByteArrayResource(exportSchema.getBytes());
 			return ResponseEntity.status(200).contentLength(exportSchema.length())
 					.contentType(MediaType.parseMediaType("application/octet-stream")).body(resource);

@@ -25,10 +25,10 @@ public class ConnectionRepositoryImpl implements ConnectionRepository {
 
 	@Override
 	public boolean createConnection(ConnectionDTO connectionDTO) throws IOException {
-		LOGGER.info("createConnection Connection à créé dans le fichier " + folderConnection);
+		LOGGER.debug("createConnection Connection à créé dans le fichier " + folderConnection);
 		if (connectionDTO != null && connectionDTO.getName() != null && !connectionDTO.getName().isEmpty()
 				&& !connectionDTO.getName().contains("#")) {
-			LOGGER.info("createConnection Connection à créé dans le fichier " + connectionDTO.toString());
+			LOGGER.debug("createConnection Connection à créé dans le fichier " + connectionDTO.toString());
 			String contentGainde = GaindeFileUtil.readeGainde(folderConnection);
 			ObjectMapper mapper = new ObjectMapper();
 			ObjectNode rootNode;
@@ -93,7 +93,7 @@ public class ConnectionRepositoryImpl implements ConnectionRepository {
 		String contentGainde = GaindeFileUtil.readeGainde(folderConnection);
 		if (listConnections != null && contentGainde != null && !contentGainde.isEmpty()) {
 			listConnections.forEach((conn) -> {
-				LOGGER.info("conn  " + conn.getName());
+				LOGGER.debug("conn  " + conn.getName());
 			});
 			ObjectMapper mapper = new ObjectMapper();
 			ObjectNode rootNode = (ObjectNode) mapper.readTree(contentGainde);

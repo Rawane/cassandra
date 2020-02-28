@@ -1,9 +1,12 @@
 package com.xoolibeut.gainde.cassandra.repository;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -39,7 +42,7 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 	private ConnectionCassandraRepository cassandraRepository;
 	@Value("${xoolibeut.gainde.connection.folder}")
 	private String folderConnection;
-
+	private static String SEPARATOR_DATA = "-----------------------------------------------------------DATA--------------------------------------------------------";
 
 	@Override
 	public void createKeyspace(String connectionName, KeyspaceDTO keyspaceDTO) throws Exception {
@@ -87,15 +90,15 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
 			if (keyspaceMetadata != null) {
 				Map<String, String> map = keyspaceMetadata.getReplication();
-				LOGGER.info(map.toString());
+				LOGGER.debug(map.toString());
 				keyspaceDTO.setName(keyspaceName);
 				keyspaceDTO.setReplication(map.get("replication_factor"));
 				keyspaceDTO.setStrategy(map.get("class"));
 				keyspaceDTO.setDurableWrite(keyspaceMetadata.isDurableWrites());
 				keyspaceMetadata.getTables().forEach(table -> {
 					Map<String, String> mapTable = new HashMap<>();
-					LOGGER.info("exportAsString " + table.getName() + "   " + table.exportAsString());
-					LOGGER.info("asCQLQuery " + table.getName() + "   " + table.asCQLQuery());
+					LOGGER.debug("exportAsString " + table.getName() + "   " + table.exportAsString());
+					LOGGER.debug("asCQLQuery " + table.getName() + "   " + table.asCQLQuery());
 					mapTable.put("name", table.getName());
 					keyspaceDTO.getTables().add(mapTable);
 				});
@@ -135,8 +138,7 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 					builder.append("\n").append(tableMeta.exportAsString());
 
 				});
-				builder.append(
-						"\n-----------------------------------------------------------DATA--------------------------------------------------------");
+				builder.append("\n").append(SEPARATOR_DATA);
 				tables.forEach(tableMeta -> {
 
 					ResultSet resulSet = session
@@ -153,18 +155,40 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 		}
 		return builder.toString();
 	}
+
 	@Override
 	public String importKeyspace(String connectionName, MultipartFile file) throws Exception {
 		if (file != null) {
-			String fileName="_temp_"+file.getName();
-			LOGGER.info("importKeyspace file "+file.getName());
+			String fileName = "_temp_" + file.getName();
+			LOGGER.debug("importKeyspace file " + file.getName());
 			Files.copy(file.getInputStream(), GaindeFileUtil.createFileTempIfNotExist(folderConnection, fileName),
 					StandardCopyOption.REPLACE_EXISTING);
-			
+			List<String> listQuery = new ArrayList<String>();
+			try (BufferedReader buffer = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+				Map<String,String> mapQuery = new HashMap<String, String>();
+				mapQuery.put("keyQuery","");
+				buffer.lines().forEach(line -> {
+					if (!SEPARATOR_DATA.equals(line)) {
+						mapQuery.put("keyQuery",mapQuery.get("keyQuery")+line);
+						if (line.endsWith(";")) {							
+							listQuery.add(mapQuery.get("keyQuery"));
+							mapQuery.put("keyQuery","");
+						}
+					}
+				});
+
+				// return buffer.lines().collect(Collectors.joining("\n"));
+			}
+			LOGGER.debug("----------------------------------------Query-----------------------"+listQuery.size());
+			listQuery.forEach(query->{
+				LOGGER.debug(query);
+			});
+
 		}
 
 		return "";
 	}
+
 	private String buildRowValue(String keyspaceName, TableMetadata tableMetadata, Row row) {
 		StringBuilder builderHead = new StringBuilder("\nINSERT INTO ");
 		builderHead.append("\"").append(keyspaceName).append("\".").append("\"").append(tableMetadata.getName())
@@ -187,7 +211,7 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 					if (object instanceof ByteBuffer) {
 						ByteBuffer byteBuffer = (ByteBuffer) object;
 						String value = new String(byteBuffer.array());
-						LOGGER.info(column.getName() + "   BLOB BLOB  " + value);
+						LOGGER.debug(column.getName() + "   BLOB BLOB  " + value);
 						columnsInsert.put(column.getName(), value);
 					}
 					break;

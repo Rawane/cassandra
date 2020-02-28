@@ -109,6 +109,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
             this.openSnackBar('Toutes les lignes ont été supprimées', '');
             let connectionName = this.gaindeService.currentGainde.connectionName;
             let keyspaceName = this.gaindeService.currentGainde.keyspaceName;
+            this.gaindeService.getInfoTable(connectionName, keyspaceName, mapTransfert.get("content"));
             this.gaindeService.getAllDataTable(connectionName, keyspaceName, mapTransfert.get("content"));
           }
         
@@ -117,11 +118,15 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
             let connectionName = this.gaindeService.currentGainde.connectionName;
             let keyspaceName = this.gaindeService.currentGainde.keyspaceName;
             this.isDataLoading=true;
+            console.log("call getInfo table "+mapTransfert.get("content"));
+            this.gaindeService.getInfoTable(connectionName, keyspaceName, mapTransfert.get("content"));
             this.gaindeService.getAllDataTable(connectionName, keyspaceName, mapTransfert.get("content"));
           }
           protected doAfterRemoveOneRowBigData(mapTransfert: Map<string, any>) {
             this.openSnackBar('La ligne a été supprimée', '');
-           
+            let connectionName = this.gaindeService.currentGainde.connectionName;
+            let keyspaceName = this.gaindeService.currentGainde.keyspaceName;
+            this.gaindeService.getInfoTable(connectionName, keyspaceName, mapTransfert.get("content"));
             this.tableDataPaginateDataSource.loadDataRows(this.currentTableKeys[2], '','asc',-1,'',1,  this.paginator.pageSize,  1);         
           }
           protected doAfterRemoveAllRowsBigData(mapTransfert: Map<string, any>) {
@@ -145,11 +150,15 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
             this.openSnackBar('Données insérées avec succès', '');
             this.emitNotificationDialogSubject({ 'type':1,'errorDialog': false, 'data': mapTransfert.get("content") });
             this.isDataLoading=true;
+            this.gaindeService.getInfoTable(connectionName, keyspaceName, mapTransfert.get("content"));
             this.gaindeService.getAllDataTable(connectionName, keyspaceName, mapTransfert.get("content"));
           }
-          protected doAfterInsertBigDataToTable(mapTransfert: Map<string, any>) {            
+          protected doAfterInsertBigDataToTable(mapTransfert: Map<string, any>) {      
+            let connectionName = this.gaindeService.currentGainde.connectionName;
+            let keyspaceName = this.gaindeService.currentGainde.keyspaceName;      
             this.openSnackBar('Données insérées avec succès', '');
             this.emitNotificationDialogSubject({'type':1, 'errorDialog': false, 'data': mapTransfert.get("content") });
+            this.gaindeService.getInfoTable(connectionName, keyspaceName, mapTransfert.get("content"));
             this.tableDataPaginateDataSource.loadDataRows(this.currentTableKeys[2], '','asc',-1,'',1,  this.paginator.pageSize,  1);         
           }
           protected doAfterUpdateBigDataToTable(mapTransfert: Map<string, any>) {

@@ -612,11 +612,14 @@ loadDataRows() {
     let connectionName=this.gaindeService.currentGainde.connectionName;
     let keyspaceName=this.gaindeService.currentGainde.keyspaceName; 
     this.isDataLoading=true;   
-
+    this.gaindeService.getInfoTable(connectionName, keyspaceName, tableName);
     this.gaindeService.getAllDataTable(connectionName,keyspaceName,tableName);
   }
-  onRefreshBigData(tableName:string){     
+  onRefreshBigData(tableName:string){  
+    let connectionName=this.gaindeService.currentGainde.connectionName;
+    let keyspaceName=this.gaindeService.currentGainde.keyspaceName;    
     this.tableDataPaginateDataSource.isQuery=false;    
+    this.gaindeService.getInfoTable(connectionName, keyspaceName, tableName);
     this.tableDataPaginateDataSource.loadDataRows(tableName, '','asc',-1,'',1,  this.paginator.pageSize,  1);         
   }
   onStrategyChange(){

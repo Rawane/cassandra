@@ -27,7 +27,7 @@ public class HistoryRepositoryImpl implements HistoryRepository {
 	private String folderHistory;
 
 	public boolean createOrUpdateHistory(HistoryDTO historyDTO) throws IOException, NoSuchAlgorithmException {
-		LOGGER.info("createHistory History à créé dans le fichier " + folderHistory);
+		LOGGER.debug("createHistory History à créé dans le fichier " + folderHistory);
 
 		if (historyDTO != null && historyDTO.getQuery() != null && !historyDTO.getQuery().isEmpty()) {
 			Calendar cal = Calendar.getInstance();
@@ -37,7 +37,7 @@ public class HistoryRepositoryImpl implements HistoryRepository {
 			messageDigest.update((historyDTO.getQuery()+historyDTO.getConnectionName()).getBytes());
 			byte[] idByte = messageDigest.digest();
 			historyDTO.setId(new String(toHexString(idByte)));
-			LOGGER.info("createHistory History à créé dans le fichier " + historyDTO.toString());
+			LOGGER.debug("createHistory History à créé dans le fichier " + historyDTO.toString());
 			String contentGainde = GaindeFileUtil.readeGaindeHistory(folderHistory);
 			ObjectMapper mapper = new ObjectMapper();
 			ObjectNode rootNode;
@@ -72,9 +72,9 @@ public class HistoryRepositoryImpl implements HistoryRepository {
 	}
 
 	public boolean removeHistory(String id) throws IOException {
-		LOGGER.info("createHistory History à créé dans le fichier " + folderHistory);
+		LOGGER.debug("createHistory History à créé dans le fichier " + folderHistory);
 		if (id != null && !id.isEmpty()) {
-			LOGGER.info("Supression History  " + id);
+			LOGGER.debug("Supression History  " + id);
 			String contentGainde = GaindeFileUtil.readeGaindeHistory(folderHistory);
 			ObjectMapper mapper = new ObjectMapper();
 			ObjectNode rootNode;

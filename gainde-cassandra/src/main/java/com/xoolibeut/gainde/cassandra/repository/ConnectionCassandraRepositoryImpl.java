@@ -40,7 +40,7 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 	private ConnectionRepository connectionRepository;
 
 	public void connnectTocassandra(ConnectionDTO connectionDTO) throws Exception {
-		LOGGER.info("Start connnectTocassandra");
+		LOGGER.debug("Start connnectTocassandra");
 		if (connectionDTO != null && connectionDTO.getIp() != null && !connectionDTO.getIp().isEmpty()
 				&& connectionDTO.getPort() != null) {
 			if (GaindeSessionConnection.getInstance().getSession(connectionDTO.getName()) == null) {
@@ -77,8 +77,8 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 					Collection<TableMetadata> tables = metadata.getTables();
 					if (tables != null) {
 						tables.forEach(table -> {
-							// LOGGER.info("exportAsString "+table.getName()+" "+table.exportAsString());
-							// LOGGER.info("asCQLQuery "+table.getName()+" "+table.asCQLQuery());
+							// LOGGER.debug("exportAsString "+table.getName()+" "+table.exportAsString());
+							// LOGGER.debug("asCQLQuery "+table.getName()+" "+table.asCQLQuery());
 							gaindeFirstChild.addMeta(new GaindeMetadataDTO(table.getName(),
 									gaindeFirstChild.getId() + "#" + table.getName(), 2));
 						});
@@ -167,7 +167,7 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 			if (keyspaceMetadata != null) {
 				TableMetadata tableMetadata = keyspaceMetadata.getTable(addQuote(tableName));
 				if (tableMetadata != null) {
-					LOGGER.info("exportAsString " + tableMetadata.getName() + "   " + tableMetadata.exportAsString());
+					LOGGER.debug("exportAsString " + tableMetadata.getName() + "   " + tableMetadata.exportAsString());
 					tableInfoDTO.setName(tableMetadata.getName());
 					Collection<IndexMetadata> indexMetadatas = tableMetadata.getIndexes();
 					List<IndexColumn> listIndexColumns = new ArrayList<>();
@@ -225,7 +225,7 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 				whereClause = whereClause.and(clauses.get(i));
 			}
 		}
-		LOGGER.info("countAllRows "+whereClause);
+		LOGGER.debug("countAllRows "+whereClause);
 		ResultSet resulset = session.execute(whereClause);
 		if (resulset != null) {
 			Row row = resulset.one();
