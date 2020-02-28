@@ -2,7 +2,7 @@
         <div class="row">            
             <div class="col-xs-6 col-md-4 col-lg-2"> 
                 <h4>{{currentConnection.name}}</h4>  
-                <mat-icon class="actionClick" style="margin-left:8px ;" (click)="onClickImportDump(currentConnection.name)" matTooltip="Import Keyspace">import_export</mat-icon>  
+                <mat-icon class="actionClick" style="margin-left:8px ;" (click)="onClickImportDump(currentConnection.name,$event)" matTooltip="Import Keyspace">import_export</mat-icon>  
             </div>
             <div class="col-xs-3 col-md-2 col-lg-1"> 
                 <button type="button" class="btn btn-gainde" (click)="onClickAddKeyspace()" matTooltip="Ajouter Keyspace">
@@ -103,7 +103,7 @@
                                         </div>
                                         <div class="col">                                                                     
                                             <button type="button" class="btn btn-gainde" 
-                                                (click)="onClickDumpKeyspace(currentConnection.name,keyspaceInfo['name'])"
+                                                (click)="onClickDumpKeyspace(keyspaceInfo['name'],$event)"
                                                 matTooltip="Dump Keyspace">
                                                     <mat-icon >import_export</mat-icon> 
                                                 </button>

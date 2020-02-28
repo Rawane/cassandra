@@ -1,0 +1,54 @@
+<div class="divTitleDialog">
+    <div class="row" style="text-align: center;">   
+        <span style="font-weight: bold;">Dump du keyspace :</span>
+    </div>
+    <div class="row" style="text-align: center;">   
+        <span >{{data.text}}</span>
+    </div>
+</div>
+<div class="row" style="text-align: center;"> <mat-spinner *ngIf="data.isLoading"></mat-spinner></div>
+<div class="messageError" *ngIf="error">
+  <span >{{messageError}}</span>
+</div>
+<div mat-dialog-content>           
+        <div  *ngIf="!data.isLoading">
+            <div class="row form-group">
+                <div class="col">
+                 <label for="name">Only Schéma</label>    
+                 </div>  
+                 <div class="col">
+                <input type="radio" value="1"   name="schema" [(ngModel)]="typeExport"  (click)="onClickSelectTypeExport();">
+                </div>
+             </div>
+             <div class="row form-group">
+                <div class="col">
+                <label for="name">Only Data</label>   
+                </div>   
+                <div class="col">
+               <input type="radio" value="2"   name="schema" [(ngModel)]="typeExport" (click)="onClickSelectTypeExport();">
+               </div>
+            </div>
+             <div class="row form-group">
+                <div class="col">
+                <label for="name">Schéma With Data</label>  
+                </div>
+                <div class="col">    
+               <input type="radio" value="3"   name="schema" [(ngModel)]="typeExport" (click)="onClickSelectTypeExport();">
+               </div>
+            </div>
+           
+        </div>      
+     
+  
+</div>
+
+<div mat-dialog-actions class="row"  >
+  <div class="col-auto mr-auto">
+    <button mat-button class="btn btn-gainder-danger"  [mat-dialog-close]=""  >Annuler</button>
+  </div>
+  <div class="col-auto">
+    <button type="button" mat-button   class="btn btn-success" (click)="onClickDump()" >Valider</button>
+  </div>
+</div>
+
+

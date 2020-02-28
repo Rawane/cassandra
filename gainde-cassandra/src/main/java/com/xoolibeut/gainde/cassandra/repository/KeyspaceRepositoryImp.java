@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -114,11 +115,7 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 		if (cluster != null) {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
 			if (keyspaceMetadata != null) {
-				builder.append(keyspaceMetadata.exportAsString());
-				Collection<TableMetadata> tables = keyspaceMetadata.getTables();
-				tables.forEach(tableMeta -> {
-					builder.append("\n").append(tableMeta.exportAsString());
-				});
+				builder.append(keyspaceMetadata.exportAsString());			
 			}
 		}
 		return builder.toString();
@@ -133,14 +130,10 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
 			if (keyspaceMetadata != null) {
 				builder.append(keyspaceMetadata.exportAsString());
-				Collection<TableMetadata> tables = keyspaceMetadata.getTables();
-				tables.forEach(tableMeta -> {
-					builder.append("\n").append(tableMeta.exportAsString());
-
-				});
+				LOGGER.debug("keyspaceMetadata " + keyspaceMetadata.exportAsString());
+				Collection<TableMetadata> tables = keyspaceMetadata.getTables();				
 				builder.append("\n").append(SEPARATOR_DATA);
 				tables.forEach(tableMeta -> {
-
 					ResultSet resulSet = session
 							.execute(QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableMeta.getName())));
 					Iterator<Row> iter = resulSet.iterator();
@@ -155,38 +148,74 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 		}
 		return builder.toString();
 	}
+	@Override
+	public String dumpOnlyDataFromKeyspace(String connectionName, String keyspaceName) throws Exception {
+		StringBuilder builder = new StringBuilder();
+		Session session = getSession(connectionName);
+		Cluster cluster = getCluster(connectionName);
+		if (cluster != null) {
+			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
+			if (keyspaceMetadata != null) {				
+				LOGGER.debug("keyspaceMetadata " + keyspaceMetadata.exportAsString());
+				Collection<TableMetadata> tables = keyspaceMetadata.getTables();	
+				tables.forEach(tableMeta -> {
+					ResultSet resulSet = session
+							.execute(QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableMeta.getName())));
+					Iterator<Row> iter = resulSet.iterator();
+					while (iter.hasNext()) {
+						Row row = iter.next();
+						builder.append(buildRowValue(keyspaceName, tableMeta, row));
 
+					}
+
+				});
+			}
+		}
+		return builder.toString();
+	}
 	@Override
 	public String importKeyspace(String connectionName, MultipartFile file) throws Exception {
+		String keyspace=null;
 		if (file != null) {
-			String fileName = "_temp_" + file.getName();
+			String fileName =Calendar.getInstance().getTimeInMillis()+"_temp_" + file.getOriginalFilename();
 			LOGGER.debug("importKeyspace file " + file.getName());
 			Files.copy(file.getInputStream(), GaindeFileUtil.createFileTempIfNotExist(folderConnection, fileName),
 					StandardCopyOption.REPLACE_EXISTING);
 			List<String> listQuery = new ArrayList<String>();
 			try (BufferedReader buffer = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
-				Map<String,String> mapQuery = new HashMap<String, String>();
-				mapQuery.put("keyQuery","");
+				Map<String, String> mapQuery = new HashMap<String, String>();
+				mapQuery.put("keyQuery", "");
 				buffer.lines().forEach(line -> {
 					if (!SEPARATOR_DATA.equals(line)) {
-						mapQuery.put("keyQuery",mapQuery.get("keyQuery")+line);
-						if (line.endsWith(";")) {							
+						mapQuery.put("keyQuery", mapQuery.get("keyQuery") + line);
+						if (line.endsWith(";")) {
 							listQuery.add(mapQuery.get("keyQuery"));
-							mapQuery.put("keyQuery","");
+							mapQuery.put("keyQuery", "");
 						}
 					}
 				});
 
 				// return buffer.lines().collect(Collectors.joining("\n"));
 			}
-			LOGGER.debug("----------------------------------------Query-----------------------"+listQuery.size());
-			listQuery.forEach(query->{
-				LOGGER.debug(query);
-			});
+			LOGGER.debug("----------------------------------------Query-----------------------" + listQuery.size());
+			if (!listQuery.isEmpty()) {
+				Session session = getSession(connectionName);
+				String[] arrayQueryKeyspace = listQuery.get(0).split(" ");
+				if (arrayQueryKeyspace.length > 3) {
+					keyspace=arrayQueryKeyspace[2];
+					if(keyspace!=null  && keyspace.contains(".")) {
+						keyspace=keyspace.split("\\.")[0];
+					}
+					keyspace=removeQuote(keyspace);
+					LOGGER.debug("Création du Keyspace  " + keyspace);
+				}
+				listQuery.forEach(query -> {
+					session.execute(query);
+				});
+			}
 
 		}
-
-		return "";
+return keyspace;
 	}
 
 	private String buildRowValue(String keyspaceName, TableMetadata tableMetadata, Row row) {
@@ -265,5 +294,14 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 	 */
 	private String addQuote(String element) {
 		return "\"" + element + "\"";
+	}
+	private String removeQuote(String element) {
+		if (element == null || element.length() < 2) {
+			return element;
+		}
+		if (element.startsWith("\"")) {
+			return element.substring(1, element.length() - 1);
+		}
+		return element;
 	}
 }

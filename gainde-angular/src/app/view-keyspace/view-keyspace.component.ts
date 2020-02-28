@@ -1,10 +1,10 @@
-import { Component, OnInit,Inject, OnDestroy } from '@angular/core';
+import { Component, OnInit,Inject, OnDestroy,ElementRef } from '@angular/core';
 import {FormGroup,FormBuilder,Validators} from '@angular/forms'; 
 import { DatePipe } from '@angular/common';
 import {Router} from '@angular/router';
 import {Subscription} from 'rxjs';
 import { tap} from 'rxjs/operators';
-import {MatDialog, MatDialogRef,MAT_DIALOG_DATA} from '@angular/material/dialog';
+import {MatDialog, MatDialogRef,MAT_DIALOG_DATA,MatDialogConfig} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import beautify from 'xml-beautifier';
 import {GaindeService} from '../services/gainde.service';
@@ -322,6 +322,11 @@ loadDataRows() {
               this.openDialog('History', mapTransfert.get("content"), false, '', ActionDialog.INFO);
               break;
             }
+            case ActionHttp.ALL_META:
+              {
+               this.doAfterGetAllMeta(mapTransfert);
+                break;
+              }
         default:
           break;
       }
@@ -513,10 +518,11 @@ loadDataRows() {
     this.currentTableKeys=this.currentNodeId.split("#");
     this.gaindeService.currentGainde.connectionName =this.currentTableKeys[0];
     this.gaindeService.currentGainde.keyspaceName =this.currentTableKeys[1]; 
+    let ip=this.gaindeService.currentGainde.connection.ip;
     if(node['type']===1){
       this.partVisible=VIEW_ECRAN.KEYSPACE_HOME;
       this.currentKeyspaceName=this.currentTableKeys[1];
-      this.openDialog('Confirmation de suppression',"Voulez-vous supprimer le keyspace "+this.currentTableKeys[1]+"?",true,this.currentNodeId,ActionDialog.ACTION_DELETE_KEYSAPCE);
+      this.openDialog('Confirmation de suppression',"Voulez-vous supprimer le keyspace "+this.currentTableKeys[1]+" Ip: "+ip+"?",true,this.currentNodeId,ActionDialog.ACTION_DELETE_KEYSAPCE);
     }else{  
       this.currentKeyspaceName=this.currentTableKeys[1];    
       //this.gaindeService.currentGainde.tableName =this.currentTableKeys[2];  
@@ -601,8 +607,9 @@ loadDataRows() {
      this.gaindeService.getAllHistories(this.allHistory,this.gaindeService.currentGainde.connectionName);
    }
   }
-  onClickDumpKeyspace(connectionName:string,keyspaceName:string){
-    this.gaindeService.dumpKeyspace(true,connectionName,keyspaceName);
+  onClickDumpKeyspace(keyspaceName:string,event: MouseEvent){
+    const target = new ElementRef(event.currentTarget);
+    this.openDialogExportKeyspace(keyspaceName,target);
   }
   onClickFilterHistoryByConnection(){
    // console.log('onClickFilterHistoryByConnection ='+this.allHistory);   
@@ -635,8 +642,9 @@ loadDataRows() {
     this.queryContent=query;
     this.selectedKeysPageIndex=2;
   }
-  onClickImportDump(connectionName){
-    this.openDialogImportKeyspace(connectionName);
+  onClickImportDump(connectionName,event: MouseEvent){
+    const target = new ElementRef(event.currentTarget);
+    this.openDialogImportKeyspace(connectionName,target);
   }
   onClickViewCell(name:string,data:string){
     let rows:number=1;
@@ -663,7 +671,7 @@ loadDataRows() {
   }
    openDialog(pTitle:string,pText:string, cancelButton:boolean,map:any,action:ActionDialog): void {
     let dialogRef = this.dialog.open(DialogInfoKeyspaceComponent, {
-      width: '500px',
+      width: '600px',
       data: {text: pText,title:pTitle,btnCancel:cancelButton,data:map,action:action}
     });
   
@@ -820,8 +828,8 @@ loadDataRows() {
 
     });
   }
-  private openDialogImportKeyspace(text:string): void {
-    let dialogRefTableInfo = this.dialog.open(DialogImportKeyspaceComponent, {
+  private openDialogImportKeyspace(text:string,target:ElementRef): void {
+    let dialogRefImport = this.dialog.open(DialogImportKeyspaceComponent, {
       width: '400px', 
       minHeight:'120px', 
       height : 'auto', 
@@ -830,10 +838,28 @@ loadDataRows() {
         top: '50px',
         left: '250px'
       } , 
-      data: {text:text}
+      data: {text:text,isLoading:false,trigger:target}
     });
-  
-    dialogRefTableInfo.afterClosed().subscribe(result => { 
+    dialogRefImport.componentInstance.setComponent(this);
+    dialogRefImport.afterClosed().subscribe(result => { 
+      
+      if(result!=null){
+        
+      }
+
+    });
+  }
+
+  private openDialogExportKeyspace(text:string,target:ElementRef): void {
+    let dialogRefExport = this.dialog.open(DialogExportKeyspaceComponent, {
+      width: '400px', 
+      minHeight:'120px', 
+      height : 'auto', 
+      disableClose:true,     
+      data: {text:text,isLoading:false,trigger:target}
+    });
+    dialogRefExport.componentInstance.setComponent(this);
+    dialogRefExport.afterClosed().subscribe(result => { 
       
       if(result!=null){
         
@@ -1115,21 +1141,62 @@ export class DialogViewCellComponent implements OnInit {
 export class DialogImportKeyspaceComponent implements OnInit {
   formImport:FormGroup; 
   fileData: File = null;
+  error:boolean=false;
+  messageError:string='';
+  notificationSubscription:Subscription;
+  private viewParent:ViewKeyspaceComponent;  
   constructor( public dialogRef: MatDialogRef<ViewKeyspaceComponent>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData,private formBuilder:FormBuilder,private gaindeService:GaindeService) { }
 
   ngOnInit() {
+    this.notificationSubscription=this.gaindeService.notificationDialogImport.subscribe((content)=>{     
+      if(content['error']){
+        this.data.isLoading=false;
+        this.error=true;
+        this.messageError="Une erreur s'est produite";
+        if(content['msg'] && content['msg'].length>1){
+          this.messageError=content['msg'];
+        }
+      }else{        
+        this.dialogRef.close();
+        this.viewParent.openSnackBar("L'import du fichier a été effectué avec succes", '');
+        let connectionName=this.gaindeService.currentGainde.connectionName;        
+        this.gaindeService.getAllMetaAfterImport(connectionName,content['msg']);
+       
+       
+      }
+    });
+
+    const matDialogConfig: MatDialogConfig = new MatDialogConfig();
+    const rect = this.data.trigger.nativeElement.getBoundingClientRect();
+    //let leftP=this.data.trigger.nativeElement.getBoundingClientRect().left+50;
+    //let widthP=this.data.trigger.nativeElement.getBoundingClientRect().width;
+   // console.log('DialogImportKeyspaceComponent '+leftP+'   '+widthP);
+    matDialogConfig.position = { left: `${rect.left+24}px`, top: `${rect.bottom}px` };
+    /*matDialogConfig.width = '400px';
+    matDialogConfig.height = 'auto';
+    matDialogConfig.maxHeight='120px';
+    matDialogConfig.disableClose=true;*/
+    //this.dialogRef.updateSize(matDialogConfig.width, matDialogConfig.height);
+    this.dialogRef.updatePosition(matDialogConfig.position);
+
     this.initForm();
+
   }
   fileProgress(fileInput: any) {
+    this.error=false;
     this.fileData = <File>fileInput.target.files[0];
     
 }
-  
+setComponent(viewParent:ViewKeyspaceComponent){
+  this.viewParent=viewParent;
+}
   onSubmitForm(){
     let formData = new FormData();
       formData.append('file', this.fileData);
-      this.dialogRef.close();
+      //this.dialogRef.close();
+      this.data.isLoading=true;
+      this.error=false;
       this.gaindeService.importKeyspace(this.data.text,formData);
     }
     private initForm(){
@@ -1138,6 +1205,68 @@ export class DialogImportKeyspaceComponent implements OnInit {
        
       });
       
+    }
+    ngOnDestroy() {
+      this.notificationSubscription.unsubscribe();
+    }
+}
+
+@Component({
+  selector: 'app-dialog-export-keyspcae',
+  templateUrl: './dialog-export-keyspace.component.html' ,
+  styleUrls: ['./view-keyspace.component.scss']
+})
+export class DialogExportKeyspaceComponent implements OnInit {
+  error:boolean=false;
+  messageError:string='';
+  typeExport:string='1';
+  notificationDialogSubscription:Subscription;
+  private viewParent:ViewKeyspaceComponent;  
+  constructor( public dialogRef: MatDialogRef<ViewKeyspaceComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: DialogData,private gaindeService:GaindeService) { }
+
+  ngOnInit() {
+    this.notificationDialogSubscription=this.gaindeService.notificationDialogExport.subscribe((content)=>{      
+      if(content['error']){
+        this.data.isLoading=false;
+        this.error=true;
+        this.messageError="Une erreur s'est produite";
+        if(content['msg'] && content['msg'].length>1){
+          this.messageError=content['msg'];
+        }
+        
+      }else{        
+        this.dialogRef.close();
+        this.viewParent.openSnackBar("Le dump du keyspace s'est déroulé avec succès ", '');
+        //this.gaindeService.getAllMetaAfterImport(this.data.text,content['msg']);
+       
+       
+      }
+    });
+
+    let matDialogConfig: MatDialogConfig = new MatDialogConfig();
+    let rect = this.data.trigger.nativeElement.getBoundingClientRect();    
+    matDialogConfig.position = { left: `${rect.left-300}px`, top: `${rect.bottom+5}px` };   
+    this.dialogRef.updatePosition(matDialogConfig.position);  
+
+  }
+  
+setComponent(viewParent:ViewKeyspaceComponent){
+  this.viewParent=viewParent;
+}
+onClickSelectTypeExport(){
+  this.error=false;
+}
+  onClickDump(){      
+      this.data.isLoading=true;
+      this.error=false;
+      let connectionName=this.gaindeService.currentGainde.connectionName;
+       let keyspaceName= this.gaindeService.currentGainde.keyspaceName;  
+      this.gaindeService.dumpKeyspace(this.typeExport,connectionName,keyspaceName);
+    }
+    
+    ngOnDestroy() {
+      this.notificationDialogSubscription.unsubscribe();
     }
 }
 

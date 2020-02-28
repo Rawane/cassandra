@@ -11,6 +11,8 @@ export class GaindeService {
   mapTransfertViewKeyspaceSubject=new Subject<Map<String,any>>();  
   mapTransfertViewAddTableSubject=new Subject<Map<String,any>>();  
   mapTransfertViewEditTableSubject=new Subject<Map<String,any>>();
+  notificationDialogImport=new Subject<any>();
+  notificationDialogExport=new Subject<any>();
  // notifParentDialogKeyspace=new Subject<any>();
   //currentMetaConnection:any;
   //currentConnection:ConnectionDTO;
@@ -43,6 +45,12 @@ export class GaindeService {
     this.mapTransfert.set("content",content);
     this.mapTransfert.set("type",action);
     this.mapTransfertViewAddTableSubject.next(this.mapTransfert);
+  }
+  emitNotificationDialogImport(content:any) {    
+    this.notificationDialogImport.next(content);
+  }
+  emitNotificationDialogExport(content:any) {    
+    this.notificationDialogExport.next(content);
   }
   getAllConnections() {   
     this.httpClient
@@ -117,12 +125,20 @@ export class GaindeService {
     );    
   }
   getAllMeta(name:string) {   
+    this.getAllMetaLocal(name,null);
+  }  
+  private getAllMetaLocal(name:string,keyspace:string) {   
     this.httpClient
       .get<any>(environment['basePathGainde']+'/connection/metadata/all/'+name,this.httpOptions)
       .subscribe(
         (response) => {               
-        // console.log('response  : ' + JSON.stringify(response));       
-         this.emitMapTransfertKeyspaceSubject(ActionHttp.ALL_META,response);       
+       // console.log('response  : ' + JSON.stringify(response));
+        console.log('keyspace   : ' + keyspace);
+        let responseFormat=response; 
+        if(keyspace) {
+          responseFormat={'keyspace':keyspace,'response':response};
+        }    
+         this.emitMapTransfertKeyspaceSubject(ActionHttp.ALL_META,responseFormat);       
         },
         (error) => {
           //console.log('Erreur ! : ' + error);           
@@ -484,21 +500,28 @@ export class GaindeService {
       }
     );    
   }
-  dumpKeyspace(all:boolean,connectionName:string,keyspaceName) { 
+  dumpKeyspace(type:string,connectionName:string,keyspaceName) { 
     // console.log('getAllHistories  : ' + all);        
      let url= environment['basePathGainde']+'/keyspace/dump'; 
      let filename;
-     if(all){
-       url=url+'/all/'+connectionName+'/'+keyspaceName;
-       filename=keyspaceName+'_schema_with_data.cql';
-       }else{
-         url=url+'/schema/'+connectionName+'/'+keyspaceName;         
-         filename=keyspaceName+'_schema.cql';
-       } 
+     if(type==='3'){
+          url=url+'/all/'+connectionName+'/'+keyspaceName;
+          filename=keyspaceName+'_schema_with_data.cql';
+        }else{
+          if(type==='2'){
+              url=url+'/data/'+connectionName+'/'+keyspaceName;
+              filename=keyspaceName+'_data.cql';
+            }else{
+                url=url+'/schema/'+connectionName+'/'+keyspaceName;         
+                filename=keyspaceName+'_schema.cql';
+            }
+    } 
        this.httpClient
        .get(url,{headers:this.httpOptions.headers, responseType: 'blob' as 'text'})
        .subscribe(
-         (response:any) => {               
+         (response:any) => {   
+          let content={'error':false,'msg':''} ;  
+          this.emitNotificationDialogExport(content) ;         
           let dataType = response.type;
           let binaryData = [];
           binaryData.push(response);
@@ -511,7 +534,9 @@ export class GaindeService {
           downloadLink.click();
          },
          (error) => {
-          // console.log('Erreur ! : ' + error);         
+          // console.log('Erreur ! : ' + error);  
+          let content={'error':true,'msg':''} ;  
+           this.emitNotificationDialogExport(content) ;        
             this.emitMapTransfertKeyspaceSubject(ActionHttp.DUMP_KEYSPACE_ERROR,error['error']['error']);
          }
        );
@@ -521,14 +546,19 @@ export class GaindeService {
     .post(environment['basePathGainde']+'/keyspace/import/file/'+connectionName,formdata,this.httpOptions)
     .subscribe(
       (response) => {            
-        console.log('response  : ' + JSON.stringify(response));   
-       
+        console.log('response  : ' + JSON.stringify(response));  
+        let content={'error':false,'msg':response['message']} ;
+        this.emitNotificationDialogImport(content);
       },
       (error) => {
        console.log('Erreur ! : ' + JSON.stringify(error));            
-        
+       let content={'error':true,'msg':error['error']['error']} ;
+       this.emitNotificationDialogImport(content);
       }
     );   
+   }
+   getAllMetaAfterImport(connectionName:string,keyspaceName:string){
+      this.getAllMetaLocal(connectionName,keyspaceName);
    }
   testCSPGateway(){   
     this.httpOptions.headers=this.httpOptions.headers.set('Accept','*/*');

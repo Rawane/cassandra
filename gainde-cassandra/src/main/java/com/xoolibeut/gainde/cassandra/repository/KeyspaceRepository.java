@@ -22,4 +22,6 @@ public interface KeyspaceRepository {
 
 	String importKeyspace(String connectionName, MultipartFile file) throws Exception;
 
+	String dumpOnlyDataFromKeyspace(String connectionName, String keyspaceName) throws Exception;
+
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit,OnDestroy,Inject } from '@angular/core';
+import { Component, OnInit,OnDestroy,Inject,ElementRef } from '@angular/core';
 import {FormGroup,FormBuilder,Validators} from '@angular/forms'; 
 import {Router} from '@angular/router';
 import {Subscription} from 'rxjs';
@@ -15,6 +15,8 @@ export interface DialogData {
   id:string;
   rows:number;
   readOnly:boolean;
+  isLoading:boolean;
+  trigger:ElementRef ;
   
 }
 
@@ -167,6 +169,7 @@ private resetForm(){
     conn['port'], conn['username'],conn['password']); 
     this.gaindeService.currentGainde=new GaindeCommunication(); 
     this.gaindeService.currentGainde.connection=connectDTO;
+    this.gaindeService.currentGainde.connectionName=connectDTO.name;
     this.gaindeService.connecToCassandra(connectDTO);
 
   }
@@ -188,11 +191,12 @@ private resetForm(){
     else {    
           this.gaindeService.currentGainde=new GaindeCommunication();       
           this.gaindeService.currentGainde.connection=connectDTO;
+          this.gaindeService.currentGainde.connectionName=connectDTO.name;
           this.gaindeService.connecToCassandra(connectDTO);
     }
   }
   onClickRemoveConnection(name:string){
-    this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la connection?"+name,true,name);
+    this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la connection "+name+"?",true,name);
   }
   private initForm(){
     this.connectionForm = this.formBuilder.group({    

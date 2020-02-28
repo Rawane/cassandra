@@ -168,7 +168,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
             this.tableDataPaginateDataSource.loadDataRows(this.currentTableKeys[2], '','asc',-1,'',1,  this.paginator.pageSize,  1);         
          
           }
-          protected openSnackBar(message: string, action: string) {
+          public openSnackBar(message: string, action: string) {
             this.snackBar.open(message, action, {
               duration: 2000,
               // here specify the position
@@ -208,7 +208,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
        protected emitNotificationDialogSubject(content:any) {
             this.notificationDialogSubject.next(content);
           }
-        protected initEcranWithCurrentData():void{
+        protected initEcranWithCurrentData():void {
         if(this.gaindeService.currentGainde.content){
             this.dataSource.data=this.gaindeService.currentGainde.content;
             let content=this.gaindeService.currentGainde.content;
@@ -241,6 +241,29 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
             }
         }
     }
+    protected doAfterGetAllMeta(mapTransfert: Map<string, any>):void {
+      let contentResp=mapTransfert.get("content");
+      //console.log('doAfterGetAllMeta  : ' + JSON.stringify(contentResp));
+      let response=contentResp['response'];
+      let keyspace=contentResp['keyspace'];
+      if(response){
+          this.dataSource.data=response;
+          let content=response;          
+          this.homeKeyspaceVisible=true;    
+          if(keyspace){
+              for (let i = 0; i < content.length; i++) {
+                //console.log('doAfterGetAllMeta  : ' + content[i]['name']+'   '+keyspace);
+              if (content[i]['name'] === keyspace) {
+                  this.treeControl.expand(content[i]);
+                  this.currentNodeId = content[i]['id'];                 
+                  let connectionName=this.gaindeService.currentGainde.connectionName;   
+                  this.gaindeService.getKeyspaceInfo(connectionName,keyspace);                 
+                  break;
+              }
+              }
+          }
+      }
+  }
     protected doAfterGetAllData(mapTransfert: Map<string, any>) {
       this.isDataLoading=false;
         if (mapTransfert.get("content")['columns']) {

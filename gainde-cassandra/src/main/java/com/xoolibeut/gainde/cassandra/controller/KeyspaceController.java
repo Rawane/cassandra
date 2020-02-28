@@ -111,14 +111,27 @@ public class KeyspaceController {
 			return ResponseEntity.status(400).build();
 		}
 	}
-
+	@GetMapping("/dump/data/{connectionName}/{keyspaceName}")
+	public ResponseEntity<Resource> dumpOnlyDataFromKeyspace(@PathVariable("connectionName") String connectionName,
+			@PathVariable("keyspaceName") String keyspaceName) {
+		try {
+			String exportSchema = keyspaceRepository.dumpOnlyDataFromKeyspace(connectionName, keyspaceName);
+			LOGGER.debug("exportSchema " + exportSchema);
+			ByteArrayResource resource = new ByteArrayResource(exportSchema.getBytes());
+			return ResponseEntity.status(200).contentLength(exportSchema.length())
+					.contentType(MediaType.parseMediaType("application/octet-stream")).body(resource);
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).build();
+		}
+	}
 	@PostMapping("/import/file/{connectionName}")
 	public ResponseEntity<String> uploadFile(@PathVariable("connectionName") String connectionName,
 			@RequestParam("file") MultipartFile file) {
 		try {
-			keyspaceRepository.importKeyspace(connectionName, file);
+			String keyspace=keyspaceRepository.importKeyspace(connectionName, file);
 
-			return ResponseEntity.status(200).body(buildMessage("message", "maj kesypace ok"));
+			return ResponseEntity.status(200).body(buildMessage("message", keyspace));
 		} catch (Exception ioException) {
 			LOGGER.error("erreur", ioException);
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
