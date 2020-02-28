@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.PostConstruct;
@@ -56,6 +57,7 @@ public class TableRepositoryImpl implements TableRepository {
 	private List<String> keyQueryStructure;
 	@Autowired
 	private ConnectionCassandraRepository cassandraRepository;
+	private static String SEPARATOR_DATA = "-----------------------------------------------------------DATA--------------------------------------------------------";
 
 	@PostConstruct
 	public void init() {
@@ -357,12 +359,11 @@ public class TableRepositoryImpl implements TableRepository {
 		if (pagination.getPageSate() == null && pagination.getPageNum() != 1) {
 			return rootNode;
 		}
-		
-		
+
 		Statement statement = QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableName));
-		List<Clause> clauses = new ArrayList<>();		
+		List<Clause> clauses = new ArrayList<>();
 		if (mapWhereClause != null && !mapWhereClause.isEmpty()) {
-			mapWhereClause.forEach((key, value) -> {				
+			mapWhereClause.forEach((key, value) -> {
 				clauses.add(QueryBuilder.eq(addQuote(key), value));
 
 			});
@@ -370,18 +371,18 @@ public class TableRepositoryImpl implements TableRepository {
 					.where(clauses.get(0));
 			if (clauses.size() > 1) {
 				for (int i = 1; i < clauses.size(); i++) {
-					whereClause=whereClause.and(clauses.get(i));					
+					whereClause = whereClause.and(clauses.get(i));
 				}
 			}
-			statement=whereClause;
+			statement = whereClause;
 		}
-	
+
 		if (pagination.getPageNum() == 1) {
-			long rows ;
-			if(statement instanceof Select) {
-			 rows = this.cassandraRepository.countAllRows(connectionName, keyspaceName, tableName);			
-			}else {
-				 rows = this.cassandraRepository.countAllRows(connectionName, keyspaceName, tableName,clauses);		
+			long rows;
+			if (statement instanceof Select) {
+				rows = this.cassandraRepository.countAllRows(connectionName, keyspaceName, tableName);
+			} else {
+				rows = this.cassandraRepository.countAllRows(connectionName, keyspaceName, tableName, clauses);
 			}
 			rootNode.put("rows", rows);
 			pagination.setTotal(rows);
@@ -389,8 +390,6 @@ public class TableRepositoryImpl implements TableRepository {
 		} else {
 			rootNode.put("rows", pagination.getTotal());
 		}
-
-		
 
 		statement.setFetchSize(pagination.getPageSize());
 		if (pagination.getPageSate() != null && !pagination.getPageSate().isEmpty()) {
@@ -656,10 +655,132 @@ public class TableRepositoryImpl implements TableRepository {
 	public void removeAllData(String connectionName, String keyspaceName, String tableName) throws Exception {
 		Session session = getSession(connectionName);
 		Truncate truncate = QueryBuilder.truncate(addQuote(keyspaceName), addQuote(tableName));
-
 		LOGGER.debug("removeAllData CQL " + truncate);
 		LOGGER.debug("removeAllData   " + truncate);
 		session.execute(truncate);
+	}
+
+	@Override
+	public String dumpTableSchema(String connectionName, String keyspaceName, String tableName) throws Exception {
+		StringBuilder builder = new StringBuilder();
+		Cluster cluster = getCluster(connectionName);
+		if (cluster != null) {
+			TableMetadata tableMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName))
+					.getTable(addQuote(tableName));
+			if (tableMetadata != null) {
+				builder.append(tableMetadata.exportAsString());
+			}
+		}
+		return builder.toString();
+	}
+
+	@Override
+	public String dumpTableWithData(String connectionName, String keyspaceName, String tableName) throws Exception {
+		StringBuilder builder = new StringBuilder();
+		Session session = getSession(connectionName);
+		Cluster cluster = getCluster(connectionName);
+		if (cluster != null) {
+			TableMetadata tableMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName))
+					.getTable(addQuote(tableName));
+			if (tableMetadata != null) {
+				builder.append(tableMetadata.exportAsString());
+				LOGGER.debug("keyspaceMetadata " + tableMetadata.exportAsString());
+				builder.append("\n").append(SEPARATOR_DATA);
+				ResultSet resulSet = session
+						.execute(QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableMetadata.getName())));
+				Iterator<Row> iter = resulSet.iterator();
+				while (iter.hasNext()) {
+					Row row = iter.next();
+					builder.append(buildRowValue(keyspaceName, tableMetadata, row));
+
+				}
+
+			}
+		}
+		return builder.toString();
+	}
+
+	@Override
+	public String dumpOnlyDataFromTable(String connectionName, String keyspaceName, String tableName) throws Exception {
+		StringBuilder builder = new StringBuilder();
+		Session session = getSession(connectionName);
+		Cluster cluster = getCluster(connectionName);
+		if (cluster != null) {
+			TableMetadata tableMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName))
+					.getTable(addQuote(tableName));
+			if (tableMetadata != null) {
+				ResultSet resulSet = session
+						.execute(QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableMetadata.getName())));
+				Iterator<Row> iter = resulSet.iterator();
+				while (iter.hasNext()) {
+					Row row = iter.next();
+					builder.append(buildRowValue(keyspaceName, tableMetadata, row));
+
+				}
+
+			}
+		}
+		return builder.toString();
+	}
+
+	private String buildRowValue(String keyspaceName, TableMetadata tableMetadata, Row row) {
+		StringBuilder builderHead = new StringBuilder("\nINSERT INTO ");
+		builderHead.append("\"").append(keyspaceName).append("\".").append("\"").append(tableMetadata.getName())
+				.append("\"");
+		Map<String, String> columnsInsert = new HashMap<>();
+		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		columns.forEach(column -> {
+			Object object = row.getObject(addQuote(column.getName()));
+			if (object != null) {
+				switch (column.getType().getName()) {
+				case TIMESTAMP: {
+					if (object instanceof Date) {
+						Date date = (Date) object;
+						SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+						columnsInsert.put(column.getName(), dateFormat.format(date));
+					}
+					break;
+				}
+				case BLOB: {
+					if (object instanceof ByteBuffer) {
+						ByteBuffer byteBuffer = (ByteBuffer) object;
+						String value = new String(byteBuffer.array());
+						LOGGER.debug(column.getName() + "   BLOB BLOB  " + value);
+						columnsInsert.put(column.getName(), value);
+					}
+					break;
+				}
+				default:
+					if (object != null) {
+						String rowValue = object.toString();
+						if (rowValue.length() > 1 && rowValue.startsWith("\"")) {
+							// rowValue = rowValue.substring(1, rowValue.length() - 1);
+						}
+						columnsInsert.put(column.getName(), rowValue);
+					}
+					break;
+				}
+
+			}
+		});
+		StringBuilder builderInsert = new StringBuilder(" (");
+		StringBuilder builderValue = new StringBuilder(" (");
+		AtomicBoolean firstInsert = new AtomicBoolean(true);
+		columnsInsert.forEach((key, value) -> {
+			if (firstInsert.get()) {
+				builderInsert.append("\"").append(key).append("\"");
+				builderValue.append("'").append(value.replaceAll("'", "''")).append("'");
+
+			} else {
+				builderInsert.append(",\"").append(key).append("\"");
+				builderValue.append(",'").append(value.replaceAll("'", "''")).append("'");
+			}
+			firstInsert.set(false);
+		});
+		builderInsert.append(")");
+		builderValue.append(");");
+		builderHead.append(builderInsert).append(" VALUES").append(builderValue);
+		return builderHead.toString();
 	}
 
 	/**
@@ -671,6 +792,7 @@ public class TableRepositoryImpl implements TableRepository {
 	private String addQuote(String element) {
 		return "\"" + element + "\"";
 	}
+
 	private String removeQuote(String element) {
 		if (element == null || element.length() < 2) {
 			return element;

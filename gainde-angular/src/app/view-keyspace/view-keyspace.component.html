@@ -382,19 +382,26 @@
                 </div>
                 <div *ngIf="partVisible==5"> 
                     <div class="row" > 
-                         <div class="col-md-5 col-lg-4"> 
+                         <div class="col-md-3 col-lg-3"> 
                         </div>
                         <div class="col-md-4 col-lg-5"> 
                             <h4>{{tableInfo.name}}</h4> 
                         </div>
-                        <div class="col-md-3 col-lg-3"> 
+                        <div class="col-md-3 col-lg-2"> 
                             <button type="button" class="btn btn-gainde" 
                             (click)="onClickEditCurrentTable()" 
                              matTooltip="Editer table">
                                 <mat-icon >create</mat-icon> 
                             </button>                            
                         </div>
-                         </div>
+                        <div class="col-md2 col-lg-2">                                                                     
+                            <button type="button" class="btn btn-gainde" 
+                                (click)="onClickDumpTable(tableInfo.name,$event)"
+                                matTooltip="Dump Keyspace">
+                                    <mat-icon >import_export</mat-icon> 
+                                </button>
+                        </div>  
+                    </div>
                     <mat-tab-group class="tabTableGainde"   [(selectedIndex)]="selectedPageIndex" (selectedTabChange)="onClickNavigateTab()">
                         <mat-tab label="Infos">
                             <div >

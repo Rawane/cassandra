@@ -500,22 +500,23 @@ export class GaindeService {
       }
     );    
   }
-  dumpKeyspace(type:string,connectionName:string,keyspaceName) { 
+  dumpKeyspace(type:string,connectionName:string,keyspaceName:string) { 
     // console.log('getAllHistories  : ' + all);        
-     let url= environment['basePathGainde']+'/keyspace/dump'; 
+     
+     let url= environment['basePathGainde']+'/keyspace/dump/{TOKEN}/'+connectionName+'/'+keyspaceName;
      let filename;
      if(type==='3'){
-          url=url+'/all/'+connectionName+'/'+keyspaceName;
-          filename=keyspaceName+'_schema_with_data.cql';
-        }else{
-          if(type==='2'){
-              url=url+'/data/'+connectionName+'/'+keyspaceName;
-              filename=keyspaceName+'_data.cql';
+            url=url.replace('{TOKEN}','all');
+            filename=keyspaceName+'_schema_with_data.cql';
+      }else{
+            if(type==='2'){
+              url=url.replace('{TOKEN}','data');
+                filename=keyspaceName+'_data.cql';
             }else{
-                url=url+'/schema/'+connectionName+'/'+keyspaceName;         
-                filename=keyspaceName+'_schema.cql';
+                url=url.replace('{TOKEN}','schema');                    
+                  filename=keyspaceName+'_schema.cql';
             }
-    } 
+        } 
        this.httpClient
        .get(url,{headers:this.httpOptions.headers, responseType: 'blob' as 'text'})
        .subscribe(
@@ -540,7 +541,48 @@ export class GaindeService {
             this.emitMapTransfertKeyspaceSubject(ActionHttp.DUMP_KEYSPACE_ERROR,error['error']['error']);
          }
        );
-   }  
+   } 
+   dumpTable(type:string,connectionName:string,keyspaceName:string,tableName:string) { 
+    // console.log('getAllHistories  : ' + all);        
+     let url= environment['basePathGainde']+'/table/dump/{TOKEN}/'+connectionName+'/'+keyspaceName+'/'+tableName;
+     let filename;
+        if(type==='3'){
+              url=url.replace('{TOKEN}','all');
+              filename=tableName+'_schema_with_data.cql';
+        }else{
+              if(type==='2'){
+                url=url.replace('{TOKEN}','data');
+                  filename=tableName+'_data.cql';
+              }else{
+                  url=url.replace('{TOKEN}','schema');                    
+                    filename=tableName+'_schema.cql';
+              }
+          } 
+       this.httpClient
+       .get(url,{headers:this.httpOptions.headers, responseType: 'blob' as 'text'})
+       .subscribe(
+         (response:any) => {   
+          let content={'error':false,'msg':''} ;  
+          this.emitNotificationDialogExport(content) ;         
+          let dataType = response.type;
+          let binaryData = [];
+          binaryData.push(response);
+          let downloadLink = document.createElement('a');
+          downloadLink.href = window.URL.createObjectURL(new Blob(binaryData, {type: dataType}));
+          if (filename){
+              downloadLink.setAttribute('download', filename);
+          }
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+         },
+         (error) => {
+          // console.log('Erreur ! : ' + error);  
+          let content={'error':true,'msg':''} ;  
+           this.emitNotificationDialogExport(content) ;        
+            this.emitMapTransfertKeyspaceSubject(ActionHttp.DUMP_KEYSPACE_ERROR,error['error']['error']);
+         }
+       );
+   }   
    importKeyspace(connectionName:string,formdata:FormData){
     this.httpClient
     .post(environment['basePathGainde']+'/keyspace/import/file/'+connectionName,formdata,this.httpOptions)

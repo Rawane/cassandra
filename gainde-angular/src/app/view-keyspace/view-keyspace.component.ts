@@ -609,7 +609,11 @@ loadDataRows() {
   }
   onClickDumpKeyspace(keyspaceName:string,event: MouseEvent){
     const target = new ElementRef(event.currentTarget);
-    this.openDialogExportKeyspace(keyspaceName,target);
+    this.openDialogExportKeyspace(keyspaceName,target,true);
+  }
+  onClickDumpTable(tableName:string,event: MouseEvent){
+    const target = new ElementRef(event.currentTarget);
+    this.openDialogExportKeyspace(tableName,target,false);
   }
   onClickFilterHistoryByConnection(){
    // console.log('onClickFilterHistoryByConnection ='+this.allHistory);   
@@ -850,13 +854,13 @@ loadDataRows() {
     });
   }
 
-  private openDialogExportKeyspace(text:string,target:ElementRef): void {
+  private openDialogExportKeyspace(text:string,target:ElementRef,isKeyspace:boolean): void {
     let dialogRefExport = this.dialog.open(DialogExportKeyspaceComponent, {
       width: '400px', 
       minHeight:'120px', 
       height : 'auto', 
       disableClose:true,     
-      data: {text:text,isLoading:false,trigger:target}
+      data: {text:text,isLoading:false,trigger:target,isKeyspace:isKeyspace}
     });
     dialogRefExport.componentInstance.setComponent(this);
     dialogRefExport.afterClosed().subscribe(result => { 
@@ -1237,7 +1241,11 @@ export class DialogExportKeyspaceComponent implements OnInit {
         
       }else{        
         this.dialogRef.close();
-        this.viewParent.openSnackBar("Le dump du keyspace s'est déroulé avec succès ", '');
+        if(this.data.isKeyspace){
+          this.viewParent.openSnackBar("Le dump du keyspace s'est déroulé avec succès ", '');
+        }else{
+          this.viewParent.openSnackBar("Le dump de la Table s'est déroulé avec succès ", '');
+        }
         //this.gaindeService.getAllMetaAfterImport(this.data.text,content['msg']);
        
        
@@ -1262,7 +1270,11 @@ onClickSelectTypeExport(){
       this.error=false;
       let connectionName=this.gaindeService.currentGainde.connectionName;
        let keyspaceName= this.gaindeService.currentGainde.keyspaceName;  
-      this.gaindeService.dumpKeyspace(this.typeExport,connectionName,keyspaceName);
+       if(this.data.isKeyspace){
+          this.gaindeService.dumpKeyspace(this.typeExport,connectionName,keyspaceName);
+       }else{
+        this.gaindeService.dumpTable(this.typeExport,connectionName,keyspaceName,this.data.text);
+       }
     }
     
     ngOnDestroy() {

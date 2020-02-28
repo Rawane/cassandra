@@ -20,14 +20,20 @@ public interface TableRepository {
 
 	void updateData(String connectionName, String keyspaceName, String tableName, JsonNode map) throws Exception;
 
-	JsonNode getAllDataPaginateByPage(String connectionName, String keyspaceName, String tableName,Map<String,String> whereClause,Pagination pagination
-			) throws Exception;
-	
+	JsonNode getAllDataPaginateByPage(String connectionName, String keyspaceName, String tableName,
+			Map<String, String> whereClause, Pagination pagination) throws Exception;
+
 	void removeRowData(String connectionName, String keyspaceName, String tableName, Map<String, Object> map)
 			throws Exception;
 
 	void removeAllData(String connectionName, String keyspaceName, String tableName) throws Exception;
 
 	JsonNode executeQuery(String connectionName, String keyspaceName, String query) throws Exception;
+
+	String dumpTableSchema(String connectionName, String keyspaceName, String tableName) throws Exception;
+
+	String dumpTableWithData(String connectionName, String keyspaceName, String tableName) throws Exception;
+
+	String dumpOnlyDataFromTable(String connectionName, String keyspaceName, String tableName) throws Exception;
 
 }

@@ -5,6 +5,9 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -234,7 +237,49 @@ public class TableController {
 			return ResponseEntity.status(400).body(buildMessage("error", ioException.getMessage()));
 		}
 	}
+	@GetMapping("/dump/schema/{connectionName}/{keyspaceName}/{tableName}")
+	public ResponseEntity<Resource> dumpTableSchema(@PathVariable("connectionName") String connectionName,
+			@PathVariable("keyspaceName") String keyspaceName, @PathVariable("tableName") String tableName) {
+		try {
+			String exportSchema = tableRepository.dumpTableSchema(connectionName, keyspaceName, tableName);
+			ByteArrayResource resource = new ByteArrayResource(exportSchema.getBytes());
+			LOGGER.debug("exportSchema " + exportSchema);
+			return ResponseEntity.status(200).contentLength(exportSchema.length())
+					.contentType(MediaType.parseMediaType("application/octet-stream")).body(resource);
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).build();
+		}
+	}
 
+	@GetMapping("/dump/all/{connectionName}/{keyspaceName}/{tableName}")
+	public ResponseEntity<Resource> dumpTableWithData(@PathVariable("connectionName") String connectionName,
+			@PathVariable("keyspaceName") String keyspaceName, @PathVariable("tableName") String tableName) {
+		try {
+			String exportSchema = tableRepository.dumpTableWithData(connectionName, keyspaceName, tableName);
+			LOGGER.debug("exportSchema " + exportSchema);
+			ByteArrayResource resource = new ByteArrayResource(exportSchema.getBytes());
+			return ResponseEntity.status(200).contentLength(exportSchema.length())
+					.contentType(MediaType.parseMediaType("application/octet-stream")).body(resource);
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).build();
+		}
+	}
+	@GetMapping("/dump/data/{connectionName}/{keyspaceName}/{tableName}")
+	public ResponseEntity<Resource> dumpOnlyDataFromTable(@PathVariable("connectionName") String connectionName,
+			@PathVariable("keyspaceName") String keyspaceName, @PathVariable("tableName") String tableName) {
+		try {
+			String exportSchema = tableRepository.dumpOnlyDataFromTable(connectionName, keyspaceName, tableName);
+			LOGGER.debug("exportSchema " + exportSchema);
+			ByteArrayResource resource = new ByteArrayResource(exportSchema.getBytes());
+			return ResponseEntity.status(200).contentLength(exportSchema.length())
+					.contentType(MediaType.parseMediaType("application/octet-stream")).body(resource);
+		} catch (Exception ioException) {
+			LOGGER.error("erreur", ioException);
+			return ResponseEntity.status(400).build();
+		}
+	}
 	private String buildMessage(String code, String message) {
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode node = mapper.createObjectNode();

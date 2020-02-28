@@ -17,7 +17,7 @@ export interface DialogData {
   readOnly:boolean;
   isLoading:boolean;
   trigger:ElementRef ;
-  
+  isKeyspace:boolean;
 }
 
 @Component({

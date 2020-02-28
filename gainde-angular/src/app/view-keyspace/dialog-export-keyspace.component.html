@@ -1,6 +1,7 @@
 <div class="divTitleDialog">
     <div class="row" style="text-align: center;">   
-        <span style="font-weight: bold;">Dump du keyspace :</span>
+        <span style="font-weight: bold;" *ngIf="data.isKeyspace">Dump du keyspace :</span>
+        <span style="font-weight: bold;" *ngIf="!data.isKeyspace">Dump de la Table :</span>
     </div>
     <div class="row" style="text-align: center;">   
         <span >{{data.text}}</span>
@@ -14,7 +15,7 @@
         <div  *ngIf="!data.isLoading">
             <div class="row form-group">
                 <div class="col">
-                 <label for="name">Only Schéma</label>    
+                 <label for="name"  >Only Schéma</label>    
                  </div>  
                  <div class="col">
                 <input type="radio" value="1"   name="schema" [(ngModel)]="typeExport"  (click)="onClickSelectTypeExport();">
