@@ -1,18 +1,35 @@
 <div class="divTitleDialog">
-    <div class="row" style="text-align: center;">   
-        <span style="font-weight: bold;" *ngIf="data.isKeyspace">Dump du keyspace :</span>
-        <span style="font-weight: bold;" *ngIf="!data.isKeyspace">Dump de la Table :</span>
+    <div class="row" *ngIf="!data.isLoading">  
+      <div class="col-4"></div>
+      <div class="col-8"> 
+          <span style="font-weight:bold;" *ngIf="data.isKeyspace">Dump du keyspace :</span>
+          <span style="font-weight:bold;" *ngIf="!data.isKeyspace">Dump de la Table :</span>
+      </div>
     </div>
-    <div class="row" style="text-align: center;">   
-        <span >{{data.text}}</span>
+    <div class="row" *ngIf="data.isLoading">  
+      <div class="col-4"></div>
+      <div class="col-8"> 
+        <span style="font-weight:bold;" >Export ...</span>        
+      </div>
+    </div>
+    <div class="row" >  
+      <div class="col-4"></div>
+      <div class="col-8"> 
+          <span >{{data.text}}</span>
+        </div>
     </div>
 </div>
-<div class="row" style="text-align: center;"> <mat-spinner *ngIf="data.isLoading"></mat-spinner></div>
+<div class="row" style="text-align: center;">  
+   <div class="col-4"></div>
+    <div class="col-8">
+    <mat-spinner *ngIf="data.isLoading"></mat-spinner>
+    </div>
+  </div>
 <div class="messageError" *ngIf="error">
   <span >{{messageError}}</span>
 </div>
-<div mat-dialog-content>           
-        <div  *ngIf="!data.isLoading">
+<div mat-dialog-content *ngIf="!data.isLoading">           
+        <div   style="margin-top: 10px;">
             <div class="row form-group">
                 <div class="col">
                  <label for="name"  >Only Schéma</label>    
@@ -43,7 +60,7 @@
   
 </div>
 
-<div mat-dialog-actions class="row"  >
+<div mat-dialog-actions class="row"  *ngIf="!data.isLoading">
   <div class="col-auto mr-auto">
     <button mat-button class="btn btn-gainder-danger"  [mat-dialog-close]=""  >Annuler</button>
   </div>

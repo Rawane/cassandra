@@ -30,6 +30,7 @@ import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.SocketOptions;
 import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.xoolibeut.gainde.cassandra.controller.dtos.KeyspaceDTO;
@@ -79,6 +80,10 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 	@Override
 	public void dropKeyspace(String connectionName, String keyspace) throws Exception {
 		Session session = getSession(connectionName);
+		Cluster cluster=getCluster(connectionName);
+		SocketOptions socketOptions = cluster.getConfiguration().getSocketOptions();
+		socketOptions.setReadTimeoutMillis(60000);
+		socketOptions.setConnectTimeoutMillis(60000);
 		session.execute("DROP KEYSPACE " + keyspace);
 
 	}
@@ -111,7 +116,10 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 	@Override
 	public String dumpKeyspace(String connectionName, String keyspaceName) throws Exception {
 		StringBuilder builder = new StringBuilder();
-		Cluster cluster = getCluster(connectionName);
+		Cluster cluster=getCluster(connectionName);
+		SocketOptions socketOptions = cluster.getConfiguration().getSocketOptions();
+		socketOptions.setReadTimeoutMillis(60000);
+		socketOptions.setConnectTimeoutMillis(60000);
 		if (cluster != null) {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
 			if (keyspaceMetadata != null) {
@@ -125,7 +133,10 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 	public String dumpKeyspaceWithData(String connectionName, String keyspaceName) throws Exception {
 		StringBuilder builder = new StringBuilder();
 		Session session = getSession(connectionName);
-		Cluster cluster = getCluster(connectionName);
+		Cluster cluster=getCluster(connectionName);
+		SocketOptions socketOptions = cluster.getConfiguration().getSocketOptions();
+		socketOptions.setReadTimeoutMillis(60000);
+		socketOptions.setConnectTimeoutMillis(60000);
 		if (cluster != null) {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
 			if (keyspaceMetadata != null) {
@@ -151,8 +162,11 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 	@Override
 	public String dumpOnlyDataFromKeyspace(String connectionName, String keyspaceName) throws Exception {
 		StringBuilder builder = new StringBuilder();
-		Session session = getSession(connectionName);
-		Cluster cluster = getCluster(connectionName);
+		Session session = getSession(connectionName);		
+		Cluster cluster=getCluster(connectionName);
+		SocketOptions socketOptions = cluster.getConfiguration().getSocketOptions();
+		socketOptions.setReadTimeoutMillis(60000);
+		socketOptions.setConnectTimeoutMillis(60000);
 		if (cluster != null) {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
 			if (keyspaceMetadata != null) {				

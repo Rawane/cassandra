@@ -1155,6 +1155,10 @@ export class DialogImportKeyspaceComponent implements OnInit {
   ngOnInit() {
     this.notificationSubscription=this.gaindeService.notificationDialogImport.subscribe((content)=>{     
       if(content['error']){
+        let matDialogConfig: MatDialogConfig = new MatDialogConfig();
+        let rect = this.data.trigger.nativeElement.getBoundingClientRect();
+        matDialogConfig.position = { left: `${rect.left+24}px`, top: `${rect.bottom}px` };
+        this.dialogRef.updatePosition(matDialogConfig.position);
         this.data.isLoading=false;
         this.error=true;
         this.messageError="Une erreur s'est produite";
@@ -1171,19 +1175,10 @@ export class DialogImportKeyspaceComponent implements OnInit {
       }
     });
 
-    const matDialogConfig: MatDialogConfig = new MatDialogConfig();
-    const rect = this.data.trigger.nativeElement.getBoundingClientRect();
-    //let leftP=this.data.trigger.nativeElement.getBoundingClientRect().left+50;
-    //let widthP=this.data.trigger.nativeElement.getBoundingClientRect().width;
-   // console.log('DialogImportKeyspaceComponent '+leftP+'   '+widthP);
+    let matDialogConfig: MatDialogConfig = new MatDialogConfig();
+    let rect = this.data.trigger.nativeElement.getBoundingClientRect();
     matDialogConfig.position = { left: `${rect.left+24}px`, top: `${rect.bottom}px` };
-    /*matDialogConfig.width = '400px';
-    matDialogConfig.height = 'auto';
-    matDialogConfig.maxHeight='120px';
-    matDialogConfig.disableClose=true;*/
-    //this.dialogRef.updateSize(matDialogConfig.width, matDialogConfig.height);
     this.dialogRef.updatePosition(matDialogConfig.position);
-
     this.initForm();
 
   }
@@ -1196,9 +1191,11 @@ setComponent(viewParent:ViewKeyspaceComponent){
   this.viewParent=viewParent;
 }
   onSubmitForm(){
+    let matDialogConfig: MatDialogConfig = new MatDialogConfig();    
+    matDialogConfig.position = { left: `${window.innerWidth/2 -200}px`, top: `${window.innerHeight/2-120}px` };
+    this.dialogRef.updatePosition(matDialogConfig.position);
     let formData = new FormData();
       formData.append('file', this.fileData);
-      //this.dialogRef.close();
       this.data.isLoading=true;
       this.error=false;
       this.gaindeService.importKeyspace(this.data.text,formData);
@@ -1232,6 +1229,11 @@ export class DialogExportKeyspaceComponent implements OnInit {
   ngOnInit() {
     this.notificationDialogSubscription=this.gaindeService.notificationDialogExport.subscribe((content)=>{      
       if(content['error']){
+        let matDialogConfig: MatDialogConfig = new MatDialogConfig();
+        let rect = this.data.trigger.nativeElement.getBoundingClientRect();    
+        matDialogConfig.position = { left: `${rect.left-300}px`, top: `${rect.bottom+5}px` };   
+        this.dialogRef.updatePosition(matDialogConfig.position);  
+
         this.data.isLoading=false;
         this.error=true;
         this.messageError="Une erreur s'est produite";
@@ -1265,7 +1267,10 @@ setComponent(viewParent:ViewKeyspaceComponent){
 onClickSelectTypeExport(){
   this.error=false;
 }
-  onClickDump(){      
+  onClickDump(){   
+    let matDialogConfig: MatDialogConfig = new MatDialogConfig();    
+    matDialogConfig.position = { left: `${window.innerWidth/2 -200}px`, top: `${window.innerHeight/2-120}px` };
+    this.dialogRef.updatePosition(matDialogConfig.position);   
       this.data.isLoading=true;
       this.error=false;
       let connectionName=this.gaindeService.currentGainde.connectionName;

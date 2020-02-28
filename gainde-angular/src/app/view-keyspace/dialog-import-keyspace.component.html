@@ -1,8 +1,17 @@
 <div class="divTitleDialog">
-    <div class="row">   
-    </div>
+    <div class="row" *ngIf="data.isLoading">
+        <div class="col-4"></div>
+        <div class="col-8">     
+            Import .....
+        </div>
+        </div>
 </div>
-<div class="row" style="text-align: center;"> <mat-spinner *ngIf="data.isLoading"></mat-spinner></div>
+<div class="row" style="text-align: center;">
+    <div class="col-4"></div>
+    <div class="col-8">
+    <mat-spinner *ngIf="data.isLoading"></mat-spinner>
+    </div>
+  </div>
 <div class="messageError" *ngIf="error">
   <span >{{messageError}}</span>
 </div>
@@ -21,7 +30,7 @@
     <button mat-button class="btn btn-gainder-danger"  [mat-dialog-close]=""  >Annuler</button>
   </div>
   <div class="col-auto">
-    <button type="submit" mat-button   class="btn btn-success"  >Valider</button>
+    <button type="submit" mat-button   class="btn btn-success"   [disabled]="formImport.invalid">Valider</button>
   </div>
 </div>
 </form>
