@@ -215,6 +215,12 @@
   border-radius: 4px;
   overflow: hidden;
 }
+.mat-dialog-content .dialogMax{
+  height: 90vh;
+}
+.mat-dialog-content .dialogMin{
+  height: 80vh;
+}
 .headColumnMove{
   cursor: move; 
 }

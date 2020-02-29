@@ -437,15 +437,17 @@ loadDataRows() {
   }
 
   onClickEditRow(row,name){
+    let rowEdit={...row};
     let data:any={'columns':this.dispColumnsHeadTableData,
-    'tableName':name,'row':row,'added':false,'bigData':false};
+    'tableName':name,'row':rowEdit,'added':false,'bigData':false};
    // console.log('onClickEditRow  : ' + JSON.stringify(data)); 
     this.openDialogRow(data);
     
   }
   onClickEditRowBigData(row,name){
+    let rowEdit={...row};
     let data:any={'columns':this.tableDataPaginateDataSource.columns,
-    'tableName':name,'row':row,'added':false,'bigData':true};
+    'tableName':name,'row':rowEdit,'added':false,'bigData':true};
    // console.log('onClickEditRow  : ' + JSON.stringify(data)); 
     this.openDialogRow(data);
     
@@ -755,6 +757,7 @@ loadDataRows() {
     });
   }
   private openDialogRow(row:JSON): void {
+    
     let dialogRefRow = this.dialog.open(DialogEditRowComponent, {
       width: 'auto',     
       data: row,
@@ -949,7 +952,8 @@ setColumns = new Set<string>();
             if(content['data'] && content['data']){
               let name=content['data']['name'];
               let text=content['data']['text'];
-              this.data['row'][name]=text;              
+              this.data['row'][name]=text;  
+              this.setColumns.add(name);               
             }
           }          
       }
@@ -1075,10 +1079,16 @@ checked:boolean=true;
   styleUrls: ['./view-keyspace.component.scss']
 })
 export class DialogViewCellComponent implements OnInit {
-
+  zoomData:boolean=false;
+  currentRow:number;
   constructor( public dialogRef: MatDialogRef<ViewKeyspaceComponent>,@Inject(MAT_DIALOG_DATA) public data: DialogData) { }
 
   ngOnInit() {
+    this.updateSizeDialog();
+  }
+  onClickZoomPopup(){
+    this.zoomData=!this.zoomData; 
+    this.updateSizeDialog();   
   }
   onClickEncode(){
     if(this.data.text){
@@ -1091,6 +1101,7 @@ export class DialogViewCellComponent implements OnInit {
         catch(error) {
             //console.error(error);      
         }
+        this.updateSizeDialog();
     }
   }
   onClickDecode(){
@@ -1106,34 +1117,50 @@ export class DialogViewCellComponent implements OnInit {
     catch(error) {
       //console.error(error);      
     }
-    
+    this.updateSizeDialog();
     }
   }
   onClickFormat(){
   try {
     this.data.text=JSON.stringify(JSON.parse(this.data.text), null, 2) ;
     let rows=Math.trunc(this.data.text.split('"').length/2);
-    if(rows<10){
-      this.data.rows=rows+2;
-    }else{
-      if(rows<20){
-        this.data.rows=rows+5;
-      } else{
-        if(rows<30){
-          this.data.rows=rows+7;
-        } else{
-          this.data.rows=rows+10;
-        }
-      }
-    }
-    console.log('onClickFormat rows'+this.data.rows);
+    rows=this.data.text.split('\n').length;
+    console.log("onClickFormat "+rows)
+    this.data.rows=rows+3;
+    
+    console.log('onClickFormat rows '+this.data.rows);
   } catch (error) {
     this.data.text=beautify(this.data.text);    
     let sizeText=this.data.text.split('\n').length;
     this.data.rows=sizeText+3;
     console.log('format XML sizeText'+sizeText);
   }
+  this.updateSizeDialog();
 }
+
+  private updateSizeDialog() {
+    console.log('updateSizeDialog'+this.zoomData);
+    if (this.zoomData) {
+      this.currentRow = this.data.rows;
+      console.log('updateSizeDialog currentRow'+this.currentRow);
+      // this.data.rows=100.
+      this.dialogRef.updateSize(window.innerWidth + 'px', (window.innerHeight - 30) + 'px');
+    }
+    else {
+       //this.data.rows=this.currentRow;
+       if (this.data.rows >= 8) {
+        this.dialogRef.updateSize('700px', (window.innerHeight - 30) + 'px');
+        }
+        else {
+          if (this.data.rows >= 4) {
+              this.dialogRef.updateSize('700px', '300px');
+          } else {          
+              this.dialogRef.updateSize('700px', '200px');
+      }
+        }
+
+    }
+  }
 }
 
 

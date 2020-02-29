@@ -3,8 +3,7 @@
           <div class="col-4" style="text-align: center;">
             <h1 mat-dialog-title>{{data.name}}</h1>
         </div>
-        <div class="col-2" style="text-align: center;">  
-        </div>
+       
         <div class="col-2" style="text-align: center;">  
           <button type="button" class="btn btn-success" 
             (click)="onClickEncode()" 
@@ -26,12 +25,31 @@
           Format
         </button> 
         </div>
+        <div class="col-1" style="text-align: center;">  
+          <mat-icon (click)="onClickZoomPopup()" class="actionClick" [matTooltip]="zoomData?'Reduire':'Agrandir'">
+            {{zoomData?'minimize':'aspect_ratio'}}
+            </mat-icon>         
+        </div>
+        <div class="col-1" style="text-align: center;">  
+          <mat-icon [mat-dialog-close]="" class="actionClick"  matTooltip="Fermer">
+            close
+            </mat-icon>         
+        </div>
+    </div>
+    <div class="row" *ngIf="!data.readOnly && data.rows>8">
+      <div class="col-auto mr-auto">
+        <button mat-button class="btn btn-gainder-danger"  [mat-dialog-close]=""  >Annuler</button>
+      </div>
+      <div class="col-auto">
+        <button mat-button   class="btn btn-success"  [mat-dialog-close]="data">Valider</button>
+      </div>
+
     </div>
 </div>
-<div mat-dialog-content>
+<div mat-dialog-content  [class]="{'dialogMin':!zoomData,'dialogMax':zoomData}">
   
   <div class="row">   
-  <textarea  [readonly]="data.readOnly" name="content"  [rows]="data.rows" [(ngModel)]="data.text"  class="form-control textArea"></textarea>
+  <textarea style="height: auto;" [readonly]="data.readOnly" name="content"  [rows]="data.rows" [(ngModel)]="data.text"  class="form-control textArea"></textarea>
   </div>
 </div>
 <div mat-dialog-actions class="row" *ngIf="data.readOnly">

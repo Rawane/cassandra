@@ -2,7 +2,7 @@
         <div class="row">            
             <div class="col-xs-6 col-md-4 col-lg-2"> 
                 <h4>{{currentConnection.name}}</h4>  
-                <mat-icon class="actionClick" style="margin-left:8px ;" (click)="onClickImportDump(currentConnection.name,$event,true)" matTooltip="Import Keyspace">import_export</mat-icon>  
+                <mat-icon class="actionClick" style="margin-left:8px ;" (click)="onClickImportDump(currentConnection.name,$event,true)" matTooltip="Import Keyspace ou Table">import_export</mat-icon>  
             </div>
             <div class="col-xs-3 col-md-2 col-lg-1"> 
                 <button type="button" class="btn btn-gainde" (click)="onClickAddKeyspace()" matTooltip="Ajouter Keyspace">
@@ -21,7 +21,7 @@
                 <p mat-line *ngIf="currentConnection.ip" style="font-weight: 14px;"> {{currentConnection.ip}}:{{currentConnection.port}}</p>   
             </div>
                 <div class="col-md-1 col-lg-1">
-                    <mat-icon class="actionClick" style="margin-left:8px ;" (click)="onClickImportDump(currentConnection.name,$event,false)" matTooltip="Import Keyspace">import_export</mat-icon> 
+                    <mat-icon class="actionClick" style="margin-left:8px ;" (click)="onClickImportDump(currentConnection.name,$event,false)" matTooltip="Import Keyspace ou Table">import_export</mat-icon> 
                  </div>
         </div>
         <div class="row rowContent">    
@@ -400,7 +400,7 @@
                         <div class="col-md2 col-lg-2">                                                                     
                             <button type="button" class="btn btn-gainde" 
                                 (click)="onClickDumpTable(tableInfo.name,$event)"
-                                matTooltip="Dump Keyspace">
+                                matTooltip="Dump Table">
                                     <mat-icon >import_export</mat-icon> 
                                 </button>
                         </div>  
@@ -492,6 +492,7 @@
                                         (cdkDragStarted)="dragStarted($event, i)"
                                         [cdkDragData]="{name: colElement.name, columIndex: i}"
                                         >
+                                        
                                             {{colElement['name']}}                                            
                                         </mat-header-cell>
                                         <mat-cell *matCellDef="let element"                                    
