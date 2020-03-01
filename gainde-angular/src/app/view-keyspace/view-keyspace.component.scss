@@ -111,10 +111,20 @@
 .dialogWrapper{
   width: 900px;
 }
+.truncate-keyspace{
+  max-width: 250px; 
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 @media(max-width: 600px) {
   .dialogWrapper {
     width:500px;
 }
+}
+
+@media(max-width: 800px) {
+
 }
 .labelRow{
   font-weight: bold;
