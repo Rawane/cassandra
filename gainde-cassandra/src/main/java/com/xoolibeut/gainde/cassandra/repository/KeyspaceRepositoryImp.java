@@ -54,13 +54,14 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 		if ("SimpleStrategy".equals(keyspaceDTO.getStrategy())) {
 			sb.append("','replication_factor':").append(keyspaceDTO.getReplication());
 		} else {
-			keyspaceDTO.getDataCenter().forEach((key, value) -> {
-				sb.append("','" + key + "':").append(value);
+			keyspaceDTO.getDataCenters().forEach(dataCenter -> {
+				sb.append("','" + dataCenter.getName() + "':").append(dataCenter.getReplication());
 			});
 		}
 		sb.append("} AND DURABLE_WRITES = " + keyspaceDTO.isDurableWrite() + ";");
 
 		String query = sb.toString();
+		LOGGER.info("execute Query "+query);
 		session.execute(query);
 
 	}

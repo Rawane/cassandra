@@ -8,7 +8,7 @@ import {MatDialog, MatDialogRef,MAT_DIALOG_DATA,MatDialogConfig} from '@angular/
 import {MatSnackBar} from '@angular/material/snack-bar';
 import beautify from 'xml-beautifier';
 import {GaindeService} from '../services/gainde.service';
-import {KeyspaceDTO,ActionHttp,VIEW_ECRAN,ActionDialog,Meta} from '../model/model-dto';
+import {KeyspaceDTO,ActionHttp,VIEW_ECRAN,ActionDialog,Meta,DataCenter} from '../model/model-dto';
 import {KeyspaceComponent} from './keyspace-common.component';
 import{DialogData} from '../view-connections/view-connections.component';
 import {CdkDragStart, CdkDropList,CdkDragDrop, moveItemInArray} from '@angular/cdk/drag-drop';
@@ -565,7 +565,16 @@ loadDataRows() {
   }
   onClickSaveKeyspace(){
     let  keyspaceDTO=new KeyspaceDTO(this.keyspaceForm.value['name'],this.keyspaceForm.value['strategy'],
-    this.keyspaceForm.value['replication'], this.keyspaceForm.value['durableWrite'],this.keyspaceForm.value['dataCenter']);  
+    this.keyspaceForm.value['replication'], this.keyspaceForm.value['durableWrite']);  
+    if(this.keyspaceForm.value['strategy']==='NetworkTopologyStrategy'){
+      for (let controlForm of this.dataCenters.controls) {
+        let dataCenter:DataCenter=new DataCenter();
+        dataCenter.name=controlForm.value['name'];
+        dataCenter.replication=controlForm.value['replication'];
+        keyspaceDTO.dataCenters.push(dataCenter);
+      }
+
+    }
     this.currentKeyspaceName=this.keyspaceForm.value['name'];  
     this.keyspaceInfo=JSON.parse(JSON.stringify(keyspaceDTO));
     this.keyspaceInfo['tables']=[];
@@ -639,20 +648,21 @@ loadDataRows() {
     console.log('1- onStrategyChange  '+ this.keyspaceForm.value['strategy']);
     //this.keyspaceForm.get('strategy').valueChanges.subscribe(val => {
     let val=this.keyspaceForm.value['strategy'];
-      console.log('2  onStrategyChange  '+val)
+     // console.log('2  onStrategyChange  '+val)
       if(val==='SimpleStrategy'){
         this.keyspaceForm.get('replication').setValidators([Validators.required]);
         if(this.dataCenters && this.dataCenters.length>0){
-       for(let index=0;index<this.dataCenters.length;index++){
-            this.dataCenters.removeAt(index);
-        }
+        let countDataCenters:number=this.dataCenters.length;
+          //console.log("onStrategyChange "+countDataCenters);
+        for(let index=countDataCenters-1;index>=0;index--){
+              console.log(" for onStrategyChange "+index);
+              this.dataCenters.removeAt(index);
+              //console.log(" after length for onStrategyChange "+this.dataCenters.length);
+          }       
          
         }
       }else{
-        this.keyspaceForm.get('replication').setValidators([]);
-        //this.keyspaceForm.get('dataCenters').setValue(this.formBuilder.array([this.createDataCenter()]));
-        //this.dataCenters = this.keyspaceForm.get('dataCenters') as FormArray;   
-       // this.dataCenterVisible=false;
+        this.keyspaceForm.get('replication').setValidators([]);        
        if(this.dataCenters && this.dataCenters.length==0){
           this.dataCenters.push(this.createDataCenter());
        }
@@ -895,7 +905,7 @@ loadDataRows() {
       strategy: ['',Validators.required],
       replication: [''],
       durableWrite:[true],
-      dataCenters:this.formBuilder.array([this.createDataCenter()])     
+      dataCenters:this.formBuilder.array([])     
     });  
     this.dataCenters = this.keyspaceForm.get('dataCenters') as FormArray;     
   }
@@ -907,7 +917,7 @@ loadDataRows() {
     console.log("---------------------------createDataCenter------------------------")
     return this.formBuilder.group({
       name: ['',Validators.required],
-      replication: ['']
+      replication: ['',Validators.required]
     });
   }
   onClickAddDataCenter() {

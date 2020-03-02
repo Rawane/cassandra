@@ -13,10 +13,10 @@ export class HistoryDTO {
     }
    
 }
-export class KeyspaceDTO {    
+export class KeyspaceDTO {   
+    dataCenters:Array<DataCenter>=new Array(); 
     constructor( public name: string,public strategy:string,
-        public replication:string,public durableWrite:boolean,
-        public dataCenter:string
+        public replication:string,public durableWrite:boolean
        ){
 
     }
@@ -134,6 +134,13 @@ export class ColumnDTO {
     constructor(        
        ){
     }   
+}
+export class DataCenter {
+    name:string ;
+    replication:number;    
+   constructor(        
+      ){
+   }   
 }
 export class IndexColumn {
      name:string ;   

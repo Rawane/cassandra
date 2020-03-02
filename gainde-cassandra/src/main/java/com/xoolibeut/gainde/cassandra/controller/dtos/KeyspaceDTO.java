@@ -12,16 +12,17 @@ public class KeyspaceDTO {
 	private String name;
 	private String strategy;
 	private String replication; 
-	private Map<String, String> dataCenter=new HashMap<>(); 
+	private List<DataCenter> dataCenters=new ArrayList<DataCenter>(); 
 	private boolean durableWrite = true;
 	private List<Map<String,String>> tables=new ArrayList<>();
 
-	public Map<String, String> getDataCenter() {
-		return dataCenter;
+
+	public List<DataCenter> getDataCenters() {
+		return dataCenters;
 	}
 
-	public void setDataCenter(Map<String, String> dataCenter) {
-		this.dataCenter = dataCenter;
+	public void setDataCenters(List<DataCenter> dataCenters) {
+		this.dataCenters = dataCenters;
 	}
 
 	public String getName() {
