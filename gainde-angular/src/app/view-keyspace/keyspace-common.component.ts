@@ -1,5 +1,5 @@
 import { OnInit,OnDestroy,ViewChild,AfterViewInit } from '@angular/core';
-import {FormGroup,FormBuilder} from '@angular/forms'; 
+import {FormGroup,FormBuilder,FormArray} from '@angular/forms'; 
 import {Router} from '@angular/router';
 import {Subscription,Subject} from 'rxjs';
 import {NestedTreeControl} from '@angular/cdk/tree';
@@ -57,6 +57,8 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
     currentKeyspaceName:string;
     columnsSize:number;
     keyspaceForm:FormGroup; 
+    dataCenters: FormArray;
+    dataCenterVisible:boolean=false;
     paginationTableDataSize:number;
     paginationResultQuerySize:number;
     paginationHistoryQuerySize:number;

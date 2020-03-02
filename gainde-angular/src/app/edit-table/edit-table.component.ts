@@ -90,6 +90,11 @@ validDuplicateName:boolean=true;
     });
       
   }
+
+  formControls():FormArray{
+
+    return <FormArray>this.ligneColumns;
+  }
   private createLigneColumn(): FormGroup {
     return this.formBuilder.group({
       name: ['',Validators.required],

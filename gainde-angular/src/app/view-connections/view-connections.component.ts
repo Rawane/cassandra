@@ -1,5 +1,5 @@
 import { Component, OnInit,OnDestroy,Inject,ElementRef } from '@angular/core';
-import {FormGroup,FormBuilder,Validators} from '@angular/forms'; 
+import {FormGroup,FormBuilder,Validators, NumberValueAccessor} from '@angular/forms'; 
 import {Router} from '@angular/router';
 import {Subscription} from 'rxjs';
 import {GaindeService} from '../services/gainde.service';
@@ -19,6 +19,11 @@ export interface DialogData {
   trigger:ElementRef ;
   isKeyspace:boolean;
   isLeft:boolean;
+  counter:number;
+  tableName:string;
+  source:any;
+  name:string;
+  columns:any;
 }
 
 @Component({
@@ -35,6 +40,7 @@ export class ViewConnectionsComponent implements OnInit,OnDestroy {
   saveConnection:boolean;
   deleteConnection:boolean;
   currentConnection:ConnectionDTO;
+  actionButton;
   constructor(private gaindeService:GaindeService,
     private formBuilder:FormBuilder,private dialog: MatDialog,private router:Router,private snackBar:MatSnackBar) { 
 
@@ -145,7 +151,7 @@ private resetForm(){
     this.saveOrUpdate=true;
     this.connectionForm.get('name').enable();
   }
-  onClickCopyConnection(conn:JSON){   
+  onClickCopyConnection(conn:ConnectionDTO){   
     this.connectionForm.get('name').setValue('Copy de '+conn['name']);
     this.connectionForm.get('ip').setValue(conn['ip']);
     this.connectionForm.get('port').setValue(conn['port']);

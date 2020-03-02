@@ -1,5 +1,5 @@
 import { Component, OnInit,Inject, OnDestroy,ElementRef } from '@angular/core';
-import {FormGroup,FormBuilder,Validators} from '@angular/forms'; 
+import {FormGroup,FormBuilder,FormArray,Validators} from '@angular/forms'; 
 import { DatePipe } from '@angular/common';
 import {Router} from '@angular/router';
 import {Subscription} from 'rxjs';
@@ -636,13 +636,28 @@ loadDataRows() {
     this.tableDataPaginateDataSource.loadDataRows(tableName, '','asc',-1,'',1,  this.paginator.pageSize,  1);         
   }
   onStrategyChange(){
-    this.keyspaceForm.get('strategy').valueChanges.subscribe(val => {
+    console.log('1- onStrategyChange  '+ this.keyspaceForm.value['strategy']);
+    //this.keyspaceForm.get('strategy').valueChanges.subscribe(val => {
+    let val=this.keyspaceForm.value['strategy'];
+      console.log('2  onStrategyChange  '+val)
       if(val==='SimpleStrategy'){
         this.keyspaceForm.get('replication').setValidators([Validators.required]);
+        if(this.dataCenters && this.dataCenters.length>0){
+       for(let index=0;index<this.dataCenters.length;index++){
+            this.dataCenters.removeAt(index);
+        }
+         
+        }
       }else{
         this.keyspaceForm.get('replication').setValidators([]);
+        //this.keyspaceForm.get('dataCenters').setValue(this.formBuilder.array([this.createDataCenter()]));
+        //this.dataCenters = this.keyspaceForm.get('dataCenters') as FormArray;   
+       // this.dataCenterVisible=false;
+       if(this.dataCenters && this.dataCenters.length==0){
+          this.dataCenters.push(this.createDataCenter());
+       }
       }
-    });
+    //});
   } 
   onClickEditQuery(query){
     this.queryContent=query;
@@ -880,10 +895,27 @@ loadDataRows() {
       strategy: ['',Validators.required],
       replication: [''],
       durableWrite:[true],
-      dataCenter:[]
-     
+      dataCenters:this.formBuilder.array([this.createDataCenter()])     
+    });  
+    this.dataCenters = this.keyspaceForm.get('dataCenters') as FormArray;     
+  }
+  formControls():FormArray{
+
+    return <FormArray>this.dataCenters;
+  }
+  private createDataCenter(): FormGroup {
+    console.log("---------------------------createDataCenter------------------------")
+    return this.formBuilder.group({
+      name: ['',Validators.required],
+      replication: ['']
     });
-    
+  }
+  onClickAddDataCenter() {
+    this.dataCenters.push(this.createDataCenter());
+  }
+  onRemoveDataCenter(index:number){
+    this.dataCenters.removeAt(index);
+   
   }
 }
 

@@ -77,6 +77,10 @@ validPrimaryKey:boolean=false;
       typeMap:''
     });
   }
+  formControls():FormArray{
+
+    return <FormArray>this.ligneColumns;
+  }
   onClickAddLigneColumn() {
     this.ligneColumns.push(this.createLigneColumn());
   }

@@ -35,7 +35,7 @@
         <label class="col-1" >Indexer?</label>
       </div>   
       <div formArrayName="ligneColumns"
-            *ngFor="let column of formTable.get('ligneColumns').controls; let i = index;">
+            *ngFor="let column of formControls().controls; let i = index;">
             <div  [formGroupName]="i">  
               <div class="row editLineColumn">
                    <div class="col-3">

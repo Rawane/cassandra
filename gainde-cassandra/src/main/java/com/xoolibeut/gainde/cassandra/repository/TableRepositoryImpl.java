@@ -265,7 +265,14 @@ public class TableRepositoryImpl implements TableRepository {
 			}
 		});
 		// Exécution de la requete
+		
+		indexColumnRemoved.forEach(indexC -> {
+			Drop drop = SchemaBuilder.dropIndex(addQuote(keyspaceName), addQuote(indexC.getName()));
+			LOGGER.debug("alterTable drop " + drop);
+			session.execute(drop);
+		});
 		colonneRemoved.forEach(column -> {
+			
 			SchemaStatement schema = SchemaBuilder.alterTable(addQuote(keyspaceName), addQuote(oldTableDTO.getName()))
 					.dropColumn(addQuote(column.getName()));
 			session.execute(schema);
@@ -309,11 +316,7 @@ public class TableRepositoryImpl implements TableRepository {
 			LOGGER.debug("alterTable renamed " + schema);
 			session.execute(schema);
 		});
-		indexColumnRemoved.forEach(indexC -> {
-			Drop drop = SchemaBuilder.dropIndex(addQuote(keyspaceName), addQuote(indexC.getName()));
-			LOGGER.debug("alterTable drop " + drop);
-			session.execute(drop);
-		});
+		
 		indexColumnAdded.forEach(indexC -> {
 			SchemaStatement createIndex = SchemaBuilder.createIndex(addQuote(indexC.getName()))
 					.onTable(addQuote(keyspaceName), addQuote(oldTableDTO.getName()))
