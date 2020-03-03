@@ -58,7 +58,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
     columnsSize:number;
     keyspaceForm:FormGroup; 
     dataCenters: FormArray;
-    dataCenterVisible:boolean=false;
+    validReplication:boolean=false;
     paginationTableDataSize:number;
     paginationResultQuerySize:number;
     paginationHistoryQuerySize:number;
@@ -119,8 +119,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
             this.openSnackBar('La ligne a été supprimée', '');
             let connectionName = this.gaindeService.currentGainde.connectionName;
             let keyspaceName = this.gaindeService.currentGainde.keyspaceName;
-            this.isDataLoading=true;
-            console.log("call getInfo table "+mapTransfert.get("content"));
+            this.isDataLoading=true;            
             this.gaindeService.getInfoTable(connectionName, keyspaceName, mapTransfert.get("content"));
             this.gaindeService.getAllDataTable(connectionName, keyspaceName, mapTransfert.get("content"));
           }
@@ -223,20 +222,32 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
                     this.currentNodeId = content[i]['id'];
                     let tableName=this.gaindeService.currentGainde.tableName;
                     let connectionName=this.gaindeService.currentGainde.connectionName;
-                    if(tableName){
-                    this.currentNodeId = content[i]['id']+'#'+tableName;
-                    let verif:boolean=false;
-                    for(let tableK of content[i]['metas']){
-                        if(tableK['id']==this.currentNodeId){
-                        verif=true;
-                        break;
+                    if(content[i]['metas']){
+                      if(tableName){
+                        this.currentNodeId = content[i]['id']+'#'+tableName;
+                        let verif:boolean=false;
+                        for(let tableK of content[i]['metas']){
+                            if(tableK['id']==this.currentNodeId){
+                            verif=true;
+                            break;
+                            }
+                        }if(!verif){
+                            content[i]['metas'].push({"name":tableName,id:this.currentNodeId,"type":2,"metas":[]});                 
                         }
-                    }if(!verif){
-                        content[i]['metas'].push({"name":tableName,id:this.currentNodeId,"type":2,"metas":[]});                 
-                    }
-                    this.gaindeService.getInfoTable(connectionName,kName,tableName);
-                    this.currentTableKeys=this.currentNodeId.split("#");
-                    }
+                        this.gaindeService.getInfoTable(connectionName,kName,tableName);
+                        this.currentTableKeys=this.currentNodeId.split("#");
+                        }
+                    }else{
+                      if(tableName){
+                        this.currentNodeId = content[i]['id']+'#'+tableName;                       
+                            content[i]['metas']=[];
+                            content[i]['metas'].push({"name":tableName,id:this.currentNodeId,"type":2,"metas":[]});                 
+                       
+                        this.gaindeService.getInfoTable(connectionName,kName,tableName);
+                        this.currentTableKeys=this.currentNodeId.split("#");
+                        }
+                   }
+
                     break;
                 }
                 }
@@ -244,8 +255,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
         }
     }
     protected doAfterGetAllMeta(mapTransfert: Map<string, any>):void {
-      let contentResp=mapTransfert.get("content");
-      //console.log('doAfterGetAllMeta  : ' + JSON.stringify(contentResp));
+      let contentResp=mapTransfert.get("content");     
       let response=contentResp['response'];
       let keyspace=contentResp['keyspace'];
       if(response){
@@ -253,8 +263,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
           let content=response;          
           this.homeKeyspaceVisible=true;    
           if(keyspace){
-              for (let i = 0; i < content.length; i++) {
-                //console.log('doAfterGetAllMeta  : ' + content[i]['name']+'   '+keyspace);
+              for (let i = 0; i < content.length; i++) {               
               if (content[i]['name'] === keyspace) {
                   this.treeControl.expand(content[i]);
                   this.currentNodeId = content[i]['id'];                 
@@ -271,8 +280,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
         if (mapTransfert.get("content")['columns']) {
           this.displayedColumnsTableData = [];
           this.columnsQuery=[];
-          mapTransfert.get("content")['columns'].forEach(col => {
-            //console.log('columns ' + JSON.stringify(col));
+          mapTransfert.get("content")['columns'].forEach(col => {          
             this.displayedColumnsTableData.push(col['name']);
             if(col['partitionKey']||col['clusteredColumn'] || col['indexed']){
               this.columnsQuery.push(col['name']);
@@ -289,8 +297,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
         this.tableDatasDataSource.sort = this.sort;
         this.tableDatasDataSource.filter = '';
         this.filterTableData = '';
-        this.tableDatasDataSource.sortingDataAccessor = (item, property) => {
-          //console.log(item)
+        this.tableDatasDataSource.sortingDataAccessor = (item, property) => {         
           switch (property) {
             case 'fromDate': {
               return new Date(item['timestamp'] * 1000);
@@ -329,8 +336,7 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
         this.isQueryLoading=false;      
         this.openSnackBar('Query exécuté avec succes', '');
         this.columnsQueryData =mapTransfert.get("content")['columns']; 
-        this.displayedColumnsQueryData=[];
-        console.log("doAfterGetExecuteQuery "+JSON.stringify( this.columnsQueryData)) ;
+        this.displayedColumnsQueryData=[];      
         this.columnsQueryData.forEach((column)=>{
           this.displayedColumnsQueryData.push(column['name']);
         });
@@ -341,32 +347,27 @@ export class KeyspaceComponent implements OnInit,OnDestroy, AfterViewInit{
             this.tableResultQueryDataSource.sort = this.sort;
             this.tableResultQueryDataSource.filter = '';
             this.filterResultQueryData = '';
-            this.tableResultQueryDataSource.sortingDataAccessor = (item, property) => {
-            //console.log(item)
+            this.tableResultQueryDataSource.sortingDataAccessor = (item, property) => {          
             switch (property) {
                 case 'fromDate': {
                 return new Date(item['timestamp'] * 1000);
                 }
                 default: return item[property];
             }
-            };
-           //this.selectedKeysPageIndex=3; 
+            };         
            this.notificationSelectKeyIndex.next(3);    
         } 
         
         this.gaindeService.saveQuery(new HistoryDTO(this.queryContent,this.gaindeService.currentGainde.connectionName));        
     }
-    protected doAfterGetAllHistory(mapTransfert: Map<string, any>):void {  
-      //console.log("doAfterGetAllHistory"); 
+    protected doAfterGetAllHistory(mapTransfert: Map<string, any>):void {      
         this.historyDataSource.data = mapTransfert.get("content");
-        if(this.historyDataSource.data){
-          //console.log("2 doAfterGetAllHistory "+JSON.stringify(this.historyDataSource.data)); 
+        if(this.historyDataSource.data){        
             this.paginationHistoryQuerySize = this.historyDataSource.data.length;          
             this.historyDataSource.sort = this.sort;
             this.historyDataSource.filter = '';
             this.filterHistoryData = '';
-            this.tableResultQueryDataSource.sortingDataAccessor = (item, property) => {
-            //console.log(item)
+            this.tableResultQueryDataSource.sortingDataAccessor = (item, property) => {          
             switch (property) {
                 case 'fromDate': {
                 return new Date(item['timestamp'] * 1000);

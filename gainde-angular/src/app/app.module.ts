@@ -103,5 +103,4 @@ export const FORMAT_GAINDE: MatDateFormats = {
 export class AppModule {
   
  }
- platformBrowserDynamic().bootstrapModule(AppModule)
- .catch(err => console.error(err));
+ 

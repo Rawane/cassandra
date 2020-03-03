@@ -38,8 +38,7 @@ export class ViewKeyspaceComponent extends KeyspaceComponent {
     }
     setDisplayedColumnsBigData() {      
       this.tableDataPaginateDataSource.columnsDisplayed=[];
-      this.tableDataPaginateDataSource.columns.forEach(( colunm, index) => {
-       // colunm[index] = index;
+      this.tableDataPaginateDataSource.columns.forEach(( colunm, index) => {      
         this.tableDataPaginateDataSource.columnsDisplayed[index] = colunm['name'];
       });
       this.tableDataPaginateDataSource.columnsDisplayed.push('action_gainde');
@@ -82,33 +81,26 @@ export class ViewKeyspaceComponent extends KeyspaceComponent {
       this.tableDataPaginateDataSource.columnsDisplayed.push('action_remove_gainde');
     }
     dragStarted(event: CdkDragStart, index: number ) {
-      this.previousIndex = index;
-      //console.log('dragStarted prev '+this.previousIndex);
+      this.previousIndex = index;    
     }
   
     dropListDropped(event: CdkDropList, index: number) {
-      if (event) {
-        //console.log('dropListDropped prev '+this.previousIndex+'   new '+index);
-        moveItemInArray(this.dispColumnsHeadTableData, this.previousIndex, index);
-        //console.log('dropListDropped '+JSON.stringify(this.dispColumnsHeadTableData));
+      if (event) {       
+        moveItemInArray(this.dispColumnsHeadTableData, this.previousIndex, index);      
         this.setDisplayedColumns();
       }
     }
     dragStartedBigData(event: CdkDragStart, index: number ) {
-      this.previousIndex = index;
-      //console.log('dragStarted prev '+this.previousIndex);
+      this.previousIndex = index;      
     }
   
     dropListDroppedBigData(event: CdkDropList, index: number) {
-      if (event) {
-        //console.log('dropListDropped prev '+this.previousIndex+'   new '+index);
-        moveItemInArray(this.tableDataPaginateDataSource.columns, this.previousIndex, index);
-        //console.log('dropListDropped '+JSON.stringify(this.dispColumnsHeadTableData));
+      if (event) {       
+        moveItemInArray(this.tableDataPaginateDataSource.columns, this.previousIndex, index);       
         this.setDisplayedColumnsBigData();
       }
     }
-onExecuteQuery(){
-    //console.log("onExecuteQuery "+this.queryContent);
+onExecuteQuery(){   
     this.tableResultQueryDataSource.data=[];
     let connectionName=this.gaindeService.currentGainde.connectionName;
     let keyspaceName=this.gaindeService.currentGainde.keyspaceName;  
@@ -118,10 +110,7 @@ onExecuteQuery(){
 
   ngOnInit() {
     this.currentConnection=this.gaindeService.currentGainde.connection;
-    this.initEcranWithCurrentData();
-    /*this.notifKeyspaceByDialog=this.gaindeService.notifParentDialogKeyspace.subscribe((dataSource:any)=>{
-    this.setDisplayedColumnsByNotif(dataSource);
-    });*/
+    this.initEcranWithCurrentData();   
     this.initObservable();    
     this.tableDataPaginateDataSource=new GaindeDataSource(this.gaindeService); 
   }  
@@ -138,10 +127,7 @@ loadDataRows() {
       this.paginatorGainde.pageIndex+1);
 }
   private initObservable() {
-    this.notificationSelectKeyIndexSubs=this.notificationSelectKeyIndex.subscribe((pageIndex)=>{
-      /*setTimeout(()=>{    
-        this.selectedKeysPageIndex = pageIndex;
-      }, 1000);*/
+    this.notificationSelectKeyIndexSubs=this.notificationSelectKeyIndex.subscribe((pageIndex)=>{      
      this.selectedKeysPageIndex=pageIndex;
     });
     this.allNotificationSubscription = this.gaindeService.mapTransfertViewKeyspaceSubject.subscribe((mapTransfert: Map<string, any>) => {
@@ -149,7 +135,7 @@ loadDataRows() {
       mapTransfert.forEach((key, item) => {
         mapToString = mapToString + ' ' + item + '  value=' + JSON.stringify(mapTransfert.get(item));
       });
-      console.log('ViewKeyspaceComponent mapTransfert ' + mapTransfert.get("type"));
+      //console.log('ViewKeyspaceComponent mapTransfert ' + mapTransfert.get("type"));
       switch (mapTransfert.get("type") as ActionHttp) {
         case ActionHttp.CLOSE_CONNECTION:
           {
@@ -335,11 +321,9 @@ loadDataRows() {
   }
 
   onVerifyDisplay(columnName:string):boolean{   
-    //console.log(columnName)
     return  this.setColumnInvisible.has(columnName);
   }
   onVerifyDisplayBigData(columnName:string):boolean{   
-    //console.log(columnName)
     return  this.setColumnBigDataInvisible.has(columnName);
   }
   
@@ -356,7 +340,6 @@ loadDataRows() {
     }
   }
   onApplyFilterTableKeyspace(filterVal: string) {
-    //console.log('onApplyFilterTableKeyspace '+filterVal);
     this.tableKeyspaceInfoDataSource.filter = filterVal.trim().toLowerCase();     
   }
   onApplyFilterHistory(filterVal: string){
@@ -372,8 +355,7 @@ loadDataRows() {
       this.gaindeService.closeConnection(name);
     }
   }
-  onClickRowNode(node){
-    //console.log('onClickRowNode  : ' + JSON.stringify(node));
+  onClickRowNode(node){    
     this.currentNodeId=node['id']; 
     this.treeControl.expand(node);   
     this.currentTableKeys=node['id'].split("#");
@@ -387,8 +369,7 @@ loadDataRows() {
       this.gaindeService.getInfoTable(this.currentTableKeys[0],this.currentTableKeys[1],this.currentTableKeys[2]);   
       this.tableDatasDataSource.data=[];
       if(this.selectedPageIndex==1) 
-      {
-        //this.selectedPageIndex=0;
+      {       
         this.whereColumnName='';
         this.whereColumnValue='';
         if(this.currentTableKeys){
@@ -406,8 +387,7 @@ loadDataRows() {
       }
     }
   }
-  onClickNavigateTab(){
-    //console.log('onClickNavigateTab  : ' + this.selectedPageIndex);
+  onClickNavigateTab(){   
     if(this.selectedPageIndex==1){
       this.whereColumnName='';
       this.whereColumnValue='';
@@ -420,8 +400,7 @@ loadDataRows() {
       {
         this.tableDataPaginateDataSource.whereColumnName='';
         this.tableDataPaginateDataSource.whereColumnValue='';
-        if(this.currentTableKeys){
-          //this.isDataLoading=true;   
+        if(this.currentTableKeys){          
           this.paginatorGainde.page.pipe(
             tap(() => this.loadDataRows())
         )
@@ -439,21 +418,18 @@ loadDataRows() {
   onClickEditRow(row,name){
     let rowEdit={...row};
     let data:any={'columns':this.dispColumnsHeadTableData,
-    'tableName':name,'row':rowEdit,'added':false,'bigData':false};
-   // console.log('onClickEditRow  : ' + JSON.stringify(data)); 
+    'tableName':name,'row':rowEdit,'added':false,'bigData':false};  
     this.openDialogRow(data);
     
   }
   onClickEditRowBigData(row,name){
     let rowEdit={...row};
     let data:any={'columns':this.tableDataPaginateDataSource.columns,
-    'tableName':name,'row':rowEdit,'added':false,'bigData':true};
-   // console.log('onClickEditRow  : ' + JSON.stringify(data)); 
+    'tableName':name,'row':rowEdit,'added':false,'bigData':true};   
     this.openDialogRow(data);
     
   }
-  onClickAddNewRow(name){
-    //console.log('onClickEditRow  : ' + name); 
+  onClickAddNewRow(name){    
     let row:any={};
     this.dispColumnsHeadTableData.forEach(eltD=>{
       row[eltD.name]="";
@@ -462,8 +438,7 @@ loadDataRows() {
     "tableName":name,'row':row,"added":true,'bigData':false}; 
     this.openDialogRow(data);
   }
-  onClickAddNewRowBigData(name){
-    //console.log('onClickEditRow  : ' + name); 
+  onClickAddNewRowBigData(name){   
     let row:any={};
     this.tableDataPaginateDataSource.columns.forEach(eltD=>{
       row[eltD['name']]="";
@@ -514,8 +489,7 @@ loadDataRows() {
   }
     this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la ligne avec la clé de partition "+parTiTionKey+" de la table "+tableName+"?",true,map,ActionDialog.ACTION_DELETE_ONE_ROW); 
   }
-  onClickRemoveKeyspaceOrTable(node){
-    //console.log('onClickRowNode  : ' + JSON.stringify(node));
+  onClickRemoveKeyspaceOrTable(node){    
     this.currentNodeId=node['id']; 
     this.currentTableKeys=this.currentNodeId.split("#");
     this.gaindeService.currentGainde.connectionName =this.currentTableKeys[0];
@@ -526,13 +500,11 @@ loadDataRows() {
       this.currentKeyspaceName=this.currentTableKeys[1];
       this.openDialog('Confirmation de suppression',"Voulez-vous supprimer le keyspace "+this.currentTableKeys[1]+" Ip: "+ip+"?",true,this.currentNodeId,ActionDialog.ACTION_DELETE_KEYSAPCE);
     }else{  
-      this.currentKeyspaceName=this.currentTableKeys[1];    
-      //this.gaindeService.currentGainde.tableName =this.currentTableKeys[2];  
+      this.currentKeyspaceName=this.currentTableKeys[1];      
       this.openDialog('Confirmation de suppression',"Voulez-vous supprimer la table "+this.currentTableKeys[2]+" du keyspace"+this.currentTableKeys[1]+"?",true,this.currentNodeId,ActionDialog.ACTION_DELETE_TABLE);
     }
   }
-  onClickRemoveTable(connectionName:string,keyspaceName:string,tableName:string){
-    //console.log('onClickRowNode  : ' + JSON.stringify(node));
+  onClickRemoveTable(connectionName:string,keyspaceName:string,tableName:string){ 
     let key:string=connectionName+'#'+keyspaceName+'#'+tableName;
     this.currentKeyspaceName=keyspaceName;   
     this.gaindeService.currentGainde.connectionName =connectionName;
@@ -580,8 +552,7 @@ loadDataRows() {
     this.keyspaceInfo['tables']=[];
     this.gaindeService.saveKeyspace(this.currentConnection['name'],keyspaceDTO);
   }  
-  onClickRowTable(row){
-    console.log('onClickRowTable  : '+row);
+  onClickRowTable(row){   
     this.currentNodeId=row;
     this.currentTableKeys=row.split("#");
     this.currentKeyspaceName=this.currentTableKeys[1];
@@ -593,21 +564,19 @@ loadDataRows() {
     }
   }
   onClickAddNewTable(connectionName:string,keyspaceName:string){
-    //console.log('onClickAddNewTable connectionName='+connectionName+' keyspace '+keyspaceName);
+   
     this.gaindeService.currentGainde.connectionName=connectionName;
     this.gaindeService.currentGainde.keyspaceName=keyspaceName;  
     this.gaindeService.currentGainde.tableName=null;   
     this.openDialogTableInfo(5);    
   }
-  onClickEditTable(connectionName:string,keyspaceName:string,tableName:string){
-   // console.log('onClickEditTable connectionName='+connectionName+' keyspace '+keyspaceName+' table name '+tableName);   
+  onClickEditTable(connectionName:string,keyspaceName:string,tableName:string){  
     this.gaindeService.currentGainde.connectionName=connectionName;
     this.gaindeService.currentGainde.keyspaceName=keyspaceName;  
     this.gaindeService.currentGainde.tableName=tableName; 
     this.router.navigate(['/editTable']);
   }
-  onClickEditCurrentTable(){    
-    //console.log('onClickEditTableView ='+JSON.stringify(this.currentTableKeys));   
+  onClickEditCurrentTable(){   
     this.gaindeService.currentGainde.connectionName=this.currentTableKeys[0];
     this.gaindeService.currentGainde.keyspaceName=this.currentTableKeys[1];  
     this.gaindeService.currentGainde.tableName=this.currentTableKeys[2]; 
@@ -626,8 +595,7 @@ loadDataRows() {
     const target = new ElementRef(event.currentTarget);
     this.openDialogExportKeyspace(tableName,target,false);
   }
-  onClickFilterHistoryByConnection(){
-   // console.log('onClickFilterHistoryByConnection ='+this.allHistory);   
+  onClickFilterHistoryByConnection(){     
     this.gaindeService.getAllHistories(!this.allHistory,this.gaindeService.currentGainde.connectionName);
   }
   onRefreshData(tableName:string){
@@ -644,31 +612,31 @@ loadDataRows() {
     this.gaindeService.getInfoTable(connectionName, keyspaceName, tableName);
     this.tableDataPaginateDataSource.loadDataRows(tableName, '','asc',-1,'',1,  this.paginator.pageSize,  1);         
   }
-  onStrategyChange(){
-    console.log('1- onStrategyChange  '+ this.keyspaceForm.value['strategy']);
-    //this.keyspaceForm.get('strategy').valueChanges.subscribe(val => {
+  onReplicationFactorChange(){   
+    this.validReplication=this.keyspaceForm.value['replication'] && this.keyspaceForm.value['replication'].length>0;  
+  }
+  onStrategyChange(){   
     let val=this.keyspaceForm.value['strategy'];
-     // console.log('2  onStrategyChange  '+val)
-      if(val==='SimpleStrategy'){
-        this.keyspaceForm.get('replication').setValidators([Validators.required]);
+     
+      if(val=='SimpleStrategy'){         
+        this.validReplication=(this.keyspaceForm.value['replication'] && this.keyspaceForm.value['replication'].length>0);   
         if(this.dataCenters && this.dataCenters.length>0){
         let countDataCenters:number=this.dataCenters.length;
-          //console.log("onStrategyChange "+countDataCenters);
-        for(let index=countDataCenters-1;index>=0;index--){
-              console.log(" for onStrategyChange "+index);
-              this.dataCenters.removeAt(index);
-              //console.log(" after length for onStrategyChange "+this.dataCenters.length);
+          
+        for(let index=countDataCenters-1;index>=0;index--){             
+              this.dataCenters.removeAt(index);             
           }       
          
         }
       }else{
+        this.validReplication=true;
         this.keyspaceForm.get('replication').setValidators([]);        
        if(this.dataCenters && this.dataCenters.length==0){
           this.dataCenters.push(this.createDataCenter());
        }
-      }
-    //});
+      }   
   } 
+
   onClickEditQuery(query){
     this.queryContent=query;
     this.selectedKeysPageIndex=2;
@@ -697,8 +665,7 @@ loadDataRows() {
     this.gaindeService.deleteHistory(id);
   }
   onZoomTable(){ 
-    this.zoomData=!this.zoomData;
-    //console.log('onZoomTable  : ' + this.zoomData);
+    this.zoomData=!this.zoomData;    
   }
    openDialog(pTitle:string,pText:string, cancelButton:boolean,map:any,action:ActionDialog): void {
     let dialogRef = this.dialog.open(DialogInfoKeyspaceComponent, {
@@ -706,10 +673,8 @@ loadDataRows() {
       data: {text: pText,title:pTitle,btnCancel:cancelButton,data:map,action:action}
     });
   
-    dialogRef.afterClosed().subscribe(result => { 
-      //console.log('1 afterClosed '+JSON.stringify(result));
-      if(result!=null){
-       // console.log('1 afterClosed '+JSON.stringify(result));
+    dialogRef.afterClosed().subscribe(result => {       
+      if(result!=null){       
         switch (result['action'] as ActionDialog)  {
           case ActionDialog.ACTION_DELETE_KEYSAPCE:
           {
@@ -737,11 +702,9 @@ loadDataRows() {
             map.delete('gainDeTableName');
             map.delete('bigDataGainde');
             let data={};
-            map.forEach((value,key)=>{
-              //console.log("key "+key+"  value "+value);
+            map.forEach((value,key)=>{             
               data[key]=value;
-            });
-            //console.log("map data  "+JSON.stringify(data));
+            });           
             this.gaindeService.removeRowDataTable(data,this.currentTableKeys[0],this.currentTableKeys[1],tableName,bigData);
             break;
           }
@@ -772,8 +735,7 @@ loadDataRows() {
   
     dialogRefTableInfo.afterClosed().subscribe(result => { 
       
-      if(result!=null){
-       //console.log("openDialogTableInfo "+result);
+      if(result!=null){       
        this.gaindeService.currentGainde.counter=result;
        this.router.navigate(['/addTable']);
       dialogRefTableInfo=null;
@@ -797,8 +759,7 @@ loadDataRows() {
 
     });
   }
-  private openDialogSelectColumn(columns:any,bigData:boolean): void {
-    //let columnSource=[...this.colonneDataSource.data];
+  private openDialogSelectColumn(columns:any,bigData:boolean): void {   
     let columnSource=[];
    if(columns){
     columns.forEach((column)=>{
@@ -815,11 +776,9 @@ loadDataRows() {
       data: {source:dataSelect}
     });
   
-    dialogRef.afterClosed().subscribe(result => {  
-      console.log('afterClosed '+JSON.stringify(result));   
+    dialogRef.afterClosed().subscribe(result => {    
       if(result!=null){
-        if(result['bigData']){
-          console.log('afterClosed setColumnBigDataInvisible');
+        if(result['bigData']){       
           this.setDisplayedColumnsBigDataByNotif(result['columns']);
           this.setColumnBigDataInvisible.clear();
           result['columns'].forEach((column)=>{
@@ -828,7 +787,7 @@ loadDataRows() {
             }
           });
         }else{
-          console.log('afterClosed setColumnBigDataInvisible');
+        
           this.setDisplayedColumnsByNotif(result['columns']);
           this.setColumnInvisible.clear();
           result['columns'].forEach((column)=>{
@@ -914,7 +873,6 @@ loadDataRows() {
     return <FormArray>this.dataCenters;
   }
   private createDataCenter(): FormGroup {
-    console.log("---------------------------createDataCenter------------------------")
     return this.formBuilder.group({
       name: ['',Validators.required],
       replication: ['',Validators.required]
@@ -976,7 +934,6 @@ setColumns = new Set<string>();
 
   ngOnInit() {
     this.notificationSubscription=this.viewParent.notificationDialogSubject.subscribe((content:any) => {
-      //console.log("notificationSubscription "+JSON.stringify(content));
       if(content['type']==1)
       {
           if(content['errorDialog']){
@@ -1022,8 +979,7 @@ setColumns = new Set<string>();
   onClickSaveData(data:any){  
     this.messageError= '';
     this.error=false;  
-    if(data!=null){
-     // console.log("openDialogTableInfo "+JSON.stringify(data));
+    if(data!=null){    
       let connectionName=this.gaindeService.currentGainde.connectionName;
       let keyspaceName=this.gaindeService.currentGainde.keyspaceName;
       if(data['added']){
@@ -1077,8 +1033,7 @@ setColumns = new Set<string>();
     this.setColumns.add(name);    
   }
   onValueChangeDate(name:string){    
-    this.setColumns.add(name);
-    //console.log("onValueChange "+name+" value "+value);
+    this.setColumns.add(name);   
   }
   public openSnackBar(message: string, action: string) {
     this.snackBar.open(message, action, {
@@ -1105,11 +1060,8 @@ checked:boolean=true;
       column['check']=!this.checked;
     });
   }
-  drop(event: CdkDragDrop<string[]>) {
-    //console.log("event "+event+'   '+JSON.stringify(this.data['source']));       
+  drop(event: CdkDragDrop<string[]>) {       
     moveItemInArray(this.data['source']['columns'], event.previousIndex, event.currentIndex);
-    //console.log("after moved "+JSON.stringify(this.data['source']['columns']));    
-    //this.gaindeService.emitNotifParentDialogKeyspace(this.data['source']['columns']);   
   }
   
 }
@@ -1141,7 +1093,7 @@ export class DialogViewCellComponent implements OnInit {
           } 
         }
         catch(error) {
-            //console.error(error);      
+             
         }
         this.updateSizeDialog();
     }
@@ -1157,7 +1109,7 @@ export class DialogViewCellComponent implements OnInit {
       } 
     }
     catch(error) {
-      //console.error(error);      
+         
     }
     this.updateSizeDialog();
     }
@@ -1166,30 +1118,22 @@ export class DialogViewCellComponent implements OnInit {
   try {
     this.data.text=JSON.stringify(JSON.parse(this.data.text), null, 2) ;
     let rows=Math.trunc(this.data.text.split('"').length/2);
-    rows=this.data.text.split('\n').length;
-    console.log("onClickFormat "+rows)
-    this.data.rows=rows+3;
-    
-    console.log('onClickFormat rows '+this.data.rows);
+    rows=this.data.text.split('\n').length;    
+    this.data.rows=rows+3;    
   } catch (error) {
     this.data.text=beautify(this.data.text);    
     let sizeText=this.data.text.split('\n').length;
     this.data.rows=sizeText+3;
-    console.log('format XML sizeText'+sizeText);
   }
   this.updateSizeDialog();
 }
 
-  private updateSizeDialog() {
-    console.log('updateSizeDialog'+this.zoomData);
+  private updateSizeDialog() {   
     if (this.zoomData) {
       this.currentRow = this.data.rows;
-      console.log('updateSizeDialog currentRow'+this.currentRow);
-      // this.data.rows=100.
       this.dialogRef.updateSize(window.innerWidth + 'px', (window.innerHeight - 30) + 'px');
     }
     else {
-       //this.data.rows=this.currentRow;
        if (this.data.rows >= 8) {
         this.dialogRef.updateSize('700px', (window.innerHeight - 30) + 'px');
         }
@@ -1325,9 +1269,7 @@ export class DialogExportKeyspaceComponent implements OnInit {
         }else{
           this.viewParent.openSnackBar("Le dump de la Table s'est déroulé avec succès ", '');
         }
-        //this.gaindeService.getAllMetaAfterImport(this.data.text,content['msg']);
-       
-       
+    
       }
     });
 

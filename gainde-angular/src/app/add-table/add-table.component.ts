@@ -29,8 +29,8 @@ validPrimaryKey:boolean=false;
       let mapToString='';
         mapTransfert.forEach((key,item)=>{
         mapToString=mapToString+' '+item+'  value='+JSON.stringify(mapTransfert.get(item));        
-      });   
-     console.log('AddTableComponent mapTransfert '+mapTransfert.get("type"));  
+      }); 
+   
       switch (mapTransfert.get("type") as ActionHttp)  {
             case ActionHttp.ADD_TABLE:
             { this.gaindeService.currentGainde.tableName=mapTransfert.get("content");
@@ -93,9 +93,9 @@ validPrimaryKey:boolean=false;
   }
   onCheckIndexChange(index:number){
     let controlForm=this.ligneColumns.at(index);
-    //console.log('onCheckIndexChange '+index+' controlForm  '+controlForm);    
+   
      controlForm.get('indexed').valueChanges.subscribe(val => {
-      //console.log('onCheckIndexChange '+index+' control  '+controlForm.value['indexName']);
+      
       if(val){
         controlForm.get('indexName').setValidators([Validators.required]);
         if( controlForm.value['partitionKey']){
@@ -151,10 +151,10 @@ validPrimaryKey:boolean=false;
   }
   onValueTypeChange(index:number){
     let controlForm=this.ligneColumns.at(index);
-    // console.log('onValueTypeChange '+index+' controlForm  '+controlForm.value['type']);  
+   
      let val=controlForm.value['type'];  
      
-     // console.log('onValueTypeChange '+index+' control   val '+val);
+     
       if(val==='22' || val==='24'){
         controlForm.get('typeList').setValidators([Validators.required]);
               
@@ -173,7 +173,7 @@ validPrimaryKey:boolean=false;
   onSubmitTable(){   
     let tableDTO:TableDTO=new TableDTO(this.formTable.value['name']);   
     for (let controlForm of this.ligneColumns.controls) {
-      //console.log('onSubmitTable   '+controlForm+'   value  '+controlForm.value['name']);   
+     
       let colonneDTO:ColumnDTO=new ColumnDTO();
       colonneDTO.name=controlForm.value['name'];
       colonneDTO.type=controlForm.value['type'];
@@ -201,31 +201,16 @@ validPrimaryKey:boolean=false;
       }
       tableDTO.columns.push(colonneDTO);
     }
-    console.log('onSubmitTable   '+JSON.stringify(tableDTO));  
+   
    this.gaindeService.saveTable(tableDTO,this.currentGainde.connectionName,
     this.currentGainde.keyspaceName);
   }
-  private openSnackBar(message: string, action: string) {
-    this.snackBar.open(message, action, {
-      duration: 2000,
-      // here specify the position
-      verticalPosition: 'top',
-      panelClass: ['green-snackbar']
-    });
-}
   private openDialog(pTitle:string,pText:string, cancelButton:boolean,pId:string): void {
-    const dialogRef = this.dialog.open(DialogAddInfoTableComponent, {
+    this.dialog.open(DialogAddInfoTableComponent, {
       width: '500px',
       data: {text: pText,title:pTitle,btnCancel:cancelButton,id:pId}
-    });
-  
-    dialogRef.afterClosed().subscribe(result => {     
-      if(result!=null && result.length>1){
-        console.log('afterClosed  : ' + result);
-        
-      }
-
-    });
+    });  
+    
   }
 }
 @Component({

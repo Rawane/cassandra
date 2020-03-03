@@ -362,7 +362,7 @@
                             </div>
                             <div class="form-group" *ngIf="keyspaceForm.value.strategy == 'SimpleStrategy'">
                                 <label for="replication">Replication factory</label>
-                                <input  class="form-control" formControlName="replication" >
+                                <input  class="form-control" formControlName="replication"  (ngModelChange)="onReplicationFactorChange()" >
                             </div>    
                             <div class="form-group" *ngIf="keyspaceForm.value.strategy == 'NetworkTopologyStrategy'" >
                                 <div class="row">
@@ -403,7 +403,7 @@
                                                 <input  class="form-control" formControlName="replication" >
                                                 </div>
                                                 <div class="col-2">  
-                                                    <button  type="button" class="btn btn-gainde"  matTooltip="Suppimer  Datacenter" (click)="onRemoveDataCenter()">
+                                                    <button  type="button" class="btn btn-gainde"  matTooltip="Suppimer  Datacenter" (click)="onRemoveDataCenter(i)">
                                                         <mat-icon >remove</mat-icon> 
                                                     </button>  
                                                </div>
@@ -416,7 +416,7 @@
                                     
                                 </div>
                                 <div class="col-xs-4 col-md-4 col-lg-4">
-                                    <button type="submit" class="btn btn-success boutonSave" [disabled]="keyspaceForm.invalid" >
+                                    <button type="submit" class="btn btn-success boutonSave" [disabled]="keyspaceForm.invalid || !validReplication" >
                                         Créer 
                                     </button> 
                                 </div>

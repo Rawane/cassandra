@@ -32,8 +32,8 @@ validDuplicateName:boolean=true;
       let mapToString='';
         mapTransfert.forEach((key,item)=>{
         mapToString=mapToString+' '+item+'  value='+JSON.stringify(mapTransfert.get(item));        
-      });   
-     console.log('EditTableComponent mapTransfert '+mapTransfert.get("type"));  
+      }); 
+    
       switch (mapTransfert.get("type") as ActionHttp)  {
             case ActionHttp.UPDATE_TABLE:
             { this.gaindeService.currentGainde.tableName=mapTransfert.get("content");
@@ -66,7 +66,7 @@ validDuplicateName:boolean=true;
   }
   private editForm(){
     let tableDTO=this.oldTableDTO;
-    console.log("editForm "+JSON.stringify(tableDTO));
+   
     this.formTable = this.formBuilder.group({    
       name: [tableDTO.name,Validators.required],
       ligneColumns:this.formBuilder.array([])
@@ -76,7 +76,7 @@ validDuplicateName:boolean=true;
     tableDTO.columns.forEach((columnDTO)=>{
       let indexColumn=null;
       if(tableDTO.indexColumns && tableDTO.indexColumns.length>0)
-      {//console.log("editForm indexColumns "+JSON.stringify(tableDTO.indexColumns));
+      {
         for(let indexCol of tableDTO.indexColumns )
         {   if(indexCol.columName==columnDTO.name)
             {
@@ -109,7 +109,7 @@ validDuplicateName:boolean=true;
     });
   }
   private editLigneColumn(columnDTO:ColumnDTO,indexColumn:IndexColumn): FormGroup {
-      console.log('editLigneColumn '+columnDTO.name+' type '+columnDTO.type+'  '+indexColumn);  
+    
       let formGroup=this.formBuilder.group({
       name:[columnDTO.name,Validators.required],
       type:[columnDTO.type,Validators.required],
@@ -124,8 +124,6 @@ validDuplicateName:boolean=true;
      if(columnDTO.indexed && indexColumn){
        if( formGroup.get('indexName')){
         formGroup.get('indexName').setValue(indexColumn.name);
-       }else{
-        console.log('editLigneColumn  anormale '+columnDTO.name+' nom index  '+indexColumn.name+'  '+indexColumn);  
        }
       
      }     
@@ -133,7 +131,7 @@ validDuplicateName:boolean=true;
     return formGroup;
   }
   onClickAddLigneColumn() {
-    //this.ligneColumns = this.formTable.get('ligneColumns') as FormArray;
+   
     this.ligneColumns.push(this.createLigneColumn());
   }
   onRemoveLineColumn(index:number){
@@ -143,7 +141,7 @@ validDuplicateName:boolean=true;
   onCheckIndexChange(index:number){
     let controlForm=this.ligneColumns.at(index);   
      controlForm.get('indexed').valueChanges.subscribe(val => {
-      //console.log('onCheckIndexChange '+index+' control  '+controlForm.value['indexName']);
+     
       if(val){
         controlForm.get('indexName').setValidators([Validators.required]);              
         if(!controlForm.value['indexName'] || controlForm.value['indexName']=='')
@@ -154,7 +152,7 @@ validDuplicateName:boolean=true;
       }else{
         controlForm.get('indexName').setValue('');
         controlForm.get('indexName').setValidators([]);   
-        console.log('onCheckIndexChange validator  '+controlForm.value['indexName']) ;
+      
         this.validateIndex();   
       }
     });  
@@ -164,8 +162,7 @@ validDuplicateName:boolean=true;
  
   onIndexNameValueChange(index:number){    
     let controlForm=this.ligneColumns.at(index); 
-    console.log('onIndexNameValueChange  '+controlForm+'  '+index) ;
-    console.log('onIndexNameValueChange  '+controlForm.value['indexName']) ;
+   
     let val=controlForm.value['indexed'] ;
     if(val){ 
       this.validateIndex();  
@@ -175,14 +172,14 @@ validDuplicateName:boolean=true;
   
   onValueNameChange(index:number){   
    let count:number=0;   
-   console.log("onValueNameChange "+index)  ; 
+  
    let controlForm=this.ligneColumns.at(index);   
       for (let ctrlFormAutre of this.ligneColumns.controls) {    
        if(controlForm.value['name']==ctrlFormAutre.value['name']){
          count++;
        }
       }
-      console.log("onValueNameChange  avant test "+count)  ; 
+     
     if(count>1){
       this.validDuplicateName=false;
     }else{
@@ -195,7 +192,7 @@ validDuplicateName:boolean=true;
         }
        }
       }
-      console.log("onValueNameChange apres for  "+count+'  length '+this.ligneColumns.controls.length)  ; 
+     
       if(count==this.ligneColumns.controls.length){
         this.validDuplicateName=true; 
       }else{
@@ -216,10 +213,10 @@ validDuplicateName:boolean=true;
   }
   onValueTypeChange(index:number){
     let controlForm=this.ligneColumns.at(index);
-    // console.log('onValueTypeChange '+index+' controlForm  '+controlForm.value['type']);  
+    
      let val=controlForm.value['type'];  
      
-     // console.log('onValueTypeChange '+index+' control   val '+val);
+    
       if(val==='22' || val==='24'){
         controlForm.get('typeList').setValidators([Validators.required]);
               
@@ -239,7 +236,7 @@ validDuplicateName:boolean=true;
   onSubmitTable(){   
     let tableDTO:TableDTO=new TableDTO(this.formTable.value['name']);   
     for (let controlForm of this.ligneColumns.controls) {
-      console.log('onSubmitTable   '+controlForm+'   value  '+controlForm.value['name']  +' oldName '+controlForm.value['oldName']);   
+    
       let colonneDTO:ColumnDTO=new ColumnDTO();
       colonneDTO.name=controlForm.value['name'];
       colonneDTO.type=controlForm.value['type'];
@@ -268,35 +265,21 @@ validDuplicateName:boolean=true;
       }
       tableDTO.columns.push(colonneDTO);
     }
-    console.log('onSubmitTable   '+JSON.stringify(tableDTO));  
+   
     this.gaindeService.updateTable(this.oldTableDTO,tableDTO,this.currentGaindeEdit.connectionName,
     this.currentGaindeEdit.keyspaceName);
   }
-  private openSnackBar(message: string, action: string) {
-    this.snackBar.open(message, action, {
-      duration: 2000,
-      // here specify the position
-      verticalPosition: 'top',
-      panelClass: ['green-snackbar']
-    });
-}
+  
 onClickBack(){
   this.router.navigate(['/viewKeyspace']);
 }
   private openDialog(pTitle:string,pText:string, cancelButton:boolean,pId:string): void {
-    let dialogRef = this.dialog.open(DialogInfoTableComponent, {
+   this.dialog.open(DialogInfoTableComponent, {
       width: '500px',
       data: {text: pText,title:pTitle,btnCancel:cancelButton,id:pId}
-    });
-  
-    dialogRef.afterClosed().subscribe(result => {     
-      if(result!=null && result.length>1){
-        console.log('afterClosed  : ' + result);
-        
-      }
-
-    });
-    dialogRef=null;
+    });  
+   
+   
   }
 }
 @Component({

@@ -48,12 +48,7 @@ export class ViewConnectionsComponent implements OnInit,OnDestroy {
   ngOnInit() {
     //init Obersver
     //this.gaindeService.testCSPGateway();
-    this.allNotificationSubscription=this.gaindeService.mapTransfertViewConnectionSubject.subscribe((mapTransfert: Map<string,any>) => {
-      let mapToString='';
-      mapTransfert.forEach((key,item)=>{
-        mapToString=mapToString+' '+item+'  value='+JSON.stringify(mapTransfert.get(item));        
-      });   
-      console.log('ViewConnectionsComponent mapTransfert '+mapTransfert.get("type"));     
+    this.allNotificationSubscription=this.gaindeService.mapTransfertViewConnectionSubject.subscribe((mapTransfert: Map<string,any>) => {          
        switch (mapTransfert.get("type") as ActionHttp) {
          case ActionHttp.ALL_CONNECTION:
            this.connections=mapTransfert.get("content");           
@@ -130,8 +125,7 @@ private resetForm(){
     this.connectionForm.get('username').setValue('');
     this.connectionForm.get('password').setValue('');
 }
-  onClickShowInfoConnection(conn:JSON){
-    //console.log('onShowInfoConnection  : ' + JSON.stringify(conn));
+  onClickShowInfoConnection(conn:JSON){    
     this.connectionForm.get('name').setValue(conn['name']);
     this.connectionForm.get('ip').setValue(conn['ip']);
     this.connectionForm.get('port').setValue(conn['port']);
@@ -160,8 +154,7 @@ private resetForm(){
     this.saveOrUpdate=true;
     this.connectionForm.get('name').enable();
   }
-  onClickConnectToCassandra(conn:JSON){
-    //console.log('onConnectToCassandra  : ' + JSON.stringify(conn));   
+  onClickConnectToCassandra(conn:JSON){   
     this.connectionForm.get('name').setValue(conn['name']);
     this.connectionForm.get('ip').setValue(conn['ip']);
     this.connectionForm.get('port').setValue(conn['port']);
@@ -170,8 +163,7 @@ private resetForm(){
     this.saveOrUpdate=false;
 
   }
-  onDblClickConnectToCassandra(conn:JSON){
-    //console.log('onConnectToCassandra  : ' + JSON.stringify(conn));
+  onDblClickConnectToCassandra(conn:JSON){    
     let  connectDTO=new ConnectionDTO(conn['name'],conn['ip'],
     conn['port'], conn['username'],conn['password']); 
     this.gaindeService.currentGainde=new GaindeCommunication(); 
@@ -180,9 +172,7 @@ private resetForm(){
     this.gaindeService.connecToCassandra(connectDTO);
 
   }
-  onSubmitFormConnection(actionButton){   
-    //console.log('onConnectToCassandra  : ' + this.connectionForm.value['name']+'   actionButton '+actionButton); 
-    
+  onSubmitFormConnection(actionButton){    
     let  connectDTO=new ConnectionDTO(this.connectionForm.value['name'],this.connectionForm.value['ip'],
     this.connectionForm.value['port'], this.connectionForm.value['username'],this.connectionForm.value['password']); 
     if(this.connectionForm.get('name').disabled){

@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.PostConstruct;
 
@@ -53,25 +52,23 @@ import com.xoolibeut.gainde.cassandra.util.GaindeUtil;
 @Repository
 public class TableRepositoryImpl implements TableRepository {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TableRepositoryImpl.class);
-	private List<String> keyQueryData;
-	private List<String> keyQueryStructure;
+	// private List<String> keyQueryData;
+	// private List<String> keyQueryStructure;
 	@Autowired
 	private ConnectionCassandraRepository cassandraRepository;
 	private static String SEPARATOR_DATA = "-----------------------------------------------------------DATA--------------------------------------------------------";
 
 	@PostConstruct
 	public void init() {
-		keyQueryData = new ArrayList<String>();
-		keyQueryStructure = new ArrayList<String>();
-		keyQueryData.add("INSERT");
-		keyQueryData.add("UPDATE");
-		keyQueryData.add("DELETE");
-		keyQueryData.add("TRUNCATE");
-		keyQueryData.add("SELECT");
-		keyQueryData.add("BATCH");
-		keyQueryStructure.add("CREATE");
-		keyQueryStructure.add("DROP");
-		keyQueryStructure.add("ALTER");
+		/*
+		 * keyQueryData = new ArrayList<String>(); keyQueryStructure = new
+		 * ArrayList<String>(); keyQueryData.add("INSERT"); keyQueryData.add("UPDATE");
+		 * keyQueryData.add("DELETE"); keyQueryData.add("TRUNCATE");
+		 * keyQueryData.add("SELECT"); keyQueryData.add("BATCH");
+		 * keyQueryStructure.add("CREATE"); keyQueryStructure.add("DROP");
+		 * keyQueryStructure.add("ALTER");
+		 */
+
 		// keyQueryStructure.add("USE");
 	}
 
@@ -82,9 +79,10 @@ public class TableRepositoryImpl implements TableRepository {
 			throw new Exception("Veuillez renseigner le query");
 		}
 		String query = pQuery;
-		if (!pQuery.contains(keyspaceName)) {
-			query = buildQueryAddKeyspace(keyspaceName, pQuery, cluster);
-		}
+		/**
+		 * if (!pQuery.contains(keyspaceName)) { query =
+		 * buildQueryAddKeyspace(keyspaceName, pQuery, cluster); }
+		 */
 
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
@@ -265,14 +263,14 @@ public class TableRepositoryImpl implements TableRepository {
 			}
 		});
 		// Exécution de la requete
-		
+
 		indexColumnRemoved.forEach(indexC -> {
 			Drop drop = SchemaBuilder.dropIndex(addQuote(keyspaceName), addQuote(indexC.getName()));
 			LOGGER.debug("alterTable drop " + drop);
 			session.execute(drop);
 		});
 		colonneRemoved.forEach(column -> {
-			
+
 			SchemaStatement schema = SchemaBuilder.alterTable(addQuote(keyspaceName), addQuote(oldTableDTO.getName()))
 					.dropColumn(addQuote(column.getName()));
 			session.execute(schema);
@@ -316,7 +314,7 @@ public class TableRepositoryImpl implements TableRepository {
 			LOGGER.debug("alterTable renamed " + schema);
 			session.execute(schema);
 		});
-		
+
 		indexColumnAdded.forEach(indexC -> {
 			SchemaStatement createIndex = SchemaBuilder.createIndex(addQuote(indexC.getName()))
 					.onTable(addQuote(keyspaceName), addQuote(oldTableDTO.getName()))
@@ -804,56 +802,6 @@ public class TableRepositoryImpl implements TableRepository {
 			return element.substring(1, element.length() - 1);
 		}
 		return element;
-	}
-
-	private String buildQueryAddKeyspace(String keyspaceName, String pQuery, Cluster cluster) {
-		String query;
-		String[] arrayQuery = pQuery.split(" ");
-		List<String> listQuery = new ArrayList<String>();
-		for (int i = 0; i < arrayQuery.length; i++) {
-			String item = arrayQuery[i].trim();
-			if (!item.isEmpty()) {
-				listQuery.add(item);
-			}
-		}
-		if (keyQueryData.contains(listQuery.get(0).toUpperCase())) {
-			Collection<TableMetadata> tables = cluster.getMetadata().getKeyspace(keyspaceName).getTables();
-			for (int i = 0; i < listQuery.size(); i++) {
-				String item = listQuery.get(i);
-				AtomicInteger atomicInteger = new AtomicInteger(i);
-				tables.forEach((table) -> {
-					if (item.startsWith(table.getName())) {
-						listQuery.set(atomicInteger.get(), keyspaceName + "." + item);
-					}
-				});
-			}
-
-		} else {
-
-			if ("CREATE".equalsIgnoreCase(listQuery.get(0))) {
-				if ("TABLE".equalsIgnoreCase(listQuery.get(1))) {
-					if (listQuery.size() >= 5) {
-						if ("IFNOTEXISTS".equalsIgnoreCase(listQuery.get(2) + listQuery.get(3) + listQuery.get(4))) {
-							if (!listQuery.get(5).contains(".")) {
-								listQuery.set(5, keyspaceName + "." + listQuery.get(5));
-							}
-						} else {
-							if (!listQuery.get(2).contains(".")) {
-								listQuery.set(2, keyspaceName + "." + listQuery.get(2));
-							}
-						}
-					}
-				} else {
-					if ("INDEX".equalsIgnoreCase(listQuery.get(1))) {
-
-					}
-				}
-
-			}
-		}
-
-		query = String.join(" ", listQuery);
-		return query;
 	}
 
 	private Session getSession(String connectionName) throws Exception {

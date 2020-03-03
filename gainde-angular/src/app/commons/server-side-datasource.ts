@@ -91,6 +91,7 @@ export class GaindeDataSource implements DataSource<JSON> {
            
         }
         if(results['data']){
+            console.log("loadDataRows data "+JSON.stringify(results['data']));
             this.dataRowsSubject.next(results['data']);
         }
     });
