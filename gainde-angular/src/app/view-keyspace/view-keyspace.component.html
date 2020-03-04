@@ -546,30 +546,34 @@
                                         </mat-cell>
                                     </ng-container>  
                                     <ng-container   matColumnDef="action_gainde">
-                                        <mat-header-cell *matHeaderCellDef class="actionHeadGainde" >
+                                        <mat-header-cell *matHeaderCellDef  
+                                        [ngClass]="{'actionHeadGainde':true,'columnDisplay':onVerifyDisplayAction()}" >
                                             <mat-icon class="actionAddTable" 
                                                                     (click)="onClickAddNewRow(tableInfo['name'])"
                                                                     matTooltip="Ajouter une Ligne">
                                                                 add
                                                         </mat-icon> 
                                         </mat-header-cell>
-                                        <mat-cell *matCellDef="let element" class="actionHeadGainde"                                       
-                                                  >
+                                        <mat-cell *matCellDef="let element"                                      
+                                        [ngClass]="{'actionHeadGainde':true,'columnDisplay':onVerifyDisplayAction()}" >
                                         <mat-icon class="actionAddTable"  matTooltip="Editer la Ligne"
-                                                  (click)="onClickEditRow(element,tableInfo['name'])" >
+                                                  (click)="onClickEditRow(element,tableInfo['name'])" 
+                                                  >
                                               create
                                           </mat-icon> 
                                         </mat-cell>
                                     </ng-container>
                                     <ng-container   matColumnDef="action_remove_gainde">
-                                        <mat-header-cell *matHeaderCellDef class="actionHeadGainde">
+                                        <mat-header-cell *matHeaderCellDef 
+                                        [ngClass]="{'actionHeadGainde':true,'columnDisplay':onVerifyDisplayAction()}">
                                             <mat-icon class="actionAddTable" 
                                                                     (click)="onClickRemoveAllRow(tableInfo['name'])"
                                                                     matTooltip="Supprimer toutes les lignes">
                                                                 delete
                                                         </mat-icon> 
                                         </mat-header-cell>
-                                        <mat-cell *matCellDef="let element" class="actionHeadGainde"                                       
+                                        <mat-cell *matCellDef="let element" 
+                                        [ngClass]="{'actionHeadGainde':true,'columnDisplay':onVerifyDisplayAction()}"                                     
                                                    >
                                         <mat-icon class="actionAddTable"  matTooltip="Supprimer la Ligne"
                                                   (click)="onClickRemoveRow(element,tableInfo['name'])" >
@@ -647,15 +651,16 @@
                                     </ng-container>                                     
                                         
                                     <ng-container   matColumnDef="action_gainde">
-                                        <mat-header-cell *matHeaderCellDef class="actionHeadGainde" >
+                                        <mat-header-cell *matHeaderCellDef 
+                                        [ngClass]="{'actionHeadGainde':true,'columnDisplay':onVerifyDisplayActionBigData()}"  >
                                             <mat-icon class="actionAddTable" 
                                                                     (click)="onClickAddNewRowBigData(tableInfo['name'])"
                                                                     matTooltip="Ajouter une Ligne">
                                                                 add
                                                         </mat-icon> 
                                         </mat-header-cell>
-                                        <mat-cell *matCellDef="let element" class="actionHeadGainde"                                       
-                                                  >
+                                        <mat-cell *matCellDef="let element"                                       
+                                        [ngClass]="{'actionHeadGainde':true,'columnDisplay':onVerifyDisplayActionBigData()}" >
                                         <mat-icon class="actionAddTable"  matTooltip="Editer la Ligne"
                                                   (click)="onClickEditRowBigData(element,tableInfo['name'])" >
                                               create
@@ -663,7 +668,8 @@
                                         </mat-cell>
                                     </ng-container>
                                     <ng-container   matColumnDef="action_remove_gainde">
-                                        <mat-header-cell *matHeaderCellDef class="actionHeadGainde">
+                                        <mat-header-cell *matHeaderCellDef class="actionHeadGainde"
+                                        [ngClass]="{'actionHeadGainde':true,'columnDisplay':onVerifyDisplayActionBigData()}">
                                             <mat-icon class="actionAddTable" 
                                                                     (click)="onClickRemoveAllRowBigData(tableInfo['name'])"
                                                                     matTooltip="Supprimer toutes les lignes">
@@ -671,7 +677,7 @@
                                                         </mat-icon> 
                                         </mat-header-cell>
                                         <mat-cell *matCellDef="let element" class="actionHeadGainde"                                       
-                                                   >
+                                        [ngClass]="{'actionHeadGainde':true,'columnDisplay':onVerifyDisplayActionBigData()}"   >
                                         <mat-icon class="actionAddTable"  matTooltip="Supprimer la Ligne"
                                                   (click)="onClickRemoveRowBigData(element,tableInfo['name'])" >
                                               clear

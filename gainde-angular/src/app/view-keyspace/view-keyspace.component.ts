@@ -323,10 +323,15 @@ loadDataRows() {
   onVerifyDisplay(columnName:string):boolean{   
     return  this.setColumnInvisible.has(columnName);
   }
+  onVerifyDisplayAction():boolean{   
+    return  this.setColumnInvisible.size==this.dispColumnsHeadTableData.length;
+  }
   onVerifyDisplayBigData(columnName:string):boolean{   
     return  this.setColumnBigDataInvisible.has(columnName);
   }
-  
+  onVerifyDisplayActionBigData():boolean{   
+    return  this.setColumnBigDataInvisible.size==this.tableDataPaginateDataSource.columns.length;
+  }
   onShowSelectColumn(){
     this.openDialogSelectColumn(this.dispColumnsHeadTableData,false);
   }
@@ -796,6 +801,8 @@ loadDataRows() {
                 this.setColumnInvisible.add(column['name']);
               }
             });
+            console.log('openDialogSelectColumn '+this.setColumnInvisible.size);
+            console.log('openDialogSelectColumn '+this.dispColumnsHeadTableData.length);
         }
         
       }
