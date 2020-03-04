@@ -27,7 +27,7 @@ public class HistoryRepositoryImpl implements HistoryRepository {
 	private String folderHistory;
 
 	public boolean createOrUpdateHistory(HistoryDTO historyDTO) throws IOException, NoSuchAlgorithmException {
-		LOGGER.debug("createHistory History à créé dans le fichier " + folderHistory);
+		LOGGER.info("createHistory History à créé dans le fichier " + folderHistory);
 
 		if (historyDTO != null && historyDTO.getQuery() != null && !historyDTO.getQuery().isEmpty()) {
 			Calendar cal = Calendar.getInstance();
@@ -72,7 +72,7 @@ public class HistoryRepositoryImpl implements HistoryRepository {
 	}
 
 	public boolean removeHistory(String id) throws IOException {
-		LOGGER.debug("createHistory History à créé dans le fichier " + folderHistory);
+		LOGGER.info("createHistory History à créé dans le fichier " + folderHistory);
 		if (id != null && !id.isEmpty()) {
 			LOGGER.debug("Supression History  " + id);
 			String contentGainde = GaindeFileUtil.readeGaindeHistory(folderHistory);
@@ -97,6 +97,7 @@ public class HistoryRepositoryImpl implements HistoryRepository {
 	}
 
 	public List<HistoryDTO> readlAllHystories() throws IOException {
+		LOGGER.info("readlAllHystories History ");
 		List<HistoryDTO> histories = new ArrayList<>();
 		String contentGainde = GaindeFileUtil.readeGaindeHistory(folderHistory);
 		if (contentGainde != null && !contentGainde.isEmpty()) {
@@ -114,6 +115,7 @@ public class HistoryRepositoryImpl implements HistoryRepository {
 	}
 
 	public List<HistoryDTO> listHystoriesByConnection(String connectionName) throws IOException {
+		LOGGER.info("listHystoriesByConnection History ");
 		List<HistoryDTO> histories = new ArrayList<>();
 		if (connectionName != null && !connectionName.isEmpty()) {
 			String contentGainde = GaindeFileUtil.readeGaindeHistory(folderHistory);

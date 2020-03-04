@@ -3,11 +3,8 @@ package com.xoolibeut.gainde.cassandra.repository;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,7 +31,6 @@ import com.datastax.driver.core.SocketOptions;
 import com.datastax.driver.core.TableMetadata;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.xoolibeut.gainde.cassandra.controller.dtos.KeyspaceDTO;
-import com.xoolibeut.gainde.cassandra.util.GaindeFileUtil;
 
 @Repository
 @PropertySource("classpath:gainde.properties")
@@ -48,6 +44,7 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 
 	@Override
 	public void createKeyspace(String connectionName, KeyspaceDTO keyspaceDTO) throws Exception {
+		LOGGER.info("createKeyspace");
 		Session session = getSession(connectionName);
 		StringBuilder sb = new StringBuilder("CREATE KEYSPACE IF NOT EXISTS ").append(addQuote(keyspaceDTO.getName()))
 				.append(" WITH replication = {").append("'class':'").append(keyspaceDTO.getStrategy());
@@ -61,13 +58,14 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 		sb.append("} AND DURABLE_WRITES = " + keyspaceDTO.isDurableWrite() + ";");
 
 		String query = sb.toString();
-		LOGGER.info("execute Query "+query);
+		LOGGER.info("execute Query " + query);
 		session.execute(query);
 
 	}
 
 	@Override
 	public void alterKeyspace(String connectionName, KeyspaceDTO keyspaceDTO) throws Exception {
+		LOGGER.info("alterKeyspace");
 		Session session = getSession(connectionName);
 		StringBuilder sb = new StringBuilder("ALTER KEYSPACE ").append(addQuote(keyspaceDTO.getName()))
 				.append(" WITH replication = {").append("'class':'").append(keyspaceDTO.getStrategy())
@@ -80,8 +78,9 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 
 	@Override
 	public void dropKeyspace(String connectionName, String keyspace) throws Exception {
+		LOGGER.info("dropKeyspace");
 		Session session = getSession(connectionName);
-		Cluster cluster=getCluster(connectionName);
+		Cluster cluster = getCluster(connectionName);
 		SocketOptions socketOptions = cluster.getConfiguration().getSocketOptions();
 		socketOptions.setReadTimeoutMillis(60000);
 		socketOptions.setConnectTimeoutMillis(60000);
@@ -91,6 +90,7 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 
 	@Override
 	public KeyspaceDTO getKeyspace(String connectionName, String keyspaceName) throws Exception {
+		LOGGER.info("getKeyspace");
 		KeyspaceDTO keyspaceDTO = new KeyspaceDTO();
 		Cluster cluster = getCluster(connectionName);
 		if (cluster != null) {
@@ -116,15 +116,16 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 
 	@Override
 	public String dumpKeyspace(String connectionName, String keyspaceName) throws Exception {
+		LOGGER.info("dumpKeyspace");
 		StringBuilder builder = new StringBuilder();
-		Cluster cluster=getCluster(connectionName);
+		Cluster cluster = getCluster(connectionName);
 		SocketOptions socketOptions = cluster.getConfiguration().getSocketOptions();
 		socketOptions.setReadTimeoutMillis(60000);
 		socketOptions.setConnectTimeoutMillis(60000);
 		if (cluster != null) {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
 			if (keyspaceMetadata != null) {
-				builder.append(keyspaceMetadata.exportAsString());			
+				builder.append(keyspaceMetadata.exportAsString());
 			}
 		}
 		return builder.toString();
@@ -132,9 +133,10 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 
 	@Override
 	public String dumpKeyspaceWithData(String connectionName, String keyspaceName) throws Exception {
+		LOGGER.info("dumpKeyspaceWithData");
 		StringBuilder builder = new StringBuilder();
 		Session session = getSession(connectionName);
-		Cluster cluster=getCluster(connectionName);
+		Cluster cluster = getCluster(connectionName);
 		SocketOptions socketOptions = cluster.getConfiguration().getSocketOptions();
 		socketOptions.setReadTimeoutMillis(60000);
 		socketOptions.setConnectTimeoutMillis(60000);
@@ -143,7 +145,7 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 			if (keyspaceMetadata != null) {
 				builder.append(keyspaceMetadata.exportAsString());
 				LOGGER.debug("keyspaceMetadata " + keyspaceMetadata.exportAsString());
-				Collection<TableMetadata> tables = keyspaceMetadata.getTables();				
+				Collection<TableMetadata> tables = keyspaceMetadata.getTables();
 				builder.append("\n").append(SEPARATOR_DATA);
 				tables.forEach(tableMeta -> {
 					ResultSet resulSet = session
@@ -160,19 +162,21 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 		}
 		return builder.toString();
 	}
+
 	@Override
 	public String dumpOnlyDataFromKeyspace(String connectionName, String keyspaceName) throws Exception {
+		LOGGER.info("dumpOnlyDataFromKeyspace");
 		StringBuilder builder = new StringBuilder();
-		Session session = getSession(connectionName);		
-		Cluster cluster=getCluster(connectionName);
+		Session session = getSession(connectionName);
+		Cluster cluster = getCluster(connectionName);
 		SocketOptions socketOptions = cluster.getConfiguration().getSocketOptions();
 		socketOptions.setReadTimeoutMillis(60000);
 		socketOptions.setConnectTimeoutMillis(60000);
 		if (cluster != null) {
 			KeyspaceMetadata keyspaceMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName));
-			if (keyspaceMetadata != null) {				
+			if (keyspaceMetadata != null) {
 				LOGGER.debug("keyspaceMetadata " + keyspaceMetadata.exportAsString());
-				Collection<TableMetadata> tables = keyspaceMetadata.getTables();	
+				Collection<TableMetadata> tables = keyspaceMetadata.getTables();
 				tables.forEach(tableMeta -> {
 					ResultSet resulSet = session
 							.execute(QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableMeta.getName())));
@@ -188,14 +192,18 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 		}
 		return builder.toString();
 	}
+
 	@Override
 	public String importKeyspace(String connectionName, MultipartFile file) throws Exception {
-		String keyspace=null;
+		LOGGER.info("importKeyspace");
+		String keyspace = null;
 		if (file != null) {
-			String fileName =Calendar.getInstance().getTimeInMillis()+"_temp_" + file.getOriginalFilename();
+			// String fileName = Calendar.getInstance().getTimeInMillis() + "_temp_" +
+			// file.getOriginalFilename();
 			LOGGER.debug("importKeyspace file " + file.getName());
-			Files.copy(file.getInputStream(), GaindeFileUtil.createFileTempIfNotExist(folderConnection, fileName),
-					StandardCopyOption.REPLACE_EXISTING);
+			// Files.copy(file.getInputStream(),
+			// GaindeFileUtil.createFileTempIfNotExist(folderConnection,
+			// fileName),StandardCopyOption.REPLACE_EXISTING);
 			List<String> listQuery = new ArrayList<String>();
 			try (BufferedReader buffer = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
 				Map<String, String> mapQuery = new HashMap<String, String>();
@@ -217,11 +225,11 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 				Session session = getSession(connectionName);
 				String[] arrayQueryKeyspace = listQuery.get(0).split(" ");
 				if (arrayQueryKeyspace.length > 3) {
-					keyspace=arrayQueryKeyspace[2];
-					if(keyspace!=null  && keyspace.contains(".")) {
-						keyspace=keyspace.split("\\.")[0];
+					keyspace = arrayQueryKeyspace[2];
+					if (keyspace != null && keyspace.contains(".")) {
+						keyspace = keyspace.split("\\.")[0];
 					}
-					keyspace=removeQuote(keyspace);
+					keyspace = removeQuote(keyspace);
 					LOGGER.debug("Création du Keyspace  " + keyspace);
 				}
 				listQuery.forEach(query -> {
@@ -230,7 +238,7 @@ public class KeyspaceRepositoryImp implements KeyspaceRepository {
 			}
 
 		}
-return keyspace;
+		return keyspace;
 	}
 
 	private String buildRowValue(String keyspaceName, TableMetadata tableMetadata, Row row) {
@@ -310,6 +318,7 @@ return keyspace;
 	private String addQuote(String element) {
 		return "\"" + element + "\"";
 	}
+
 	private String removeQuote(String element) {
 		if (element == null || element.length() < 2) {
 			return element;

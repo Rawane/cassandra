@@ -40,7 +40,7 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 	private ConnectionRepository connectionRepository;
 
 	public void connnectTocassandra(ConnectionDTO connectionDTO) throws Exception {
-		LOGGER.debug("Start connnectTocassandra");
+		LOGGER.info("Start connnectTocassandra");
 		if (connectionDTO != null && connectionDTO.getIp() != null && !connectionDTO.getIp().isEmpty()
 				&& connectionDTO.getPort() != null) {
 			if (GaindeSessionConnection.getInstance().getSession(connectionDTO.getName()) == null) {
@@ -65,6 +65,7 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 	}
 
 	public List<GaindeMetadataDTO> getAllMetadatas(String connectionName) throws Exception {
+		LOGGER.info("getAllMetadatas ");
 		List<GaindeMetadataDTO> gaindeMetadatas = new ArrayList<GaindeMetadataDTO>();
 		Cluster cluster = getCluster(connectionName);
 		if (cluster != null) {
@@ -92,18 +93,19 @@ public class ConnectionCassandraRepositoryImpl implements ConnectionCassandraRep
 
 	public List<ColonneTableDTO> getAllColumns(String connectionName, String keyspaceName, String tableName)
 			throws Exception {
-
+		LOGGER.info("getAllColumns ");
 		return buildAllColumns(connectionName, keyspaceName, tableName, false);
 	}
 
 	public List<ColonneTableDTO> getAllColumnsTypeNative(String connectionName, String keyspaceName, String tableName)
 			throws Exception {
-
+		LOGGER.info("getAllColumnsTypeNative ");
 		return buildAllColumns(connectionName, keyspaceName, tableName, true);
 	}
 
 	private List<ColonneTableDTO> buildAllColumns(String connectionName, String keyspaceName, String tableName,
 			boolean colNative) throws Exception {
+		LOGGER.info("buildAllColumns ");
 		List<ColonneTableDTO> listColumDTO = new ArrayList<>();
 		Cluster cluster = getCluster(connectionName);
 		if (cluster != null) {

@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ import com.xoolibeut.gainde.cassandra.controller.dtos.TableDTO;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@Ignore
 public class TableRepositoryTest {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TableRepositoryTest.class);
 	@Autowired

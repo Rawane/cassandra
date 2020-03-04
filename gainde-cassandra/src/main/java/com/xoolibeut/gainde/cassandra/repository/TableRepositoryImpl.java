@@ -51,44 +51,28 @@ import com.xoolibeut.gainde.cassandra.util.GaindeUtil;
 
 @Repository
 public class TableRepositoryImpl implements TableRepository {
-	private static final Logger LOGGER = LoggerFactory.getLogger(TableRepositoryImpl.class);
-	// private List<String> keyQueryData;
-	// private List<String> keyQueryStructure;
+	private static final Logger LOGGER = LoggerFactory.getLogger(TableRepositoryImpl.class);	
 	@Autowired
 	private ConnectionCassandraRepository cassandraRepository;
 	private static String SEPARATOR_DATA = "-----------------------------------------------------------DATA--------------------------------------------------------";
 
 	@PostConstruct
 	public void init() {
-		/*
-		 * keyQueryData = new ArrayList<String>(); keyQueryStructure = new
-		 * ArrayList<String>(); keyQueryData.add("INSERT"); keyQueryData.add("UPDATE");
-		 * keyQueryData.add("DELETE"); keyQueryData.add("TRUNCATE");
-		 * keyQueryData.add("SELECT"); keyQueryData.add("BATCH");
-		 * keyQueryStructure.add("CREATE"); keyQueryStructure.add("DROP");
-		 * keyQueryStructure.add("ALTER");
-		 */
-
-		// keyQueryStructure.add("USE");
+		
 	}
 
-	public JsonNode executeQuery(String connectionName, String keyspaceName, String pQuery) throws Exception {
+	public JsonNode executeQuery(String connectionName, String keyspaceName, String query) throws Exception {
+		LOGGER.info("executeQuery " + query);
 		Session session = getSession(connectionName);
 		Cluster cluster = getCluster(connectionName);
-		if (pQuery == null || pQuery.isEmpty()) {
+		if (query == null || query.isEmpty()) {
 			throw new Exception("Veuillez renseigner le query");
 		}
-		String query = pQuery;
-		/**
-		 * if (!pQuery.contains(keyspaceName)) { query =
-		 * buildQueryAddKeyspace(keyspaceName, pQuery, cluster); }
-		 */
 
 		ObjectMapper mapper = new ObjectMapper();
 		ObjectNode rootNode = mapper.createObjectNode();
 		ArrayNode arrayNode = mapper.createArrayNode();
 		rootNode.set("data", arrayNode);
-		LOGGER.debug("executeQuery " + query);
 		ResultSet resultSet = session.execute(query);
 		if (resultSet != null) {
 			Map<String, String> columsQuery = new HashMap<>();
@@ -152,6 +136,7 @@ public class TableRepositoryImpl implements TableRepository {
 	}
 
 	public void createTable(TableDTO tableDTO, String connectionName, String keyspaceName) throws Exception {
+		LOGGER.info("createTable in " + keyspaceName);
 		Session session = getSession(connectionName);
 		Create createTable = SchemaBuilder.createTable(addQuote(keyspaceName), addQuote(tableDTO.getName()))
 				.ifNotExists();
@@ -191,6 +176,7 @@ public class TableRepositoryImpl implements TableRepository {
 	}
 
 	public void dropTable(String connectionName, String keyspaceName, String tableName) throws Exception {
+		LOGGER.info("dropTable " + tableName);
 		Session session = getSession(connectionName);
 		Drop dropTable = SchemaBuilder.dropTable(addQuote(keyspaceName), addQuote(tableName)).ifExists();
 		session.execute(dropTable);
@@ -199,6 +185,7 @@ public class TableRepositoryImpl implements TableRepository {
 
 	public void alterTable(TableDTO oldTableDTO, TableDTO tableDTO, String connectionName, String keyspaceName)
 			throws Exception {
+		LOGGER.info("alterTable ");
 		Session session = getSession(connectionName);
 		if (!oldTableDTO.getName().equals(tableDTO.getName())) {
 			throw new Exception("Vous ne pouvez pas modifier le nom de la table");
@@ -327,6 +314,7 @@ public class TableRepositoryImpl implements TableRepository {
 
 	public JsonNode getAllDataByTableName(String connectionName, String keyspaceName, String tableName)
 			throws Exception {
+		LOGGER.info("getAllDataByTableName "+tableName);
 		Session session = getSession(connectionName);
 		Cluster cluster = getCluster(connectionName);
 		TableMetadata table = cluster.getMetadata().getKeyspace(addQuote(keyspaceName)).getTable(addQuote(tableName));
@@ -351,6 +339,7 @@ public class TableRepositoryImpl implements TableRepository {
 
 	public JsonNode getAllDataPaginateByPage(String connectionName, String keyspaceName, String tableName,
 			Map<String, String> mapWhereClause, Pagination pagination) throws Exception {
+		LOGGER.info("getAllDataPaginateByPage "+tableName);
 		Session session = getSession(connectionName);
 		Cluster cluster = getCluster(connectionName);
 		ObjectMapper mapper = new ObjectMapper();
@@ -433,6 +422,7 @@ public class TableRepositoryImpl implements TableRepository {
 
 	public void insertData(String connectionName, String keyspaceName, String tableName, JsonNode map)
 			throws Exception {
+		LOGGER.info("insertData in "+tableName);
 		Session session = getSession(connectionName);
 		List<String> keys = new ArrayList<String>();
 		List<Object> values = new ArrayList<Object>();
@@ -454,6 +444,7 @@ public class TableRepositoryImpl implements TableRepository {
 
 	public void updateData(String connectionName, String keyspaceName, String tableName, JsonNode map)
 			throws Exception {
+		LOGGER.info("updateData on  "+tableName);
 		Session session = getSession(connectionName);
 		JsonNode dataNode = map.get("data");
 		ArrayNode arrayNode = (ArrayNode) map.get("partitionKeys");
@@ -486,7 +477,100 @@ public class TableRepositoryImpl implements TableRepository {
 		}
 
 	}
+	public void removeRowData(String connectionName, String keyspaceName, String tableName, Map<String, Object> map)
+			throws Exception {
+		LOGGER.info("removeRowData   "+tableName);
+		Session session = getSession(connectionName);
+		List<Clause> clauses = new ArrayList<>();
+		map.keySet().forEach(key -> {
+			clauses.add(QueryBuilder.eq(addQuote(key), map.get(key)));
+		});
 
+		Delete.Where deleteWhere = QueryBuilder.delete().from(addQuote(keyspaceName), addQuote(tableName))
+				.where(clauses.get(0));
+		if (clauses.size() > 1) {
+			for (int i = 1; i < clauses.size(); i++) {
+				deleteWhere.and(clauses.get(i));
+			}
+		}
+		LOGGER.debug("removeRowData CQL " + deleteWhere);
+		session.execute(deleteWhere);
+	}
+
+	public void removeAllData(String connectionName, String keyspaceName, String tableName) throws Exception {
+		LOGGER.info("removeAllData   "+tableName);
+		Session session = getSession(connectionName);
+		Truncate truncate = QueryBuilder.truncate(addQuote(keyspaceName), addQuote(tableName));
+		LOGGER.debug("removeAllData CQL " + truncate);
+		LOGGER.debug("removeAllData   " + truncate);
+		session.execute(truncate);
+	}
+
+	@Override
+	public String dumpTableSchema(String connectionName, String keyspaceName, String tableName) throws Exception {
+		LOGGER.info("dumpTableSchema   "+tableName);
+		StringBuilder builder = new StringBuilder();
+		Cluster cluster = getCluster(connectionName);
+		if (cluster != null) {
+			TableMetadata tableMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName))
+					.getTable(addQuote(tableName));
+			if (tableMetadata != null) {
+				builder.append(tableMetadata.exportAsString());
+			}
+		}
+		return builder.toString();
+	}
+
+	@Override
+	public String dumpTableWithData(String connectionName, String keyspaceName, String tableName) throws Exception {
+		LOGGER.info("dumpTableWithData   "+tableName);
+		StringBuilder builder = new StringBuilder();
+		Session session = getSession(connectionName);
+		Cluster cluster = getCluster(connectionName);
+		if (cluster != null) {
+			TableMetadata tableMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName))
+					.getTable(addQuote(tableName));
+			if (tableMetadata != null) {
+				builder.append(tableMetadata.exportAsString());
+				LOGGER.debug("keyspaceMetadata " + tableMetadata.exportAsString());
+				builder.append("\n").append(SEPARATOR_DATA);
+				ResultSet resulSet = session
+						.execute(QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableMetadata.getName())));
+				Iterator<Row> iter = resulSet.iterator();
+				while (iter.hasNext()) {
+					Row row = iter.next();
+					builder.append(buildRowValue(keyspaceName, tableMetadata, row));
+
+				}
+
+			}
+		}
+		return builder.toString();
+	}
+
+	@Override
+	public String dumpOnlyDataFromTable(String connectionName, String keyspaceName, String tableName) throws Exception {
+		LOGGER.info("dumpOnlyDataFromTable   "+tableName);
+		StringBuilder builder = new StringBuilder();
+		Session session = getSession(connectionName);
+		Cluster cluster = getCluster(connectionName);
+		if (cluster != null) {
+			TableMetadata tableMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName))
+					.getTable(addQuote(tableName));
+			if (tableMetadata != null) {
+				ResultSet resulSet = session
+						.execute(QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableMetadata.getName())));
+				Iterator<Row> iter = resulSet.iterator();
+				while (iter.hasNext()) {
+					Row row = iter.next();
+					builder.append(buildRowValue(keyspaceName, tableMetadata, row));
+
+				}
+
+			}
+		}
+		return builder.toString();
+	}
 	private ObjectNode buildRowNode(ObjectMapper mapper, List<ColumnMetadata> columns, Row row) {
 		ObjectNode rowNode = mapper.createObjectNode();
 		columns.forEach(column -> {
@@ -634,95 +718,7 @@ public class TableRepositoryImpl implements TableRepository {
 		return listColumnsName;
 	}
 
-	public void removeRowData(String connectionName, String keyspaceName, String tableName, Map<String, Object> map)
-			throws Exception {
-		Session session = getSession(connectionName);
-		List<Clause> clauses = new ArrayList<>();
-		map.keySet().forEach(key -> {
-			clauses.add(QueryBuilder.eq(addQuote(key), map.get(key)));
-		});
-
-		Delete.Where deleteWhere = QueryBuilder.delete().from(addQuote(keyspaceName), addQuote(tableName))
-				.where(clauses.get(0));
-		if (clauses.size() > 1) {
-			for (int i = 1; i < clauses.size(); i++) {
-				deleteWhere.and(clauses.get(i));
-			}
-		}
-		LOGGER.debug("removeRowData CQL " + deleteWhere);
-		session.execute(deleteWhere);
-	}
-
-	public void removeAllData(String connectionName, String keyspaceName, String tableName) throws Exception {
-		Session session = getSession(connectionName);
-		Truncate truncate = QueryBuilder.truncate(addQuote(keyspaceName), addQuote(tableName));
-		LOGGER.debug("removeAllData CQL " + truncate);
-		LOGGER.debug("removeAllData   " + truncate);
-		session.execute(truncate);
-	}
-
-	@Override
-	public String dumpTableSchema(String connectionName, String keyspaceName, String tableName) throws Exception {
-		StringBuilder builder = new StringBuilder();
-		Cluster cluster = getCluster(connectionName);
-		if (cluster != null) {
-			TableMetadata tableMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName))
-					.getTable(addQuote(tableName));
-			if (tableMetadata != null) {
-				builder.append(tableMetadata.exportAsString());
-			}
-		}
-		return builder.toString();
-	}
-
-	@Override
-	public String dumpTableWithData(String connectionName, String keyspaceName, String tableName) throws Exception {
-		StringBuilder builder = new StringBuilder();
-		Session session = getSession(connectionName);
-		Cluster cluster = getCluster(connectionName);
-		if (cluster != null) {
-			TableMetadata tableMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName))
-					.getTable(addQuote(tableName));
-			if (tableMetadata != null) {
-				builder.append(tableMetadata.exportAsString());
-				LOGGER.debug("keyspaceMetadata " + tableMetadata.exportAsString());
-				builder.append("\n").append(SEPARATOR_DATA);
-				ResultSet resulSet = session
-						.execute(QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableMetadata.getName())));
-				Iterator<Row> iter = resulSet.iterator();
-				while (iter.hasNext()) {
-					Row row = iter.next();
-					builder.append(buildRowValue(keyspaceName, tableMetadata, row));
-
-				}
-
-			}
-		}
-		return builder.toString();
-	}
-
-	@Override
-	public String dumpOnlyDataFromTable(String connectionName, String keyspaceName, String tableName) throws Exception {
-		StringBuilder builder = new StringBuilder();
-		Session session = getSession(connectionName);
-		Cluster cluster = getCluster(connectionName);
-		if (cluster != null) {
-			TableMetadata tableMetadata = cluster.getMetadata().getKeyspace(addQuote(keyspaceName))
-					.getTable(addQuote(tableName));
-			if (tableMetadata != null) {
-				ResultSet resulSet = session
-						.execute(QueryBuilder.select().from(addQuote(keyspaceName), addQuote(tableMetadata.getName())));
-				Iterator<Row> iter = resulSet.iterator();
-				while (iter.hasNext()) {
-					Row row = iter.next();
-					builder.append(buildRowValue(keyspaceName, tableMetadata, row));
-
-				}
-
-			}
-		}
-		return builder.toString();
-	}
+	
 
 	private String buildRowValue(String keyspaceName, TableMetadata tableMetadata, Row row) {
 		StringBuilder builderHead = new StringBuilder("\nINSERT INTO ");
@@ -755,7 +751,7 @@ public class TableRepositoryImpl implements TableRepository {
 					if (object != null) {
 						String rowValue = object.toString();
 						if (rowValue.length() > 1 && rowValue.startsWith("\"")) {
-							// rowValue = rowValue.substring(1, rowValue.length() - 1);
+							//rowValue = rowValue.substring(1, rowValue.length() - 1);
 						}
 						columnsInsert.put(column.getName(), rowValue);
 					}

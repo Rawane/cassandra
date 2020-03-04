@@ -590,6 +590,7 @@
                             <ng-template matTabLabel>
                                 <span  >Données(Big table)</span>
                             </ng-template>
+                            <div >
                             <div class="row" style="margin-top: 10px;">                                                                   
                                 <div class="col-6" >                                                                                
                                         <mat-icon  (click)="onZoomTable()" style="margin-left: 20px;" class="actionClick" matTooltip="Agrandir">
@@ -683,6 +684,7 @@
                                     <mat-row  *matRowDef="let row; columns: tableDataPaginateDataSource.columnsDisplayed;"></mat-row>         
                                 </mat-table>                                                                                       
                              </div>  
+                            </div>
                              <mat-paginator  #paginatorGainde [pageSizeOptions]="[5, 10, 20,50, 100]"  [length]="tableDataPaginateDataSource?.currentPagination?.total"   [pageSize]="20"  [showFirstLastButtons]="true" [hidden]="!tableDataPaginateDataSource?.columns" >
                             </mat-paginator>                              
                         </mat-tab>

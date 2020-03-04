@@ -25,7 +25,7 @@ public class ConnectionRepositoryImpl implements ConnectionRepository {
 
 	@Override
 	public boolean createConnection(ConnectionDTO connectionDTO) throws IOException {
-		LOGGER.debug("createConnection Connection à créé dans le fichier " + folderConnection);
+		LOGGER.info("createConnection Connection à créé dans le fichier " + folderConnection);
 		if (connectionDTO != null && connectionDTO.getName() != null && !connectionDTO.getName().isEmpty()
 				&& !connectionDTO.getName().contains("#")) {
 			LOGGER.debug("createConnection Connection à créé dans le fichier " + connectionDTO.toString());
@@ -59,6 +59,7 @@ public class ConnectionRepositoryImpl implements ConnectionRepository {
 
 	@Override
 	public boolean updateConnection(ConnectionDTO connectionDTO) throws IOException {
+		LOGGER.info("updateConnection Connection ");
 		if (connectionDTO != null && connectionDTO.getName() != null && !connectionDTO.getName().isEmpty()) {
 			String contentGainde = GaindeFileUtil.readeGainde(folderConnection);
 			if (contentGainde != null && !contentGainde.isEmpty()) {
@@ -90,6 +91,7 @@ public class ConnectionRepositoryImpl implements ConnectionRepository {
 
 	@Override
 	public void updateOrderConnection(List<ConnectionDTO> listConnections) throws IOException {
+		LOGGER.info("updateOrderConnection Connection ");
 		String contentGainde = GaindeFileUtil.readeGainde(folderConnection);
 		if (listConnections != null && contentGainde != null && !contentGainde.isEmpty()) {
 			listConnections.forEach((conn) -> {
@@ -181,6 +183,7 @@ public class ConnectionRepositoryImpl implements ConnectionRepository {
 
 	@Override
 	public ConnectionDTO getConnection(String name) throws IOException {
+		LOGGER.info("getConnection Connection ");
 		String contentGainde = GaindeFileUtil.readeGainde(folderConnection);
 		if (contentGainde != null && !contentGainde.isEmpty()) {
 			ObjectMapper mapper = new ObjectMapper();

@@ -362,7 +362,8 @@ loadDataRows() {
     this.gaindeService.currentGainde.connectionName =this.currentTableKeys[0];
     this.gaindeService.currentGainde.keyspaceName =this.currentTableKeys[1];  
     if(node['type']===1){
-      this.partVisible=VIEW_ECRAN.KEYSPACE_INFO;     
+      this.partVisible=VIEW_ECRAN.KEYSPACE_INFO;  
+      this.tableDataPaginateDataSource=new GaindeDataSource(this.gaindeService);    
       this.gaindeService.getKeyspaceInfo(this.currentTableKeys[0],this.currentTableKeys[1]);      
     }else{      
       this.gaindeService.currentGainde.tableName =this.currentTableKeys[2];  

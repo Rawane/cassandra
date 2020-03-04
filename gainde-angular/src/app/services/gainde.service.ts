@@ -591,18 +591,5 @@ export class GaindeService {
    getAllMetaAfterImport(connectionName:string,keyspaceName:string){
       this.getAllMetaLocal(connectionName,keyspaceName);
    }
-  testCSPGateway(){   
-    this.httpOptions.headers=this.httpOptions.headers.set('Accept','*/*');
-    
-    this.httpClient
-    .get('https://api-mig.gidn.urssaf.fr/api/reporting/page.html',{headers:this.httpOptions.headers, responseType: 'text' as 'text'})
-    .subscribe(
-      (response) => {       
-      
-      },
-      (error) => {
-      
-      }
-    );
-  }
+  
 }
